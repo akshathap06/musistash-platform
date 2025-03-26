@@ -112,11 +112,15 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
       return null;
     }
     
+    // Find the extralarge image URL if available
+    const imageObject = lastFmArtist?.image?.find(img => img.size === 'extralarge');
+    const imageUrl = imageObject ? imageObject["#text"] : undefined;
+    
     // Combine all data sources
     const combinedData: ArtistStats = {
       name: artistName,
       mbid: mbArtist?.id,
-      image: lastFmArtist?.image?.find(img => img.size === 'extralarge')?['#text'],
+      image: imageUrl,
       listeners: parseInt(lastFmArtist?.stats?.listeners || '0'),
       playcount: parseInt(lastFmArtist?.stats?.playcount || '0'),
       followers: songstatsData.followers,
@@ -146,7 +150,7 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
           category: 'Engagement Rate', 
           value: `${(Math.random() * 5 + 1).toFixed(1)}%`, 
           change: 0.5 
-        },
+        }
       ]
     };
     

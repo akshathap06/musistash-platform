@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Search, Music, Bell, User, Menu, X } from 'lucide-react';
+import { Search, Bell, Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,7 +32,11 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <Music className="h-6 w-6 text-primary" />
+              <img 
+                src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
+                alt="MusiStash Logo" 
+                className="h-8 w-auto"
+              />
               <span className="text-xl font-semibold tracking-tight">MusiStash</span>
             </Link>
           </div>

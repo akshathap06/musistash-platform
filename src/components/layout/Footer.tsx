@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -10,7 +9,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Music className="h-6 w-6 text-primary" />
+              <img 
+                src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
+                alt="MusiStash Logo" 
+                className="h-8 w-auto"
+              />
               <span className="text-xl font-semibold tracking-tight">MusiStash</span>
             </div>
             <p className="text-sm text-muted-foreground">

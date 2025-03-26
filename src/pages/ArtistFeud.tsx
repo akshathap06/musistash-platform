@@ -4,9 +4,136 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { Disc3, BookCopy, Music2, AlertTriangle } from 'lucide-react';
+import { Disc3, BookCopy, Music2, AlertTriangle, CalendarClock } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+
+interface TimelineEvent {
+  year: string;
+  title: string;
+  description: string;
+}
+
+// Frank Ocean Timeline
+const frankOceanTimeline: TimelineEvent[] = [
+  {
+    year: "2009",
+    title: "Joins Odd Future",
+    description: "Frank Ocean joins the hip-hop collective Odd Future and begins collaborating with other members."
+  },
+  {
+    year: "2009",
+    title: "Signs with Def Jam",
+    description: "Meets Tricky Stewart and signs a record deal with Def Jam Recordings."
+  },
+  {
+    year: "2011",
+    title: "Nostalgia, Ultra Mixtape",
+    description: "Independently releases Nostalgia, Ultra without label support, gaining underground attention."
+  },
+  {
+    year: "2012",
+    title: "Channel Orange",
+    description: "Releases Channel Orange after demanding $1M advance and creative control. Album debuts at #2 on Billboard."
+  },
+  {
+    year: "2016",
+    title: "Endless Release",
+    description: "Releases Endless as a visual album through Def Jam to fulfill contract obligations."
+  },
+  {
+    year: "2016",
+    title: "Blonde Release",
+    description: "Independently releases Blonde one day after Endless, retaining ownership and most profits."
+  }
+];
+
+// Dr. Dre Timeline
+const drDreTimeline: TimelineEvent[] = [
+  {
+    year: "1988",
+    title: "Straight Outta Compton",
+    description: "N.W.A. releases groundbreaking album Straight Outta Compton through Ruthless Records."
+  },
+  {
+    year: "1991",
+    title: "Leaves Ruthless Records",
+    description: "Dr. Dre leaves Ruthless Records over financial disputes with Eazy-E and Jerry Heller."
+  },
+  {
+    year: "1992",
+    title: "Founds Death Row",
+    description: "Partners with Suge Knight to found Death Row Records and gain creative control."
+  },
+  {
+    year: "1992",
+    title: "The Chronic",
+    description: "Releases his solo debut album The Chronic, redefining West Coast hip-hop."
+  },
+  {
+    year: "1996",
+    title: "Leaves Death Row",
+    description: "Departs from Death Row Records due to tensions with Suge Knight and the volatile environment."
+  },
+  {
+    year: "1996",
+    title: "Founds Aftermath",
+    description: "Establishes Aftermath Entertainment, gaining full control over his art and business."
+  }
+];
+
+// Prince Timeline
+const princeTimeline: TimelineEvent[] = [
+  {
+    year: "1978",
+    title: "Signs with Warner Bros.",
+    description: "At 18 years old, Prince signs with Warner Bros. and releases his debut album For You."
+  },
+  {
+    year: "1982-1984",
+    title: "Commercial Peak",
+    description: "Releases 1999 and Purple Rain, establishing himself as a global icon."
+  },
+  {
+    year: "1993",
+    title: "Name Change",
+    description: "Changes his name to an unpronounceable symbol in protest of Warner Bros.' control."
+  },
+  {
+    year: "1993",
+    title: "Public Protest",
+    description: "Appears in public with 'slave' written on his face to criticize the music industry."
+  },
+  {
+    year: "1996",
+    title: "Contract Fulfilled",
+    description: "After rapidly releasing albums to meet contractual obligations, Prince parts ways with Warner Bros."
+  },
+  {
+    year: "1996",
+    title: "NPG Records",
+    description: "Founds his own independent label, NPG Records, gaining full ownership of his work."
+  }
+];
+
+const TimelineComponent = ({ events }: { events: TimelineEvent[] }) => (
+  <div className="space-y-4 relative mt-6 before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-primary/20 before:content-[''] md:before:mx-auto md:before:translate-x-0">
+    {events.map((event, index) => (
+      <div key={index} className="relative flex items-start md:flex-row-reverse">
+        <div className="md:flex flex-1 bg-card rounded-lg shadow-sm md:ml-12 p-4 border border-primary/10 border-l-4 md:border-l md:border-r-4 border-primary">
+          <div className="flex flex-col">
+            <span className="text-primary font-semibold mb-1">{event.title}</span>
+            <p className="text-sm text-muted-foreground">{event.description}</p>
+          </div>
+        </div>
+        <div className="absolute left-0 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary md:relative md:left-auto md:mr-12">
+          <CalendarClock className="h-5 w-5" />
+          <span className="absolute text-xs font-semibold">{event.year}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const ArtistFeud = () => {
   return (
@@ -142,6 +269,9 @@ const ArtistFeud = () => {
                   tale into a masterclass in artistic independence. His battle with Def Jam reshaped how artists think about ownership, 
                   contracts, and freedom in the music industry.
                 </p>
+                
+                <h3 className="text-xl font-semibold mt-6 mb-2">Timeline of Events</h3>
+                <TimelineComponent events={frankOceanTimeline} />
               </CardContent>
             </Card>
 
@@ -185,6 +315,9 @@ const ArtistFeud = () => {
                   Dr. Dre's journey through Ruthless and Death Row underscores a recurring theme in music: talented artists fighting to maintain 
                   ownership, control, and fair compensation in an industry often stacked against them.
                 </p>
+                
+                <h3 className="text-xl font-semibold mt-6 mb-2">Timeline of Events</h3>
+                <TimelineComponent events={drDreTimeline} />
               </CardContent>
             </Card>
 
@@ -227,6 +360,9 @@ const ArtistFeud = () => {
                   around artist rights and inspired countless musicians to fight for control over their work—long before terms like "owning your 
                   masters" became common in the industry dialogue.
                 </p>
+                
+                <h3 className="text-xl font-semibold mt-6 mb-2">Timeline of Events</h3>
+                <TimelineComponent events={princeTimeline} />
               </CardContent>
             </Card>
           </div>

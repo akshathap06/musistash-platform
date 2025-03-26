@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,14 @@ const Navbar = () => {
               Artists
             </Link>
             <Link 
+              to="/artist-feuds" 
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === '/artist-feuds' ? 'text-primary' : ''
+              }`}
+            >
+              Artist Feuds
+            </Link>
+            <Link 
               to="/services" 
               className="text-sm font-medium transition-colors hover:text-primary"
             >
@@ -120,6 +129,14 @@ const Navbar = () => {
               className="block text-sm font-medium p-2 hover:bg-muted rounded-md"
             >
               Artists
+            </Link>
+            <Link 
+              to="/artist-feuds" 
+              className={`block text-sm font-medium p-2 hover:bg-muted rounded-md ${
+                location.pathname === '/artist-feuds' ? 'bg-muted' : ''
+              }`}
+            >
+              Artist Feuds
             </Link>
             <Link 
               to="/services" 

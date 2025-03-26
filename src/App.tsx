@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProjectDetail from "./pages/ProjectDetail";
 import ArtistProfile from "./pages/ArtistProfile";
+import ArtistFeud from "./pages/ArtistFeud";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:id" element={<ProjectDetail />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
+            <Route path="/artist-feuds" element={<ArtistFeud />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

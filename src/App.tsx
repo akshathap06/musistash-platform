@@ -15,6 +15,7 @@ import ArtistFeud from "./pages/ArtistFeud";
 import HowItWorks from "./pages/HowItWorks";
 import Services from "./pages/Services";
 import Artists from "./pages/Artists";
+import ArtistSearch from "./pages/ArtistSearch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/project/:id" element={<ProjectDetail />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/artists" element={<Artists />} />
+            <Route path="/artist-search" element={<ArtistSearch />} />
             <Route path="/artist-feuds" element={<ArtistFeud />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/services" element={<Services />} />

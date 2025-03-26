@@ -27,8 +27,8 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       
-      <div className={expanded ? 'space-y-4 max-w-md text-center w-full' : ''}>
-        <div className={`flex items-center ${expanded ? 'justify-center' : ''}`}>
+      <div className={expanded ? 'space-y-4 max-w-md text-center w-full' : 'text-center flex-1'}>
+        <div className={`flex items-center ${expanded ? 'justify-center' : 'justify-center'}`}>
           <Link to={`/artist/${artist.id}`}>
             <h3 className={`font-medium hover:text-primary transition-colors ${expanded ? 'text-2xl' : ''}`}>
               {artist.name}
@@ -63,7 +63,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         )}
         
         {!expanded && (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground text-center">
             {artist.genres.slice(0, 2).join(', ')}
           </div>
         )}

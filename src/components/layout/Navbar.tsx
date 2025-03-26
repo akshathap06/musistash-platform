@@ -54,7 +54,9 @@ const Navbar = () => {
             </Link>
             <Link 
               to="/artists" 
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === '/artists' ? 'text-primary' : ''
+              }`}
             >
               Artists
             </Link>
@@ -68,7 +70,9 @@ const Navbar = () => {
             </Link>
             <Link 
               to="/services" 
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === '/services' ? 'text-primary' : ''
+              }`}
             >
               Services
             </Link>
@@ -118,7 +122,9 @@ const Navbar = () => {
             </Link>
             <Link 
               to="/artists" 
-              className="block text-sm font-medium p-2 hover:bg-muted rounded-md"
+              className={`block text-sm font-medium p-2 hover:bg-muted rounded-md ${
+                location.pathname === '/artists' ? 'bg-muted' : ''
+              }`}
             >
               Artists
             </Link>
@@ -132,7 +138,9 @@ const Navbar = () => {
             </Link>
             <Link 
               to="/services" 
-              className="block text-sm font-medium p-2 hover:bg-muted rounded-md"
+              className={`block text-sm font-medium p-2 hover:bg-muted rounded-md ${
+                location.pathname === '/services' ? 'bg-muted' : ''
+              }`}
             >
               Services
             </Link>

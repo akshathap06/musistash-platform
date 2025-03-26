@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { serviceProviders } from '@/lib/mockData';
+import { serviceProviders, Service, ServiceProvider } from '@/lib/mockData';
 import { Star, Search, Filter, Clock, DollarSign, CheckCircle2, FileText, Package, Calendar } from 'lucide-react';
 
 const Services = () => {
@@ -30,7 +29,7 @@ const Services = () => {
   });
 
   // Get all unique categories
-  const categories = ['all', ...new Set(serviceProviders.flatMap(
+  const categories: string[] = ['all', ...new Set(serviceProviders.flatMap(
     provider => provider.services.map(service => service.category)
   ))];
   
@@ -126,7 +125,7 @@ const Services = () => {
   );
 };
 
-const ServiceCard = ({ service, provider }) => {
+const ServiceCard = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
@@ -203,7 +202,7 @@ const ServiceCard = ({ service, provider }) => {
   );
 };
 
-const ProviderCard = ({ provider }) => {
+const ProviderCard = ({ provider }: { provider: ServiceProvider }) => {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-4">
@@ -248,7 +247,7 @@ const ProviderCard = ({ provider }) => {
   );
 };
 
-const FeaturedServiceCard = ({ service, provider }) => {
+const FeaturedServiceCard = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
   return (
     <Card className="overflow-hidden">
       <div className="bg-primary/10 p-2 text-center text-sm font-medium text-primary">
@@ -322,7 +321,7 @@ const FeaturedServiceCard = ({ service, provider }) => {
   );
 };
 
-const ContractDialog = ({ service, provider }) => {
+const ContractDialog = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>

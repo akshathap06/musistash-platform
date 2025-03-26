@@ -1,4 +1,3 @@
-
 export interface Artist {
   id: string;
   name: string;
@@ -53,7 +52,29 @@ export interface User {
   createdAt: string;
 }
 
-// Mock Artists
+export interface ServiceProvider {
+  id: string;
+  name: string;
+  avatar: string;
+  title: string;
+  bio: string;
+  services: Service[];
+  rating: number;
+  completedProjects: number;
+  location: string;
+}
+
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  duration: string;
+  category: 'production' | 'mixing' | 'mastering' | 'recording' | 'marketing' | 'other';
+  features: string[];
+  contractUrl: string;
+}
+
 export const artists: Artist[] = [
   {
     id: '1',
@@ -87,7 +108,6 @@ export const artists: Artist[] = [
   }
 ];
 
-// Mock Projects
 export const projects: Project[] = [
   {
     id: '1',
@@ -208,7 +228,6 @@ export const projects: Project[] = [
   }
 ];
 
-// Mock similarity data for AI recommendations
 export const similarityData = [
   {
     artist: "Aria Luna",
@@ -248,7 +267,6 @@ export const similarityData = [
   }
 ];
 
-// Mock Investments
 export const investments: Investment[] = [
   {
     id: '1',
@@ -276,7 +294,6 @@ export const investments: Investment[] = [
   }
 ];
 
-// Mock Users
 export const users: User[] = [
   {
     id: 'user1',
@@ -302,5 +319,144 @@ export const users: User[] = [
     role: 'developer',
     bio: 'Award-winning producer with 15+ years of experience across multiple genres.',
     createdAt: '2023-03-10'
+  }
+];
+
+export const serviceProviders: ServiceProvider[] = [
+  {
+    id: 'sp1',
+    name: 'Alex Thompson',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&h=300',
+    title: 'Grammy-Winning Producer',
+    bio: 'With over 15 years of experience in the music industry, I specialize in pop and R&B production. My work has been featured on multiple platinum records.',
+    services: [
+      {
+        id: 'serv1',
+        title: 'Premium Production Package',
+        description: 'Full-service production including beat creation, arrangement, and vocal production. Includes 4 weeks of dedicated service with unlimited revisions.',
+        price: 30000,
+        duration: '4 weeks',
+        category: 'production',
+        features: [
+          'Custom beat production',
+          'Vocal arrangement and production',
+          'Access to premium sound library',
+          'Mixing included',
+          'Two rounds of mastering',
+          'Commercial release rights'
+        ],
+        contractUrl: '/contracts/premium-production-contract.pdf'
+      },
+      {
+        id: 'serv2',
+        title: 'Standard Mixing Package',
+        description: 'Professional mixing for your already recorded tracks. Includes 3 rounds of revisions.',
+        price: 5000,
+        duration: '1 week',
+        category: 'mixing',
+        features: [
+          'Up to 24 tracks',
+          'Vocal processing',
+          'EQ and compression',
+          '3 rounds of revisions',
+          'Stems delivery'
+        ],
+        contractUrl: '/contracts/standard-mixing-contract.pdf'
+      }
+    ],
+    rating: 4.9,
+    completedProjects: 87,
+    location: 'Los Angeles, CA'
+  },
+  {
+    id: 'sp2',
+    name: 'Samantha Rodriguez',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&h=300',
+    title: 'Marketing Specialist',
+    bio: 'Former Sony Music marketing executive with a passion for helping independent artists reach their audience. Specialized in digital marketing and brand development.',
+    services: [
+      {
+        id: 'serv3',
+        title: 'Complete Marketing Campaign',
+        description: 'End-to-end marketing strategy and execution for your music release. Includes social media, PR, and playlist placement.',
+        price: 15000,
+        duration: '8 weeks',
+        category: 'marketing',
+        features: [
+          'Release strategy development',
+          'Social media campaign management',
+          'Press release and media outreach',
+          'Playlist pitching',
+          'Advertising campaign setup and management',
+          'Performance analytics and reporting'
+        ],
+        contractUrl: '/contracts/marketing-campaign-contract.pdf'
+      },
+      {
+        id: 'serv4',
+        title: 'Social Media Growth Package',
+        description: 'Focused campaign to grow your social media presence and engagement across platforms.',
+        price: 7500,
+        duration: '6 weeks',
+        category: 'marketing',
+        features: [
+          'Content strategy development',
+          'Content calendar creation',
+          'Daily posting and community management',
+          'Follower growth tactics',
+          'Analytics and optimization',
+          'Training for self-management'
+        ],
+        contractUrl: '/contracts/social-media-contract.pdf'
+      }
+    ],
+    rating: 4.7,
+    completedProjects: 62,
+    location: 'New York, NY'
+  },
+  {
+    id: 'sp3',
+    name: 'Marcus Williams',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&h=300',
+    title: 'Mastering Engineer',
+    bio: 'Specialized in bringing out the best in your mixes with a focus on maintaining dynamics while achieving competitive loudness. My credits include work with major artists across multiple genres.',
+    services: [
+      {
+        id: 'serv5',
+        title: 'Premium Mastering',
+        description: 'High-end mastering for your project with a focus on detail and sonic excellence.',
+        price: 3500,
+        duration: '1 week',
+        category: 'mastering',
+        features: [
+          'Up to 12 tracks',
+          'Analog and digital processing',
+          'Multiple format delivery (CD, Streaming, Vinyl)',
+          '3 revisions included',
+          'Stem mastering option',
+          'Reference matching'
+        ],
+        contractUrl: '/contracts/premium-mastering-contract.pdf'
+      },
+      {
+        id: 'serv6',
+        title: 'Single Track Mastering',
+        description: 'Professional mastering for a single track with quick turnaround.',
+        price: 400,
+        duration: '48 hours',
+        category: 'mastering',
+        features: [
+          'One track',
+          'Digital processing',
+          'Streaming and CD masters',
+          '1 revision included',
+          'Quick turnaround'
+        ],
+        contractUrl: '/contracts/single-track-mastering-contract.pdf'
+      }
+    ],
+    rating: 4.8,
+    completedProjects: 215,
+    location: 'Nashville, TN'
   }
 ];

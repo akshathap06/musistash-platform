@@ -13,6 +13,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import ArtistProfile from "./pages/ArtistProfile";
 import ArtistFeud from "./pages/ArtistFeud";
 import HowItWorks from "./pages/HowItWorks";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/artist/:id" element={<ArtistProfile />} />
             <Route path="/artist-feuds" element={<ArtistFeud />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/services" element={<Services />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

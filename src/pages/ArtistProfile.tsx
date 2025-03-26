@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ProjectCard from '@/components/ui/ProjectCard';
+import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
 import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
 
@@ -17,6 +17,7 @@ const ArtistProfile = () => {
   const [artistProjects, setArtistProjects] = useState([]);
   const [similarityInfo, setSimilarityInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [spotifyImage, setSpotifyImage] = useState('');
   
   useEffect(() => {
     // Simulate API fetch
@@ -30,9 +31,61 @@ const ArtistProfile = () => {
       const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
       setSimilarityInfo(foundSimilarity);
       
+      // If we have an artist name, try to fetch their Spotify image
+      if (foundArtist && foundArtist.name) {
+        fetchSpotifyArtistImage(foundArtist.name);
+      }
+      
       setIsLoading(false);
     }, 500);
   }, [id]);
+  
+  const fetchSpotifyArtistImage = async (artistName) => {
+    try {
+      // First get Spotify access token
+      const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + btoa(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET)
+        },
+        body: 'grant_type=client_credentials'
+      });
+      
+      if (!tokenResponse.ok) {
+        console.error('Failed to get Spotify token');
+        return;
+      }
+      
+      const tokenData = await tokenResponse.json();
+      const token = tokenData.access_token;
+      
+      // Search for the artist
+      const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!searchResponse.ok) {
+        console.error('Failed to search Spotify artist');
+        return;
+      }
+      
+      const searchData = await searchResponse.json();
+      
+      if (searchData.artists.items.length > 0) {
+        const artistData = searchData.artists.items[0];
+        // Get the largest image available
+        if (artistData.images && artistData.images.length > 0) {
+          setSpotifyImage(artistData.images[0].url);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Spotify data:', error);
+    }
+  };
   
   if (isLoading || !artist) {
     return (
@@ -57,7 +110,7 @@ const ArtistProfile = () => {
               {/* Artist Image */}
               <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background shadow-xl">
                 <img 
-                  src={artist.avatar} 
+                  src={spotifyImage || artist.avatar} 
                   alt={artist.name}
                   className="w-full h-full object-cover"
                 />

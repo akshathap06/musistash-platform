@@ -9,21 +9,26 @@ import { CheckCircle } from 'lucide-react';
 interface ArtistInfoProps {
   artist: Artist;
   expanded?: boolean;
+  spotifyImage?: string; // Add prop for Spotify profile image
 }
 
 const ArtistInfo: React.FC<ArtistInfoProps> = ({ 
   artist, 
-  expanded = false 
+  expanded = false,
+  spotifyImage
 }) => {
   const initials = artist.name
     .split(' ')
     .map(n => n[0])
     .join('');
 
+  // Use Spotify image if available, otherwise fallback to artist avatar
+  const imageUrl = spotifyImage || artist.avatar;
+
   return (
     <div className={`flex ${expanded ? 'flex-col items-center text-center' : 'items-center'} animate-fade-in`}>
       <Avatar className={expanded ? 'h-24 w-24 mb-4' : 'h-10 w-10 mr-3'}>
-        <AvatarImage src={artist.avatar} alt={artist.name} />
+        <AvatarImage src={imageUrl} alt={artist.name} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       

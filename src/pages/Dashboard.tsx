@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -11,6 +10,7 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import { useAuth } from '@/hooks/useAuth';
 import { projects, investments } from '@/lib/mockData';
 import { PlusCircle, ChevronRight, LineChart, DollarSign } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -33,7 +33,6 @@ const Dashboard = () => {
     );
   }
   
-  // For demo purposes, we'll show different dashboard views based on user role
   const renderDashboardContent = () => {
     switch (user.role) {
       case 'artist':
@@ -88,12 +87,10 @@ const Dashboard = () => {
 };
 
 const ListenerDashboard = () => {
-  // For demo purposes, we'll show a few projects as "invested"
   const myInvestments = investments.filter(inv => inv.userId === 'user1');
   const investedProjectIds = myInvestments.map(inv => inv.projectId);
   const investedProjects = projects.filter(project => investedProjectIds.includes(project.id));
   
-  // Calculate total invested and potential returns
   const totalInvested = myInvestments.reduce((sum, inv) => sum + inv.amount, 0);
   const potentialReturns = investedProjects.reduce((sum, project) => {
     const investment = myInvestments.find(inv => inv.projectId === project.id);
@@ -102,7 +99,6 @@ const ListenerDashboard = () => {
   
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Investment Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -152,7 +148,6 @@ const ListenerDashboard = () => {
         </Card>
       </div>
       
-      {/* Investments Tabs */}
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="active">Active Investments</TabsTrigger>
@@ -220,7 +215,6 @@ const ListenerDashboard = () => {
 };
 
 const ArtistDashboard = () => {
-  // For demo purposes, we'll show a few projects as belonging to this artist
   const artistProjects = projects.slice(0, 2);
   
   const totalFundingGoal = artistProjects.reduce((sum, project) => sum + project.fundingGoal, 0);
@@ -229,7 +223,6 @@ const ArtistDashboard = () => {
   
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Funding Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -274,7 +267,6 @@ const ArtistDashboard = () => {
         </Card>
       </div>
       
-      {/* Projects and Stats Tabs */}
       <Tabs defaultValue="projects" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="projects">My Projects</TabsTrigger>
@@ -340,7 +332,6 @@ const ArtistDashboard = () => {
 const DeveloperDashboard = () => {
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Service Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -385,7 +376,6 @@ const DeveloperDashboard = () => {
         </Card>
       </div>
       
-      {/* Services Tabs */}
       <Tabs defaultValue="services" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="services">My Services</TabsTrigger>

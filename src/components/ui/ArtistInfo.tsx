@@ -27,8 +27,8 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       
-      <div className={expanded ? 'space-y-4 max-w-md' : ''}>
-        <div className="flex items-center">
+      <div className={expanded ? 'space-y-4 max-w-md text-center w-full' : ''}>
+        <div className={`flex items-center ${expanded ? 'justify-center' : ''}`}>
           <Link to={`/artist/${artist.id}`}>
             <h3 className={`font-medium hover:text-primary transition-colors ${expanded ? 'text-2xl' : ''}`}>
               {artist.name}

@@ -52,7 +52,7 @@ const Index = () => {
             <div className="md:w-1/2 animate-scale-in">
               <div className="rounded-xl overflow-hidden shadow-2xl">
                 <img 
-                  src="/placeholder.svg" 
+                  src="https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&h=675" 
                   alt="MusiStash Platform" 
                   className="w-full h-auto aspect-video object-cover"
                 />

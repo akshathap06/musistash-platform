@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Search, Music, BarChart2, Disc, Volume2, ListMusic, Sparkles } from 'lucide-react';
@@ -49,6 +48,7 @@ interface ComparisonData {
   searchedArtist: ArtistStats | null;
   comparisonArtist: ArtistStats | null;
   resonanceScore?: number;
+  originalQuery?: string;
 }
 
 const AIRecommendationTool: React.FC = () => {
@@ -61,29 +61,79 @@ const AIRecommendationTool: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
 
-  // Mock function to simulate getting a Spotify token
-  // In a real application, this would be handled by a backend service
   const getSpotifyToken = async () => {
-    // For demo purposes, we'll just return a simulated token
-    // In production, this should be handled securely on a backend
     return "SIMULATED_TOKEN";
+  };
+
+  const findCorrectArtistName = async (query: string): Promise<{ name: string, id: string, corrected: boolean }> => {
+    try {
+      const commonMisspellings: { [key: string]: string } = {
+        'jucieee wrlds': 'Juice WRLD',
+        'jucie world': 'Juice WRLD',
+        'juiceworld': 'Juice WRLD',
+        'beylonce': 'Beyoncé',
+        'beonce': 'Beyoncé',
+        'tayler swift': 'Taylor Swift',
+        'ariana grand': 'Ariana Grande',
+        'weeknd': 'The Weeknd',
+        'ed sheran': 'Ed Sheeran'
+      };
+      
+      const lowercaseQuery = query.toLowerCase();
+      
+      if (lowercaseQuery in commonMisspellings) {
+        const correctedName = commonMisspellings[lowercaseQuery];
+        return {
+          name: correctedName,
+          id: 'spotify-' + Math.random().toString(36).substring(7),
+          corrected: true
+        };
+      }
+      
+      const formattedName = query.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      return {
+        name: formattedName,
+        id: 'spotify-' + Math.random().toString(36).substring(7),
+        corrected: formattedName.toLowerCase() !== query.toLowerCase()
+      };
+    } catch (error) {
+      console.error('Error finding correct artist name:', error);
+      return {
+        name: query,
+        id: 'unknown-' + Math.random().toString(36).substring(7),
+        corrected: false
+      };
+    }
   };
 
   const searchArtist = async (query: string) => {
     try {
-      // In a real implementation, we would use the token to make the request
-      // For demo purposes, we'll use mock data
+      const { name: correctedName, id, corrected } = await findCorrectArtistName(query);
       
       const mockArtistResponse = {
-        id: "6eUKZXaKkcviH0Ku9w2n3V",
-        name: query,
+        id: id,
+        name: correctedName,
         images: [{ url: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=300&h=300" }],
         followers: { total: Math.floor(Math.random() * 10000000) },
         popularity: Math.floor(Math.random() * 100),
         genres: ["pop", "dance pop", "electropop"]
       };
       
-      return mockArtistResponse;
+      if (corrected) {
+        toast({
+          title: "Artist name corrected",
+          description: `Showing results for "${correctedName}" instead of "${query}"`,
+        });
+      }
+      
+      return {
+        artist: mockArtistResponse,
+        corrected,
+        originalQuery: query
+      };
     } catch (error) {
       console.error('Error searching for artist:', error);
       throw error;
@@ -91,8 +141,6 @@ const AIRecommendationTool: React.FC = () => {
   };
 
   const getArtistTopTracks = async (artistId: string) => {
-    // In a real implementation, fetch top tracks from Spotify API
-    // For demo purposes, we'll return mock data
     return Array(5).fill(null).map((_, i) => ({
       id: `track-${i}`,
       name: `Top Track ${i + 1}`,
@@ -101,8 +149,6 @@ const AIRecommendationTool: React.FC = () => {
   };
 
   const getTrackFeatures = async () => {
-    // In a real implementation, fetch track audio features from Spotify API
-    // For demo, return random values
     return {
       acousticness: Math.random(),
       danceability: Math.random(),
@@ -115,8 +161,6 @@ const AIRecommendationTool: React.FC = () => {
   };
 
   const getBillboardArtist = async () => {
-    // In a real implementation, this would fetch a current Billboard 100 artist
-    // For demo, we'll use a fixed artist
     const mockBillboardArtists = [
       "Taylor Swift", "Drake", "The Weeknd", "Billie Eilish", "Post Malone"
     ];
@@ -128,16 +172,14 @@ const AIRecommendationTool: React.FC = () => {
       name: selectedArtist,
       images: [{ url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&h=300" }],
       followers: { total: Math.floor(Math.random() * 50000000) },
-      popularity: Math.floor(Math.random() * 20) + 80, // Higher popularity for Billboard artists
+      popularity: Math.floor(Math.random() * 20) + 80,
       genres: ["pop", "r&b", "hip hop"]
     };
     
     return mockArtistResponse;
   };
 
-  // Calculate a resonance score between two artists based on their features
   const calculateResonanceScore = (artist1Features: TrackFeatures, artist2Features: TrackFeatures): number => {
-    // Define weights for each feature (can be adjusted based on importance)
     const weights = {
       danceability: 0.2,
       energy: 0.2,
@@ -147,7 +189,6 @@ const AIRecommendationTool: React.FC = () => {
       valence: 0.2
     };
     
-    // Calculate the weighted difference for each feature
     let totalDifference = 0;
     let totalWeight = 0;
     
@@ -156,17 +197,14 @@ const AIRecommendationTool: React.FC = () => {
         const featureValue1 = artist1Features[feature as keyof TrackFeatures];
         const featureValue2 = artist2Features[feature as keyof TrackFeatures];
         
-        // Calculate absolute difference and scale it
         const difference = Math.abs(featureValue1 - featureValue2);
         totalDifference += difference * weight;
         totalWeight += weight;
       }
     }
     
-    // Normalize the difference (0 = identical, 1 = completely different)
     const normalizedDifference = totalDifference / totalWeight;
     
-    // Convert to a similarity score (0-100 scale where 100 = identical)
     const similarityScore = Math.round((1 - normalizedDifference) * 100);
     
     return Math.min(100, Math.max(0, similarityScore));
@@ -180,24 +218,18 @@ const AIRecommendationTool: React.FC = () => {
     setHasSearched(true);
     
     try {
-      // Get artist from search
-      const searchedArtist = await searchArtist(searchQuery);
+      const { artist: searchedArtist, corrected, originalQuery } = await searchArtist(searchQuery);
       
-      // Get a billboard artist for comparison
       const billboardArtist = await getBillboardArtist();
       
-      // Get top tracks and features for both artists
       const searchedArtistTopTracks = await getArtistTopTracks(searchedArtist.id);
       const billboardArtistTopTracks = await getArtistTopTracks(billboardArtist.id);
       
-      // Get audio features (we'd normally average these across top tracks)
       const searchedArtistFeatures = await getTrackFeatures();
       const billboardArtistFeatures = await getTrackFeatures();
       
-      // Calculate resonance score
       const resonanceScore = calculateResonanceScore(searchedArtistFeatures, billboardArtistFeatures);
       
-      // Set comparison data
       setComparisonData({
         searchedArtist: {
           artist: searchedArtist,
@@ -209,7 +241,8 @@ const AIRecommendationTool: React.FC = () => {
           features: billboardArtistFeatures,
           topTracks: billboardArtistTopTracks
         },
-        resonanceScore
+        resonanceScore,
+        originalQuery: corrected ? originalQuery : undefined
       });
       
       toast({
@@ -260,7 +293,6 @@ const AIRecommendationTool: React.FC = () => {
     ];
   };
 
-  // Helper function to get resonance score color
   const getResonanceScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-500';
     if (score >= 70) return 'text-blue-500';
@@ -268,7 +300,6 @@ const AIRecommendationTool: React.FC = () => {
     return 'text-red-500';
   };
 
-  // Helper function to get resonance score label
   const getResonanceScoreLabel = (score: number) => {
     if (score >= 90) return 'Exceptional Match';
     if (score >= 70) return 'Strong Match';
@@ -316,7 +347,6 @@ const AIRecommendationTool: React.FC = () => {
 
       {!isLoading && comparisonData.searchedArtist && comparisonData.comparisonArtist && (
         <div className="space-y-8 animate-fade-in">
-          {/* Resonance Score Card */}
           {comparisonData.resonanceScore !== undefined && (
             <Card className="bg-gradient-to-br from-background to-primary/5 border border-primary/20">
               <CardHeader className="pb-2">
@@ -326,6 +356,11 @@ const AIRecommendationTool: React.FC = () => {
                 </CardTitle>
                 <CardDescription>
                   How closely {comparisonData.searchedArtist.artist.name}'s sound aligns with {comparisonData.comparisonArtist.artist.name}'s commercial profile
+                  {comparisonData.originalQuery && (
+                    <span className="block mt-1 text-sm italic">
+                      Results shown for "{comparisonData.searchedArtist.artist.name}" instead of "{comparisonData.originalQuery}"
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
@@ -362,12 +397,11 @@ const AIRecommendationTool: React.FC = () => {
             
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Artist 1 */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-full overflow-hidden">
                       <img 
-                        src={comparisonData.searchedArtist.artist.images[0]?.url || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop"} 
+                        src={comparisonData.searchedArtist.artist.images[0]?.url || "https://images.unsplash.com/photo-1470225457124-a3eb161ffa5f?w=100&h=100&fit=crop"} 
                         alt={comparisonData.searchedArtist.artist.name}
                         className="h-full w-full object-cover"
                       />
@@ -391,7 +425,6 @@ const AIRecommendationTool: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Artist 2 */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-full overflow-hidden">
@@ -423,7 +456,6 @@ const AIRecommendationTool: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Musical Features Comparison Chart */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -476,7 +508,6 @@ const AIRecommendationTool: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Feature Breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="pb-2">

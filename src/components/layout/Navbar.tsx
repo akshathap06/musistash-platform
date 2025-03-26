@@ -45,14 +45,10 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link 
-              to="/projects" 
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Discover
-            </Link>
-            <Link 
               to="/how-it-works" 
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location.pathname === '/how-it-works' ? 'text-primary' : ''
+              }`}
             >
               How It Works
             </Link>
@@ -113,14 +109,10 @@ const Navbar = () => {
         <div className="md:hidden animate-fade-in">
           <div className="px-4 py-6 space-y-4 bg-background/95 backdrop-blur-lg border-b">
             <Link 
-              to="/projects" 
-              className="block text-sm font-medium p-2 hover:bg-muted rounded-md"
-            >
-              Discover
-            </Link>
-            <Link 
               to="/how-it-works" 
-              className="block text-sm font-medium p-2 hover:bg-muted rounded-md"
+              className={`block text-sm font-medium p-2 hover:bg-muted rounded-md ${
+                location.pathname === '/how-it-works' ? 'bg-muted' : ''
+              }`}
             >
               How It Works
             </Link>

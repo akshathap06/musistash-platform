@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Search, Music, BarChart2, Disc, Volume2, ListMusic } from 'lucide-react';
+import { Search, Music, BarChart2, Disc, Volume2, ListMusic, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +48,7 @@ interface ArtistStats {
 interface ComparisonData {
   searchedArtist: ArtistStats | null;
   comparisonArtist: ArtistStats | null;
+  resonanceScore?: number;
 }
 
 const AIRecommendationTool: React.FC = () => {
@@ -134,6 +135,43 @@ const AIRecommendationTool: React.FC = () => {
     return mockArtistResponse;
   };
 
+  // Calculate a resonance score between two artists based on their features
+  const calculateResonanceScore = (artist1Features: TrackFeatures, artist2Features: TrackFeatures): number => {
+    // Define weights for each feature (can be adjusted based on importance)
+    const weights = {
+      danceability: 0.2,
+      energy: 0.2,
+      acousticness: 0.15,
+      instrumentalness: 0.1,
+      speechiness: 0.15,
+      valence: 0.2
+    };
+    
+    // Calculate the weighted difference for each feature
+    let totalDifference = 0;
+    let totalWeight = 0;
+    
+    for (const [feature, weight] of Object.entries(weights)) {
+      if (feature in artist1Features && feature in artist2Features) {
+        const featureValue1 = artist1Features[feature as keyof TrackFeatures];
+        const featureValue2 = artist2Features[feature as keyof TrackFeatures];
+        
+        // Calculate absolute difference and scale it
+        const difference = Math.abs(featureValue1 - featureValue2);
+        totalDifference += difference * weight;
+        totalWeight += weight;
+      }
+    }
+    
+    // Normalize the difference (0 = identical, 1 = completely different)
+    const normalizedDifference = totalDifference / totalWeight;
+    
+    // Convert to a similarity score (0-100 scale where 100 = identical)
+    const similarityScore = Math.round((1 - normalizedDifference) * 100);
+    
+    return Math.min(100, Math.max(0, similarityScore));
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -156,6 +194,9 @@ const AIRecommendationTool: React.FC = () => {
       const searchedArtistFeatures = await getTrackFeatures();
       const billboardArtistFeatures = await getTrackFeatures();
       
+      // Calculate resonance score
+      const resonanceScore = calculateResonanceScore(searchedArtistFeatures, billboardArtistFeatures);
+      
       // Set comparison data
       setComparisonData({
         searchedArtist: {
@@ -167,7 +208,8 @@ const AIRecommendationTool: React.FC = () => {
           artist: billboardArtist,
           features: billboardArtistFeatures,
           topTracks: billboardArtistTopTracks
-        }
+        },
+        resonanceScore
       });
       
       toast({
@@ -218,6 +260,22 @@ const AIRecommendationTool: React.FC = () => {
     ];
   };
 
+  // Helper function to get resonance score color
+  const getResonanceScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-500';
+    if (score >= 70) return 'text-blue-500';
+    if (score >= 50) return 'text-amber-500';
+    return 'text-red-500';
+  };
+
+  // Helper function to get resonance score label
+  const getResonanceScoreLabel = (score: number) => {
+    if (score >= 90) return 'Exceptional Match';
+    if (score >= 70) return 'Strong Match';
+    if (score >= 50) return 'Moderate Match';
+    return 'Unique Sound';
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       <form onSubmit={handleSearch} className="flex gap-2 mb-6">
@@ -258,6 +316,39 @@ const AIRecommendationTool: React.FC = () => {
 
       {!isLoading && comparisonData.searchedArtist && comparisonData.comparisonArtist && (
         <div className="space-y-8 animate-fade-in">
+          {/* Resonance Score Card */}
+          {comparisonData.resonanceScore !== undefined && (
+            <Card className="bg-gradient-to-br from-background to-primary/5 border border-primary/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Musi$tash Resonance Score
+                </CardTitle>
+                <CardDescription>
+                  How closely {comparisonData.searchedArtist.artist.name}'s sound aligns with {comparisonData.comparisonArtist.artist.name}'s commercial profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-center flex-col">
+                  <div className={`text-5xl font-bold ${getResonanceScoreColor(comparisonData.resonanceScore)}`}>
+                    {comparisonData.resonanceScore}%
+                  </div>
+                  <div className="text-lg font-medium mt-2 mb-4">
+                    {getResonanceScoreLabel(comparisonData.resonanceScore)}
+                  </div>
+                  <Progress 
+                    value={comparisonData.resonanceScore} 
+                    className="h-3 w-full max-w-md" 
+                  />
+                  <p className="mt-6 text-sm text-muted-foreground text-center max-w-md">
+                    This score represents how similar the audio profiles are between these two artists, 
+                    indicating potential for similar commercial success.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Card>
             <CardHeader className="bg-primary/5 border-b">
               <CardTitle className="flex items-center gap-2">

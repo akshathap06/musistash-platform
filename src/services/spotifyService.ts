@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Spotify API response interfaces
@@ -227,10 +226,9 @@ class SpotifyService {
   }
 }
 
-// Create and export a singleton instance with environment variables
-// Note: In a real app, you would store these in environment variables
-const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
-const clientSecret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET || '';
+// Create and export a singleton instance with your Spotify API credentials
+const clientId = 'efef3f967a0a451ab781c423e5f363b3';
+const clientSecret = '21b94bd9b83e4ddb9828867b2cce5f23';
 
 export const spotifyService = new SpotifyService(clientId, clientSecret);
 

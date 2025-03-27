@@ -58,7 +58,6 @@ class SpotifyService {
    * Get an access token using client credentials flow
    */
   private async getAccessToken(): Promise<string> {
-    // Check if we already have a valid token
     if (this.accessToken && Date.now() < this.tokenExpiration) {
       return this.accessToken;
     }
@@ -75,7 +74,6 @@ class SpotifyService {
       });
 
       this.accessToken = response.data.access_token;
-      // Set expiration time (subtracting 60 seconds as a buffer)
       this.tokenExpiration = Date.now() + (response.data.expires_in - 60) * 1000;
       
       return this.accessToken;
@@ -182,14 +180,12 @@ class SpotifyService {
    */
   async getFullArtistData(artistName: string): Promise<SpotifyArtistData | null> {
     try {
-      // First search for the artist
       const artist = await this.searchArtist(artistName);
       
       if (!artist) {
         return null;
       }
       
-      // Get top tracks and albums in parallel
       const [topTracks, albums] = await Promise.all([
         this.getArtistTopTracks(artist.id),
         this.getArtistAlbums(artist.id)
@@ -214,13 +210,52 @@ class SpotifyService {
       const artist = await this.searchArtist(artistName);
       
       if (artist && artist.images && artist.images.length > 0) {
-        // Return the largest image (typically the first one)
         return artist.images[0].url;
       }
       
       return null;
     } catch (error) {
       console.error('Error getting artist image:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get artist recommendations based on an artist ID
+   */
+  async getArtistRecommendations(id: string, limit = 5): Promise<SpotifyArtist[] | null> {
+    try {
+      const token = await this.getAccessToken();
+      
+      const topTracks = await this.getArtistTopTracks(id);
+      
+      if (!topTracks || topTracks.length === 0) {
+        return null;
+      }
+      
+      const trackSeeds = topTracks.slice(0, 5).map(track => track.id).join(',');
+      
+      const response = await axios({
+        method: 'get',
+        url: `https://api.spotify.com/v1/recommendations?seed_artists=${id}&seed_tracks=${trackSeeds}&limit=${limit}`,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const uniqueArtists: {[key: string]: SpotifyArtist} = {};
+      
+      response.data.tracks.forEach((track: any) => {
+        track.artists.forEach((artist: any) => {
+          if (artist.id !== id && !uniqueArtists[artist.id]) {
+            uniqueArtists[artist.id] = artist;
+          }
+        });
+      });
+      
+      return Object.values(uniqueArtists).slice(0, limit);
+    } catch (error) {
+      console.error('Error getting artist recommendations:', error);
       return null;
     }
   }

@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import spotifyService from './spotifyService';
 
 // Interface for combined artist stats
 export interface ArtistStats {
@@ -96,25 +97,42 @@ export const simulateSongstatsData = (artistName: string) => {
   };
 };
 
+// Get Spotify artist info
+export const getSpotifyArtistInfo = async (name: string) => {
+  try {
+    const artistData = await spotifyService.getFullArtistData(name);
+    return artistData;
+  } catch (error) {
+    console.error('Error fetching Spotify data:', error);
+    return null;
+  }
+};
+
 // Combine data from all sources
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
-    // Get data from MusicBrainz
-    const mbArtist = await getMusicBrainzArtist(artistName);
-    
-    // Get data from Last.fm
-    const lastFmArtist = await getLastFmArtist(artistName);
+    // Get data from all sources in parallel
+    const [mbArtist, lastFmArtist, spotifyData] = await Promise.all([
+      getMusicBrainzArtist(artistName),
+      getLastFmArtist(artistName),
+      getSpotifyArtistInfo(artistName)
+    ]);
     
     // Get simulated Songstats data (would be real API call in production)
     const songstatsData = simulateSongstatsData(artistName);
     
-    if (!mbArtist && !lastFmArtist && !songstatsData) {
+    if (!mbArtist && !lastFmArtist && !spotifyData && !songstatsData) {
       return null;
     }
     
-    // Find the extralarge image URL if available
-    const imageObject = lastFmArtist?.image?.find(img => img.size === 'extralarge');
-    const imageUrl = imageObject ? imageObject["#text"] : undefined;
+    // Find the image URL from available sources (prioritize Spotify)
+    let imageUrl;
+    if (spotifyData?.artist?.images?.length > 0) {
+      imageUrl = spotifyData.artist.images[0].url;
+    } else if (lastFmArtist?.image) {
+      const imageObject = lastFmArtist.image.find(img => img.size === 'extralarge');
+      imageUrl = imageObject ? imageObject["#text"] : undefined;
+    }
     
     // Combine all data sources
     const combinedData: ArtistStats = {
@@ -123,12 +141,22 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
       image: imageUrl,
       listeners: parseInt(lastFmArtist?.stats?.listeners || '0'),
       playcount: parseInt(lastFmArtist?.stats?.playcount || '0'),
-      followers: songstatsData.followers,
+      followers: spotifyData?.artist?.followers ? 
+        { 
+          total: spotifyData.artist.followers.total,
+          history: songstatsData.followers.history
+        } : 
+        songstatsData.followers,
       monthlyListeners: songstatsData.monthlyListeners,
       trackStats: lastFmArtist?.toptracks?.track?.map(track => ({
         name: track.name,
         playcount: track.playcount,
         listeners: track.listeners
+      })) || [],
+      albums: spotifyData?.albums?.map(album => ({
+        name: album.name,
+        releaseDate: album.release_date,
+        tracks: album.total_tracks
       })) || [],
       stats: [
         { 
@@ -143,7 +171,7 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
         },
         { 
           category: 'Followers', 
-          value: songstatsData.followers.total.toLocaleString(), 
+          value: (spotifyData?.artist?.followers?.total || songstatsData.followers.total).toLocaleString(), 
           change: 3.2 
         },
         { 

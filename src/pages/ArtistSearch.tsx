@@ -11,7 +11,7 @@ import Footer from '@/components/layout/Footer';
 import ArtistStatsDisplay from '@/components/ui/ArtistStatsDisplay';
 import { getArtistStats } from '@/services/artistStats';
 import { Search } from 'lucide-react';
-import { spotifyService } from '@/services/spotifyService';
+import { spotifyService } from '@/services/spotify';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
   Command,

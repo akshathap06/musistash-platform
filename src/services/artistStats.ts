@@ -1,6 +1,5 @@
-
 import axios from 'axios';
-import spotifyService from './spotifyService';
+import spotifyService from './spotify';
 
 // Interface for combined artist stats
 export interface ArtistStats {

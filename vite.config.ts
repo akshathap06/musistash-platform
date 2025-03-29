@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,8 +12,11 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    // Only add the tagger in development mode, not in production
     mode === 'development' &&
-    componentTagger(),
+    componentTagger({
+      showBadge: false // Disable the badge even in development
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {

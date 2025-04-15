@@ -13,10 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // Only add the tagger in development mode, not in production
-    mode === 'development' &&
-    componentTagger({
-      showBadge: false // Disable the badge even in development
-    }),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {

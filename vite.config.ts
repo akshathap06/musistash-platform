@@ -12,8 +12,10 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // Only add the tagger in development mode, not in production
-    mode === 'development' && componentTagger(),
+    // Disable the Lovable badge completely
+    componentTagger({
+      showBadge: false
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {

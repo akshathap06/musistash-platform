@@ -12,10 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // Disable the Lovable badge completely
-    componentTagger({
-      showBadge: false
-    }),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -23,3 +20,4 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
+

@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Search, Music, BarChart2, Disc, Volume2, ListMusic, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,15 +18,8 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-
-interface SpotifyArtist {
-  id: string;
-  name: string;
-  images: Array<{ url: string }>;
-  followers: { total: number };
-  popularity: number;
-  genres: string[];
-}
+import spotifyService from '@/services/spotify';
+import { SpotifyArtist, SpotifyTrack } from '@/services/spotify/spotifyTypes';
 
 interface TrackFeatures {
   acousticness: number;
@@ -40,8 +33,8 @@ interface TrackFeatures {
 
 interface ArtistStats {
   artist: SpotifyArtist;
-  features: TrackFeatures;
-  topTracks: any[];
+  topTracks?: SpotifyTrack[];
+  features?: TrackFeatures;
 }
 
 interface ComparisonData {
@@ -50,6 +43,9 @@ interface ComparisonData {
   resonanceScore?: number;
   originalQuery?: string;
 }
+
+// Billboard artists for comparison
+const BILLBOARD_ARTISTS = ["Drake", "Taylor Swift", "The Weeknd", "Billie Eilish", "Post Malone", "Dua Lipa", "Bad Bunny"];
 
 const AIRecommendationTool: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,11 +57,7 @@ const AIRecommendationTool: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
 
-  const getSpotifyToken = async () => {
-    return "SIMULATED_TOKEN";
-  };
-
-  const findCorrectArtistName = async (query: string): Promise<{ name: string, id: string, corrected: boolean }> => {
+  const findCorrectArtistName = async (query: string): Promise<{ name: string, corrected: boolean }> => {
     try {
       const commonMisspellings: { [key: string]: string } = {
         'jucieee wrlds': 'Juice WRLD',
@@ -85,70 +77,27 @@ const AIRecommendationTool: React.FC = () => {
         const correctedName = commonMisspellings[lowercaseQuery];
         return {
           name: correctedName,
-          id: 'spotify-' + Math.random().toString(36).substring(7),
           corrected: true
         };
       }
       
-      const formattedName = query.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-      
+      // If not a common misspelling, return the query as is
       return {
-        name: formattedName,
-        id: 'spotify-' + Math.random().toString(36).substring(7),
-        corrected: formattedName.toLowerCase() !== query.toLowerCase()
+        name: query,
+        corrected: false
       };
     } catch (error) {
       console.error('Error finding correct artist name:', error);
       return {
         name: query,
-        id: 'unknown-' + Math.random().toString(36).substring(7),
         corrected: false
       };
     }
   };
 
-  const searchArtist = async (query: string) => {
-    try {
-      const { name: correctedName, id, corrected } = await findCorrectArtistName(query);
-      
-      const mockArtistResponse = {
-        id: id,
-        name: correctedName,
-        images: [{ url: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=300&h=300" }],
-        followers: { total: Math.floor(Math.random() * 10000000) },
-        popularity: Math.floor(Math.random() * 100),
-        genres: ["pop", "dance pop", "electropop"]
-      };
-      
-      if (corrected) {
-        toast({
-          title: "Artist name corrected",
-          description: `Showing results for "${correctedName}" instead of "${query}"`,
-        });
-      }
-      
-      return {
-        artist: mockArtistResponse,
-        corrected,
-        originalQuery: query
-      };
-    } catch (error) {
-      console.error('Error searching for artist:', error);
-      throw error;
-    }
-  };
-
-  const getArtistTopTracks = async (artistId: string) => {
-    return Array(5).fill(null).map((_, i) => ({
-      id: `track-${i}`,
-      name: `Top Track ${i + 1}`,
-      popularity: Math.floor(Math.random() * 100)
-    }));
-  };
-
-  const getTrackFeatures = async () => {
+  const getTrackFeatures = async (): Promise<TrackFeatures> => {
+    // For now, we'll use random numbers as Spotify doesn't expose these directly
+    // In a real implementation, you would use the Spotify Audio Features API
     return {
       acousticness: Math.random(),
       danceability: Math.random(),
@@ -160,23 +109,10 @@ const AIRecommendationTool: React.FC = () => {
     };
   };
 
-  const getBillboardArtist = async () => {
-    const mockBillboardArtists = [
-      "Taylor Swift", "Drake", "The Weeknd", "Billie Eilish", "Post Malone"
-    ];
-    
-    const selectedArtist = mockBillboardArtists[Math.floor(Math.random() * mockBillboardArtists.length)];
-    
-    const mockArtistResponse = {
-      id: "billboard-artist",
-      name: selectedArtist,
-      images: [{ url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&h=300" }],
-      followers: { total: Math.floor(Math.random() * 50000000) },
-      popularity: Math.floor(Math.random() * 20) + 80,
-      genres: ["pop", "r&b", "hip hop"]
-    };
-    
-    return mockArtistResponse;
+  const getBillboardArtist = async (): Promise<SpotifyArtist | null> => {
+    // Select a random Billboard artist from our predefined list
+    const selectedArtist = BILLBOARD_ARTISTS[Math.floor(Math.random() * BILLBOARD_ARTISTS.length)];
+    return spotifyService.searchArtist(selectedArtist);
   };
 
   const calculateResonanceScore = (artist1Features: TrackFeatures, artist2Features: TrackFeatures): number => {
@@ -204,7 +140,6 @@ const AIRecommendationTool: React.FC = () => {
     }
     
     const normalizedDifference = totalDifference / totalWeight;
-    
     const similarityScore = Math.round((1 - normalizedDifference) * 100);
     
     return Math.min(100, Math.max(0, similarityScore));
@@ -218,36 +153,65 @@ const AIRecommendationTool: React.FC = () => {
     setHasSearched(true);
     
     try {
-      const { artist: searchedArtist, corrected, originalQuery } = await searchArtist(searchQuery);
+      // Check for common misspellings
+      const { name: correctedName, corrected } = await findCorrectArtistName(searchQuery);
+      const originalQuery = corrected ? searchQuery : undefined;
       
+      // Get artist data from Spotify
+      const searchedArtistData = await spotifyService.getFullArtistData(correctedName);
+      
+      if (!searchedArtistData || !searchedArtistData.artist) {
+        toast({
+          title: "Artist Not Found",
+          description: "We couldn't find that artist on Spotify. Please try another name.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get a Billboard artist for comparison
       const billboardArtist = await getBillboardArtist();
       
-      const searchedArtistTopTracks = await getArtistTopTracks(searchedArtist.id);
-      const billboardArtistTopTracks = await getArtistTopTracks(billboardArtist.id);
+      if (!billboardArtist) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch comparison artist data.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
       
+      // Get billboard artist top tracks
+      const billboardArtistTopTracks = await spotifyService.getArtistTopTracks(billboardArtist.id);
+      
+      // Get audio features (this would be from Spotify's Audio Features API in a real implementation)
       const searchedArtistFeatures = await getTrackFeatures();
       const billboardArtistFeatures = await getTrackFeatures();
       
+      // Calculate resonance score
       const resonanceScore = calculateResonanceScore(searchedArtistFeatures, billboardArtistFeatures);
       
+      // Set the comparison data
       setComparisonData({
         searchedArtist: {
-          artist: searchedArtist,
-          features: searchedArtistFeatures,
-          topTracks: searchedArtistTopTracks
+          artist: searchedArtistData.artist,
+          topTracks: searchedArtistData.topTracks,
+          features: searchedArtistFeatures
         },
         comparisonArtist: {
           artist: billboardArtist,
-          features: billboardArtistFeatures,
-          topTracks: billboardArtistTopTracks
+          topTracks: billboardArtistTopTracks || undefined,
+          features: billboardArtistFeatures
         },
         resonanceScore,
-        originalQuery: corrected ? originalQuery : undefined
+        originalQuery
       });
       
       toast({
         title: "Analysis Complete",
-        description: `Successfully compared ${searchedArtist.name} with ${billboardArtist.name}`,
+        description: `Successfully compared ${searchedArtistData.artist.name} with ${billboardArtist.name}`,
       });
     } catch (error) {
       console.error('Error during artist search:', error);
@@ -261,7 +225,7 @@ const AIRecommendationTool: React.FC = () => {
     }
   };
 
-  const prepareChartData = (searchedFeatures: TrackFeatures, comparisonFeatures: TrackFeatures) => {
+  const prepareChartData = (searchedFeatures?: TrackFeatures, comparisonFeatures?: TrackFeatures) => {
     if (!searchedFeatures || !comparisonFeatures) return [];
 
     return [

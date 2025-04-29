@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,8 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
 import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
+import spotifyService from '@/services/spotify';
+import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 
 const ArtistProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,11 +20,13 @@ const ArtistProfile = () => {
   const [artistProjects, setArtistProjects] = useState([]);
   const [similarityInfo, setSimilarityInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [spotifyArtist, setSpotifyArtist] = useState<SpotifyArtist | null>(null);
   const [spotifyImage, setSpotifyImage] = useState('');
   
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
+    // Simulate API fetch for artist data
+    const fetchData = async () => {
+      // First get the mock artist data
       const foundArtist = artists.find(a => a.id === id) || artists[0];
       setArtist(foundArtist);
       
@@ -31,61 +36,26 @@ const ArtistProfile = () => {
       const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
       setSimilarityInfo(foundSimilarity);
       
-      // If we have an artist name, try to fetch their Spotify image
-      if (foundArtist && foundArtist.name) {
-        fetchSpotifyArtistImage(foundArtist.name);
+      // Then fetch real Spotify data for the artist
+      try {
+        if (foundArtist && foundArtist.name) {
+          const spotifyData = await spotifyService.searchArtist(foundArtist.name);
+          if (spotifyData) {
+            setSpotifyArtist(spotifyData);
+            if (spotifyData.images && spotifyData.images.length > 0) {
+              setSpotifyImage(spotifyData.images[0].url);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching Spotify artist data:', error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    }, 500);
+    };
+    
+    fetchData();
   }, [id]);
-  
-  const fetchSpotifyArtistImage = async (artistName) => {
-    try {
-      // First get Spotify access token
-      const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': 'Basic ' + btoa(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET)
-        },
-        body: 'grant_type=client_credentials'
-      });
-      
-      if (!tokenResponse.ok) {
-        console.error('Failed to get Spotify token');
-        return;
-      }
-      
-      const tokenData = await tokenResponse.json();
-      const token = tokenData.access_token;
-      
-      // Search for the artist
-      const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!searchResponse.ok) {
-        console.error('Failed to search Spotify artist');
-        return;
-      }
-      
-      const searchData = await searchResponse.json();
-      
-      if (searchData.artists.items.length > 0) {
-        const artistData = searchData.artists.items[0];
-        // Get the largest image available
-        if (artistData.images && artistData.images.length > 0) {
-          setSpotifyImage(artistData.images[0].url);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Spotify data:', error);
-    }
-  };
   
   if (isLoading || !artist) {
     return (
@@ -126,9 +96,15 @@ const ArtistProfile = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
-                  {artist.genres.map((genre, index) => (
-                    <Badge key={index} variant="secondary">{genre}</Badge>
-                  ))}
+                  {spotifyArtist && spotifyArtist.genres ? (
+                    spotifyArtist.genres.slice(0, 4).map((genre, index) => (
+                      <Badge key={index} variant="secondary" className="capitalize">{genre}</Badge>
+                    ))
+                  ) : (
+                    artist.genres.map((genre, index) => (
+                      <Badge key={index} variant="secondary">{genre}</Badge>
+                    ))
+                  )}
                 </div>
                 
                 <p className="text-muted-foreground max-w-2xl mb-6">{artist.bio}</p>
@@ -136,7 +112,11 @@ const ArtistProfile = () => {
                 <div className="flex flex-wrap gap-6 justify-center md:justify-start">
                   <div className="flex items-center">
                     <Users className="h-5 w-5 mr-2 text-primary" />
-                    <span className="font-semibold">{artist.followers.toLocaleString()} Followers</span>
+                    <span className="font-semibold">
+                      {spotifyArtist && spotifyArtist.followers ? 
+                        `${spotifyArtist.followers.total.toLocaleString()} Followers` : 
+                        `${artist.followers.toLocaleString()} Followers`}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <Music className="h-5 w-5 mr-2 text-primary" />
@@ -144,7 +124,11 @@ const ArtistProfile = () => {
                   </div>
                   <div className="flex items-center">
                     <Sparkles className="h-5 w-5 mr-2 text-primary" />
-                    <span className="font-semibold">{artist.successRate}% Success Rate</span>
+                    <span className="font-semibold">
+                      {spotifyArtist ? 
+                        `${spotifyArtist.popularity}% Popularity` : 
+                        `${artist.successRate}% Success Rate`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -229,12 +213,19 @@ const ArtistProfile = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-muted-foreground">
-                        {artist.name}'s music blends traditional elements of {artist.genres.join(' and ')} 
-                        with innovative production techniques. Their sound is characterized by emotional depth
+                        {artist.name}'s music blends traditional elements of {
+                          spotifyArtist && spotifyArtist.genres ? 
+                            spotifyArtist.genres.slice(0, 2).join(' and ') : 
+                            artist.genres.join(' and ')
+                        } with innovative production techniques. Their sound is characterized by emotional depth
                         and meticulous attention to sonic detail.
                       </p>
                       <p className="text-muted-foreground">
-                        Key influences include pioneering artists in the {artist.genres[0]} scene, as well as
+                        Key influences include pioneering artists in the {
+                          spotifyArtist && spotifyArtist.genres ? 
+                            spotifyArtist.genres[0] : 
+                            artist.genres[0]
+                        } scene, as well as
                         classic songwriters from various eras. This combination creates a fresh yet familiar
                         sound that resonates with diverse audiences.
                       </p>
@@ -361,8 +352,8 @@ const ArtistProfile = () => {
                                 <div className="text-sm text-muted-foreground">Commercial Potential</div>
                               </div>
                               <div className="bg-secondary/50 rounded-lg p-4">
-                                <div className="text-2xl font-semibold">{artist.successRate}%</div>
-                                <div className="text-sm text-muted-foreground">Project Success Rate</div>
+                                <div className="text-2xl font-semibold">{spotifyArtist ? spotifyArtist.popularity : artist.successRate}%</div>
+                                <div className="text-sm text-muted-foreground">{spotifyArtist ? 'Spotify Popularity' : 'Project Success Rate'}</div>
                               </div>
                             </div>
                             
@@ -390,10 +381,10 @@ const ArtistProfile = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {artist.genres.map((genre, index) => (
+                        {(spotifyArtist ? spotifyArtist.genres : artist.genres).slice(0, 3).map((genre, index) => (
                           <div key={index} className="space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-sm">{genre}</span>
+                              <span className="text-sm capitalize">{genre}</span>
                               <span className="text-sm font-medium">
                                 {index === 0 ? '+12%' : index === 1 ? '+8%' : '+5%'}
                               </span>

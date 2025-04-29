@@ -5,15 +5,18 @@ import { Artist } from '@/lib/mockData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
+import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 
 interface ArtistInfoProps {
   artist: Artist;
+  spotifyArtist?: SpotifyArtist | null;
   expanded?: boolean;
-  spotifyImage?: string; // Add prop for Spotify profile image
+  spotifyImage?: string;
 }
 
 const ArtistInfo: React.FC<ArtistInfoProps> = ({ 
   artist, 
+  spotifyArtist,
   expanded = false,
   spotifyImage
 }) => {
@@ -24,6 +27,12 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
 
   // Use Spotify image if available, otherwise fallback to artist avatar
   const imageUrl = spotifyImage || artist.avatar;
+
+  // Use Spotify genres if available, otherwise fallback to artist genres
+  const genres = spotifyArtist?.genres || artist.genres;
+
+  // Use Spotify followers if available, otherwise fallback to artist followers
+  const followers = spotifyArtist?.followers?.total || artist.followers;
 
   return (
     <div className={`flex ${expanded ? 'flex-col items-center text-center' : 'items-center'} animate-fade-in`}>
@@ -49,19 +58,23 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
             <p className="text-muted-foreground">{artist.bio}</p>
             
             <div className="flex flex-wrap gap-2 justify-center">
-              {artist.genres.map((genre, index) => (
-                <Badge key={index} variant="secondary">{genre}</Badge>
+              {genres.slice(0, 4).map((genre, index) => (
+                <Badge key={index} variant="secondary" className="capitalize">{genre}</Badge>
               ))}
             </div>
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-secondary/50 rounded-lg p-3">
-                <div className="text-2xl font-semibold">{artist.followers.toLocaleString()}</div>
+                <div className="text-2xl font-semibold">{followers.toLocaleString()}</div>
                 <div className="text-muted-foreground">Followers</div>
               </div>
               <div className="bg-secondary/50 rounded-lg p-3">
-                <div className="text-2xl font-semibold">{artist.successRate}%</div>
-                <div className="text-muted-foreground">Success Rate</div>
+                <div className="text-2xl font-semibold">
+                  {spotifyArtist ? `${spotifyArtist.popularity}%` : `${artist.successRate}%`}
+                </div>
+                <div className="text-muted-foreground">
+                  {spotifyArtist ? 'Popularity' : 'Success Rate'}
+                </div>
               </div>
             </div>
           </>
@@ -69,7 +82,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         
         {!expanded && (
           <div className="text-sm text-muted-foreground text-center">
-            {artist.genres.slice(0, 2).join(', ')}
+            {genres.slice(0, 2).join(', ')}
           </div>
         )}
       </div>

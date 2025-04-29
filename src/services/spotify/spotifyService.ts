@@ -91,6 +91,65 @@ class SpotifyService {
   async getArtistRecommendations(id: string, limit = 5) {
     return this.recommendationsService.getArtistRecommendations(id, limit);
   }
+
+  /**
+   * Compare two artists and get similarity score
+   */
+  async compareArtists(artist1Name: string, artist2Name: string): Promise<{
+    artist1: SpotifyArtist | null;
+    artist2: SpotifyArtist | null;
+    similarityScore: number;
+  }> {
+    try {
+      const [artist1, artist2] = await Promise.all([
+        this.searchArtist(artist1Name),
+        this.searchArtist(artist2Name)
+      ]);
+      
+      if (!artist1 || !artist2) {
+        return {
+          artist1,
+          artist2,
+          similarityScore: 0
+        };
+      }
+      
+      // Calculate similarity score based on genres overlap and popularity
+      let similarityScore = 0;
+      
+      // Genre similarity (up to 50 points)
+      const artist1Genres = new Set(artist1.genres);
+      let genreOverlap = 0;
+      
+      for (const genre of artist2.genres) {
+        if (artist1Genres.has(genre)) {
+          genreOverlap++;
+        }
+      }
+      
+      if (artist1.genres.length > 0 && artist2.genres.length > 0) {
+        const maxPossibleOverlap = Math.max(artist1.genres.length, artist2.genres.length);
+        similarityScore += 50 * (genreOverlap / maxPossibleOverlap);
+      }
+      
+      // Popularity similarity (up to 50 points)
+      const popularityDiff = Math.abs(artist1.popularity - artist2.popularity);
+      similarityScore += 50 * (1 - (popularityDiff / 100));
+      
+      return {
+        artist1,
+        artist2,
+        similarityScore: Math.round(similarityScore)
+      };
+    } catch (error) {
+      console.error('Error comparing artists:', error);
+      return {
+        artist1: null,
+        artist2: null,
+        similarityScore: 0
+      };
+    }
+  }
 }
 
 // Create and export a singleton instance with Spotify API credentials

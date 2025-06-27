@@ -1,8 +1,12 @@
+
 {
   "build": {
     "env": {
-      "VITE_API_URL": "https://your-backend-url.vercel.app"
+      "VITE_API_URL": "https://musistash-platform.onrender.com"
     }
+  },
+  "env": {
+    "VITE_API_URL": "https://musistash-platform.onrender.com"
   },
   "rewrites": [
     {
@@ -10,4 +14,4 @@
       "destination": "/index.html"
     }
   ]
-} 
+}

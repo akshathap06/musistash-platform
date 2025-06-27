@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import spotifyService from './spotify';
 
@@ -29,6 +30,9 @@ export interface ArtistStats {
     change?: number;
   }[];
 }
+
+// Use the live backend URL consistently
+const API_BASE_URL = 'https://musistash-platform.onrender.com';
 
 // Get MusicBrainz artist info
 export const getMusicBrainzArtist = async (name: string) => {
@@ -132,13 +136,19 @@ export const getListenBrainzArtist = async (artistName: string, userToken: strin
   }
 };
 
-// Update getArtistStats to use the backend endpoint
+// Update getArtistStats to use the live Render backend
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const response = await fetch(`${apiUrl}/artist-stats/${encodeURIComponent(artistName)}`);
-    if (!response.ok) return null;
+    console.log('Fetching artist stats for:', artistName);
+    console.log('Using API URL:', API_BASE_URL);
+    
+    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
+    if (!response.ok) {
+      console.error('API response not ok:', response.status, response.statusText);
+      return null;
+    }
     const data = await response.json();
+    
     // Parse Spotify
     const spotify = data.spotify;
     // Parse Last.fm
@@ -147,22 +157,26 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
     const listenbrainz = data.listenbrainz;
     // Parse Billboard
     const billboard = data.billboard;
+    
     // Followers from Spotify
     const followers = spotify?.followers || 0;
     // Monthly listeners from Last.fm (listeners)
     const monthlyListeners = lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : 0;
     // Total plays from Last.fm (playcount)
     const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
+    
     // Engagement rate: playcount / followers * 100
     let engagementRate = null;
     if (playcount && followers) {
       engagementRate = ((playcount / followers) * 100).toFixed(2) + '%';
     }
+    
     // ListenBrainz listens count (if available)
     let listenBrainzListens = null;
     if (listenbrainz && listenbrainz.payload && listenbrainz.payload.count) {
       listenBrainzListens = listenbrainz.payload.count;
     }
+    
     // Compose combined stats
     const combinedData: ArtistStats = {
       name: spotify?.name || artistName,
@@ -184,9 +198,10 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
         { category: 'Followers', value: followers.toLocaleString() },
         { category: 'Engagement Rate', value: engagementRate || 'N/A' },
         listenBrainzListens !== null ? { category: 'ListenBrainz Listens', value: listenBrainzListens.toLocaleString() } : undefined,
-        billboard ? { category: 'Billboard', value: `#${billboard.rank}: ${billboard.title}` } : undefined
+        billboard ? { category: 'Billboard Chart', value: `#${billboard.rank}: ${billboard.title}` } : undefined
       ].filter(Boolean)
     };
+    
     return combinedData;
   } catch (error) {
     console.error('Error fetching artist stats:', error);

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,31 +20,33 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/project/:id" element={<ProjectDetail />} />
-            <Route path="/artist/:id" element={<ArtistProfile />} />
-            <Route path="/artists" element={<Artists />} />
-            <Route path="/artist-search" element={<ArtistSearch />} />
-            <Route path="/artist-feuds" element={<ArtistFeud />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/services" element={<Services />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <div className="min-h-screen bg-[rgb(15,18,22)] text-white">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/project/:id" element={<ProjectDetail />} />
+              <Route path="/artist/:id" element={<ArtistProfile />} />
+              <Route path="/artists" element={<Artists />} />
+              <Route path="/artist-search" element={<ArtistSearch />} />
+              <Route path="/artist-feuds" element={<ArtistFeud />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/services" element={<Services />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </div>
 );
 
 export default App;

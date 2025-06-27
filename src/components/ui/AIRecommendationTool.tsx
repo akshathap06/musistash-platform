@@ -1,600 +1,360 @@
-
 import React, { useState } from 'react';
-import { Search, Music, BarChart2, Disc, Volume2, ListMusic, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
-import { ChartContainer } from '@/components/ui/chart';
-import spotifyService from '@/services/spotify';
-import { SpotifyArtist, SpotifyTrack } from '@/services/spotify/spotifyTypes';
+import { Input } from './input';
+import { Button } from './button';
+import { Card } from './card';
+import { Progress } from './progress';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ArtistInfo from './ArtistInfo';
+import { getArtistStats, ArtistStats, processRawArtistStats } from '../../services/artistStats';
+import ArtistStatsDisplay from './ArtistStatsDisplay';
+// We are removing the direct import of mock data
+// import { mockApiResponse } from '../lib/mockData';
 
-interface TrackFeatures {
-  acousticness: number;
-  danceability: number;
-  energy: number;
-  instrumentalness: number;
-  liveness: number;
-  speechiness: number;
-  valence: number;
+// --- New Data Structures to Match API Response ---
+interface Artist {
+    id?: string;
+    name: string;
+    avatar?: string;
+    bio?: string;
+    followers: number;
+    popularity: number;
+    genres: string[];
+    image_url?: string;
+    verified?: boolean;
+    successRate?: number;
 }
 
-interface ArtistStats {
-  artist: SpotifyArtist;
-  topTracks?: SpotifyTrack[];
-  features?: TrackFeatures;
+interface MusicalFeaturesComparison {
+    labels: string[];
+    searched_artist_data: number[];
+    comparable_artist_data: number[];
 }
 
-interface ComparisonData {
-  searchedArtist: ArtistStats | null;
-  comparisonArtist: ArtistStats | null;
-  resonanceScore?: number;
-  originalQuery?: string;
+interface AnalysisData {
+    resonance_score: number;
+    resonance_reasoning: string;
+    artist_comparison: {
+        searched: Artist;
+        comparable: Artist;
+    };
+    musical_features_comparison: MusicalFeaturesComparison;
+    searched_artist_stats?: any;
+    comparable_artist_stats?: any;
+    ai_similarity_analysis?: {
+        similarity_score: number;
+        reasoning: string;
+        key_similarities: string[];
+        key_differences: string[];
+        category_scores: {
+            genre_similarity: number;
+            popularity_similarity: number;
+            audience_size_similarity: number;
+            chart_performance_similarity: number;
+        };
+    };
+    searched_artist_news?: Array<{
+        title: string;
+        description: string;
+        url: string;
+        published_at: string;
+        source: string;
+    }>;
+    comparable_artist_news?: Array<{
+        title: string;
+        description: string;
+        url: string;
+        published_at: string;
+        source: string;
+    }>;
 }
-
-// Billboard artists for comparison
-const BILLBOARD_ARTISTS = ["Drake", "Taylor Swift", "The Weeknd", "Billie Eilish", "Post Malone", "Dua Lipa", "Bad Bunny"];
 
 const AIRecommendationTool: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [comparisonData, setComparisonData] = useState<ComparisonData>({
-    searchedArtist: null,
-    comparisonArtist: null
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const { toast } = useToast();
+    const [artistName, setArtistName] = useState('');
+    const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [searchedArtistStats, setSearchedArtistStats] = useState<ArtistStats | null>(null);
+    const [comparableArtistStats, setComparableArtistStats] = useState<ArtistStats | null>(null);
 
-  const findCorrectArtistName = async (query: string): Promise<{ name: string, corrected: boolean }> => {
-    try {
-      const commonMisspellings: { [key: string]: string } = {
-        'jucieee wrlds': 'Juice WRLD',
-        'jucie world': 'Juice WRLD',
-        'juiceworld': 'Juice WRLD',
-        'beylonce': 'Beyoncé',
-        'beonce': 'Beyoncé',
-        'tayler swift': 'Taylor Swift',
-        'ariana grand': 'Ariana Grande',
-        'weeknd': 'The Weeknd',
-        'ed sheran': 'Ed Sheeran'
-      };
-      
-      const lowercaseQuery = query.toLowerCase();
-      
-      if (lowercaseQuery in commonMisspellings) {
-        const correctedName = commonMisspellings[lowercaseQuery];
-        return {
-          name: correctedName,
-          corrected: true
-        };
-      }
-      
-      // If not a common misspelling, return the query as is
-      return {
-        name: query,
-        corrected: false
-      };
-    } catch (error) {
-      console.error('Error finding correct artist name:', error);
-      return {
-        name: query,
-        corrected: false
-      };
-    }
-  };
+    const handleAnalyze = async () => {
+        if (!artistName.trim()) {
+            setError("Please enter an artist's name.");
+            return;
+        }
 
-  const getTrackFeatures = async (): Promise<TrackFeatures> => {
-    // For now, we'll use random numbers as Spotify doesn't expose these directly
-    // In a real implementation, you would use the Spotify Audio Features API
-    return {
-      acousticness: Math.random(),
-      danceability: Math.random(),
-      energy: Math.random(),
-      instrumentalness: Math.random(),
-      liveness: Math.random(),
-      speechiness: Math.random(),
-      valence: Math.random()
+        setIsLoading(true);
+        setError(null);
+        setAnalysis(null);
+        setSearchedArtistStats(null);
+        setComparableArtistStats(null);
+
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`);
+            if (!response.ok) {
+                let errorData = {};
+                try {
+                    errorData = await response.json();
+                } catch (e) {}
+                throw new Error((errorData as any).detail || `Error: ${response.status}`);
+            }
+            const data: AnalysisData = await response.json();
+            console.log('Backend response:', data);
+            setAnalysis(data);
+
+            // Process artist stats from the backend response
+            if (data.searched_artist_stats) {
+                const processedSearchedStats = processRawArtistStats(data.searched_artist_stats, data.artist_comparison.searched.name);
+                setSearchedArtistStats(processedSearchedStats);
+            }
+            
+            if (data.comparable_artist_stats) {
+                const processedComparableStats = processRawArtistStats(data.comparable_artist_stats, data.artist_comparison.comparable.name);
+                setComparableArtistStats(processedComparableStats);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch analysis. Please try again.');
+            console.error('Error in handleAnalyze:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
-  };
 
-  const getBillboardArtist = async (): Promise<SpotifyArtist | null> => {
-    // Select a random Billboard artist from our predefined list
-    const selectedArtist = BILLBOARD_ARTISTS[Math.floor(Math.random() * BILLBOARD_ARTISTS.length)];
-    return spotifyService.searchArtist(selectedArtist);
-  };
-
-  const calculateResonanceScore = (artist1Features: TrackFeatures, artist2Features: TrackFeatures): number => {
-    const weights = {
-      danceability: 0.2,
-      energy: 0.2,
-      acousticness: 0.15,
-      instrumentalness: 0.1,
-      speechiness: 0.15,
-      valence: 0.2
-    };
-    
-    let totalDifference = 0;
-    let totalWeight = 0;
-    
-    for (const [feature, weight] of Object.entries(weights)) {
-      if (feature in artist1Features && feature in artist2Features) {
-        const featureValue1 = artist1Features[feature as keyof TrackFeatures];
-        const featureValue2 = artist2Features[feature as keyof TrackFeatures];
-        
-        const difference = Math.abs(featureValue1 - featureValue2);
-        totalDifference += difference * weight;
-        totalWeight += weight;
-      }
-    }
-    
-    const normalizedDifference = totalDifference / totalWeight;
-    const similarityScore = Math.round((1 - normalizedDifference) * 100);
-    
-    return Math.min(100, Math.max(0, similarityScore));
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setIsLoading(true);
-    setHasSearched(true);
-    
-    try {
-      // Check for common misspellings
-      const { name: correctedName, corrected } = await findCorrectArtistName(searchQuery);
-      const originalQuery = corrected ? searchQuery : undefined;
-      
-      // Get artist data from Spotify
-      const searchedArtistData = await spotifyService.getFullArtistData(correctedName);
-      
-      if (!searchedArtistData || !searchedArtistData.artist) {
-        toast({
-          title: "Artist Not Found",
-          description: "We couldn't find that artist on Spotify. Please try another name.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      // Get a Billboard artist for comparison
-      const billboardArtist = await getBillboardArtist();
-      
-      if (!billboardArtist) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch comparison artist data.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      // Get billboard artist top tracks
-      const billboardArtistTopTracks = await spotifyService.getArtistTopTracks(billboardArtist.id);
-      
-      // Get audio features (this would be from Spotify's Audio Features API in a real implementation)
-      const searchedArtistFeatures = await getTrackFeatures();
-      const billboardArtistFeatures = await getTrackFeatures();
-      
-      // Calculate resonance score
-      const resonanceScore = calculateResonanceScore(searchedArtistFeatures, billboardArtistFeatures);
-      
-      // Set the comparison data
-      setComparisonData({
-        searchedArtist: {
-          artist: searchedArtistData.artist,
-          topTracks: searchedArtistData.topTracks,
-          features: searchedArtistFeatures
-        },
-        comparisonArtist: {
-          artist: billboardArtist,
-          topTracks: billboardArtistTopTracks || undefined,
-          features: billboardArtistFeatures
-        },
-        resonanceScore,
-        originalQuery
-      });
-      
-      toast({
-        title: "Analysis Complete",
-        description: `Successfully compared ${searchedArtistData.artist.name} with ${billboardArtist.name}`,
-      });
-    } catch (error) {
-      console.error('Error during artist search:', error);
-      toast({
-        title: "Error",
-        description: "Failed to analyze artist data. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const prepareChartData = (searchedFeatures?: TrackFeatures, comparisonFeatures?: TrackFeatures) => {
-    if (!searchedFeatures || !comparisonFeatures) return [];
-
-    return [
-      {
-        name: 'Danceability',
-        [comparisonData.searchedArtist?.artist.name || 'Artist']: searchedFeatures.danceability * 100,
-        [comparisonData.comparisonArtist?.artist.name || 'Billboard Artist']: comparisonFeatures.danceability * 100,
-      },
-      {
-        name: 'Energy',
-        [comparisonData.searchedArtist?.artist.name || 'Artist']: searchedFeatures.energy * 100,
-        [comparisonData.comparisonArtist?.artist.name || 'Billboard Artist']: comparisonFeatures.energy * 100,
-      },
-      {
-        name: 'Acousticness',
-        [comparisonData.searchedArtist?.artist.name || 'Artist']: searchedFeatures.acousticness * 100,
-        [comparisonData.comparisonArtist?.artist.name || 'Billboard Artist']: comparisonFeatures.acousticness * 100,
-      },
-      {
-        name: 'Valence',
-        [comparisonData.searchedArtist?.artist.name || 'Artist']: searchedFeatures.valence * 100,
-        [comparisonData.comparisonArtist?.artist.name || 'Billboard Artist']: comparisonFeatures.valence * 100,
-      },
-      {
-        name: 'Speechiness',
-        [comparisonData.searchedArtist?.artist.name || 'Artist']: searchedFeatures.speechiness * 100,
-        [comparisonData.comparisonArtist?.artist.name || 'Billboard Artist']: comparisonFeatures.speechiness * 100,
-      }
-    ];
-  };
-
-  const getResonanceScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-500';
-    if (score >= 70) return 'text-blue-500';
-    if (score >= 50) return 'text-amber-500';
-    return 'text-red-500';
-  };
-
-  const getResonanceScoreLabel = (score: number) => {
-    if (score >= 90) return 'Exceptional Match';
-    if (score >= 70) return 'Strong Match';
-    if (score >= 50) return 'Moderate Match';
-    return 'Unique Sound';
-  };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto">
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Enter an artist name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Analyzing...' : 'Analyze'}
-        </Button>
-      </form>
-
-      {isLoading && (
-        <div className="text-center py-12 animate-pulse">
-          <div className="text-xl font-semibold mb-2">Analyzing artist profile</div>
-          <div className="text-muted-foreground">
-            Our AI is comparing sound signatures and market data with Billboard artists...
-          </div>
-        </div>
-      )}
-
-      {!isLoading && hasSearched && !comparisonData.searchedArtist && (
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <CardTitle>No Results Found</CardTitle>
-            <CardDescription>
-              We couldn't find any matches for "{searchQuery}". Please try another artist name.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      {!isLoading && comparisonData.searchedArtist && comparisonData.comparisonArtist && (
-        <div className="space-y-8 animate-fade-in">
-          {comparisonData.resonanceScore !== undefined && (
-            <Card className="bg-gradient-to-br from-background to-primary/5 border border-primary/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Musi$tash Resonance Score
-                </CardTitle>
-                <CardDescription>
-                  How closely {comparisonData.searchedArtist.artist.name}'s sound aligns with {comparisonData.comparisonArtist.artist.name}'s commercial profile
-                  {comparisonData.originalQuery && (
-                    <span className="block mt-1 text-sm italic">
-                      Results shown for "{comparisonData.searchedArtist.artist.name}" instead of "{comparisonData.originalQuery}"
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-center flex-col">
-                  <div className={`text-5xl font-bold ${getResonanceScoreColor(comparisonData.resonanceScore)}`}>
-                    {comparisonData.resonanceScore}%
-                  </div>
-                  <div className="text-lg font-medium mt-2 mb-4">
-                    {getResonanceScoreLabel(comparisonData.resonanceScore)}
-                  </div>
-                  <Progress 
-                    value={comparisonData.resonanceScore} 
-                    className="h-3 w-full max-w-md" 
-                  />
-                  <p className="mt-6 text-sm text-muted-foreground text-center max-w-md">
-                    This score represents how similar the audio profiles are between these two artists, 
-                    indicating potential for similar commercial success.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          <Card>
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle className="flex items-center gap-2">
-                <Music className="h-5 w-5" />
-                Artist Comparison
-              </CardTitle>
-              <CardDescription>
-                Music profile comparison between {comparisonData.searchedArtist.artist.name} and {comparisonData.comparisonArtist.artist.name} (Billboard Artist)
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full overflow-hidden">
-                      <img 
-                        src={comparisonData.searchedArtist.artist.images[0]?.url || "https://images.unsplash.com/photo-1470225457124-a3eb161ffa5f?w=100&h=100&fit=crop"} 
-                        alt={comparisonData.searchedArtist.artist.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium">{comparisonData.searchedArtist.artist.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{comparisonData.searchedArtist.artist.followers.total.toLocaleString()} followers</Badge>
-                        <Badge variant="secondary">Popularity: {comparisonData.searchedArtist.artist.popularity}%</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm font-medium mb-1">Genres</div>
-                    <div className="flex flex-wrap gap-1">
-                      {comparisonData.searchedArtist.artist.genres.slice(0, 3).map((genre, idx) => (
-                        <Badge key={idx} variant="outline" className="capitalize">{genre}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full overflow-hidden">
-                      <img 
-                        src={comparisonData.comparisonArtist.artist.images[0]?.url || "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=100&h=100&fit=crop"} 
-                        alt={comparisonData.comparisonArtist.artist.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium">{comparisonData.comparisonArtist.artist.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{comparisonData.comparisonArtist.artist.followers.total.toLocaleString()} followers</Badge>
-                        <Badge variant="secondary">Popularity: {comparisonData.comparisonArtist.artist.popularity}%</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm font-medium mb-1">Genres</div>
-                    <div className="flex flex-wrap gap-1">
-                      {comparisonData.comparisonArtist.artist.genres.slice(0, 3).map((genre, idx) => (
-                        <Badge key={idx} variant="outline" className="capitalize">{genre}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5" />
-                Musical Features Comparison
-              </CardTitle>
-              <CardDescription>
-                Comparing audio features between the two artists
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="h-80 w-full">
-                <ChartContainer 
-                  className="h-full w-full" 
-                  config={{
-                    [comparisonData.searchedArtist.artist.name]: { 
-                      color: '#8B5CF6' 
-                    },
-                    [comparisonData.comparisonArtist.artist.name]: { 
-                      color: '#D946EF' 
-                    },
-                  }}
-                >
-                  <BarChart
-                    data={prepareChartData(
-                      comparisonData.searchedArtist.features,
-                      comparisonData.comparisonArtist.features
-                    )}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis label={{ value: 'Score (%)', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar 
-                      dataKey={comparisonData.searchedArtist.artist.name} 
-                      fill="#8B5CF6" 
-                      name={comparisonData.searchedArtist.artist.name}
-                    />
-                    <Bar 
-                      dataKey={comparisonData.comparisonArtist.artist.name} 
-                      fill="#D946EF" 
-                      name={comparisonData.comparisonArtist.artist.name}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Volume2 className="h-4 w-4" />
-                  Popularity Metrics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Popularity Score</span>
-                    <span className="font-medium">{comparisonData.searchedArtist.artist.popularity}%</span>
-                  </div>
-                  <Progress value={comparisonData.searchedArtist.artist.popularity} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Billboard Artist Score</span>
-                    <span className="font-medium">{comparisonData.comparisonArtist.artist.popularity}%</span>
-                  </div>
-                  <Progress value={comparisonData.comparisonArtist.artist.popularity} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Commercial Potential</span>
-                    <span className="font-medium">{Math.round((comparisonData.searchedArtist.artist.popularity / comparisonData.comparisonArtist.artist.popularity) * 100)}%</span>
-                  </div>
-                  <Progress 
-                    value={Math.round((comparisonData.searchedArtist.artist.popularity / comparisonData.comparisonArtist.artist.popularity) * 100)} 
-                    className="h-2" 
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ListMusic className="h-4 w-4" />
-                  Market Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-secondary/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-semibold">
-                        {(comparisonData.searchedArtist.artist.followers.total / 1000000).toFixed(1)}M
-                      </div>
-                      <div className="text-xs text-muted-foreground">Followers</div>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-semibold">
-                        {(comparisonData.comparisonArtist.artist.followers.total / 1000000).toFixed(1)}M
-                      </div>
-                      <div className="text-xs text-muted-foreground">Billboard Artist</div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-primary/10 rounded-md p-3">
-                    <p className="text-sm">
-                      {comparisonData.searchedArtist.artist.name} has {
-                        comparisonData.searchedArtist.artist.followers.total < comparisonData.comparisonArtist.artist.followers.total
-                          ? `${((comparisonData.searchedArtist.artist.followers.total / comparisonData.comparisonArtist.artist.followers.total) * 100).toFixed(1)}% of`
-                          : `${((comparisonData.searchedArtist.artist.followers.total / comparisonData.comparisonArtist.artist.followers.total)).toFixed(1)}x`
-                      } {comparisonData.comparisonArtist.artist.name}'s following, with similar appeal in {
-                        comparisonData.searchedArtist.artist.genres.filter(g => 
-                          comparisonData.comparisonArtist.artist.genres.includes(g)
-                        ).length
-                      } shared genres.
+    return (
+        <div className="container mx-auto p-4 md:p-8">
+            <Card className="bg-white text-white p-6 md:p-8 rounded-xl shadow-lg border-2 border-blue-500/50">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl md:text-4xl font-bold">AI-Powered Investment Insights</h1>
+                    <p className="text-gray-400 mt-2">
+                        Our AI analyzes musical similarity and provides investment recommendations based on comparable successful artists.
                     </p>
-                  </div>
                 </div>
-              </CardContent>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8">
+                    <Input
+                        type="text"
+                        placeholder="Enter an artist name..."
+                        value={artistName}
+                        onChange={(e) => setArtistName(e.target.value)}
+                        className="w-full md:w-1/2 bg-gray-800 border-gray-700 text-white focus:ring-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                    />
+                    <Button onClick={handleAnalyze} disabled={isLoading} className="w-full md:w-auto">
+                        {isLoading ? 'Analyzing...' : 'Analyze'}
+                    </Button>
+                </div>
+
+                {error && <p className="text-center text-red-500 mb-4">{error}</p>}
+
+                {!isLoading && !analysis && !error && (
+                    <p className="text-center text-gray-400">No data found for this artist.</p>
+                )}
+
+                {isLoading && (
+                    <div className="text-center">
+                        <p>Loading analysis...</p>
+                        <Progress value={50} className="w-full h-2 mt-2 animate-pulse" />
+                    </div>
+                )}
+                
+                {analysis && (
+                    <div className="space-y-8 text-white" >
+                        {/* Artist Comparison */}
+                        <Card className="bg-white p-6 rounded-lg">
+                            <h2 className="text-2xl font-semibold text-center mb-6">Artist Comparison</h2>
+                            <div className="flex flex-col md:flex-row justify-around items-center gap-8">
+                                <ArtistInfo
+                                    artist={{
+                                        id: analysis.artist_comparison.searched.id || '',
+                                        name: analysis.artist_comparison.searched.name,
+                                        avatar: analysis.artist_comparison.searched.avatar || '',
+                                        bio: analysis.artist_comparison.searched.bio || '',
+                                        genres: analysis.artist_comparison.searched.genres,
+                                        followers: analysis.artist_comparison.searched.followers,
+                                        verified: analysis.artist_comparison.searched.verified,
+                                        successRate: analysis.artist_comparison.searched.successRate
+                                    }}
+                                />
+                                <div className="text-2xl font-bold text-white-500">vs</div>
+                                <ArtistInfo
+                                    artist={{
+                                        id: analysis.artist_comparison.comparable.id || '',
+                                        name: analysis.artist_comparison.comparable.name,
+                                        avatar: analysis.artist_comparison.comparable.avatar || '',
+                                        bio: analysis.artist_comparison.comparable.bio || '',
+                                        genres: analysis.artist_comparison.comparable.genres,
+                                        followers: analysis.artist_comparison.comparable.followers,
+                                        verified: analysis.artist_comparison.comparable.verified,
+                                        successRate: analysis.artist_comparison.comparable.successRate
+                                    }}
+                                />
+                            </div>
+                        </Card>
+
+                        {/* AI Similarity Analysis */}
+                        {analysis.ai_similarity_analysis && (
+                            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200 dark:from-blue-950/20 dark:to-purple-950/20 dark:border-blue-800/30 p-6 rounded-lg">
+                                <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800 dark:text-white">
+                                    AI Similarity Analysis
+                                </h2>
+                                
+                                {/* Similarity Score */}
+                                <div className="text-center mb-8">
+                                    <div className="text-6xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                        {analysis.ai_similarity_analysis.similarity_score}%
+                                    </div>
+                                    <div className="text-lg text-gray-600 dark:text-gray-300">Overall Similarity Score</div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    {/* Category Scores */}
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                                        <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Category Breakdown</h3>
+                                        <div className="space-y-3">
+                                            {Object.entries(analysis.ai_similarity_analysis.category_scores).map(([category, score]) => (
+                                                <div key={category} className="flex justify-between items-center">
+                                                    <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">
+                                                        {category.replace('_', ' ')}
+                                                    </span>
+                                                    <div className="flex items-center">
+                                                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                                                            <div 
+                                                                className="bg-blue-600 h-2 rounded-full" 
+                                                                style={{ width: `${score}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-800 dark:text-white">
+                                                            {score}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* AI Reasoning */}
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                                        <h3 className="font-semibold text-gray-800 dark:text-white mb-3">AI Analysis</h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                                            {analysis.ai_similarity_analysis.reasoning}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Key Similarities */}
+                                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                                        <h3 className="font-semibold text-green-800 dark:text-green-300 mb-3">Key Similarities</h3>
+                                        <ul className="space-y-2">
+                                            {analysis.ai_similarity_analysis.key_similarities.map((similarity, index) => (
+                                                <li key={index} className="text-sm text-green-700 dark:text-green-400 flex items-start">
+                                                    <span className="text-green-500 mr-2">✓</span>
+                                                    {similarity}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Key Differences */}
+                                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                                        <h3 className="font-semibold text-red-800 dark:text-red-300 mb-3">Key Differences</h3>
+                                        <ul className="space-y-2">
+                                            {analysis.ai_similarity_analysis.key_differences.map((difference, index) => (
+                                                <li key={index} className="text-sm text-red-700 dark:text-red-400 flex items-start">
+                                                    <span className="text-red-500 mr-2">×</span>
+                                                    {difference}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* News Articles */}
+                        {(analysis.searched_artist_news || analysis.comparable_artist_news) && (
+                            <Card className="bg-white p-6 rounded-lg">
+                                <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">Latest News</h2>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Searched Artist News */}
+                                    {analysis.searched_artist_news && analysis.searched_artist_news.length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                                {analysis.artist_comparison.searched.name} News
+                                            </h3>
+                                            <div className="space-y-4">
+                                                {analysis.searched_artist_news.map((article, index) => (
+                                                    <div key={index} className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                                                        <h4 className="font-medium text-gray-800 mb-2 line-clamp-2">
+                                                            <a 
+                                                                href={article.url} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="hover:text-blue-600"
+                                                            >
+                                                                {article.title}
+                                                            </a>
+                                                        </h4>
+                                                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                                            {article.description}
+                                                        </p>
+                                                        <div className="flex justify-between items-center text-xs text-gray-500">
+                                                            <span>{article.source}</span>
+                                                            <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Comparable Artist News */}
+                                    {analysis.comparable_artist_news && analysis.comparable_artist_news.length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                                                {analysis.artist_comparison.comparable.name} News
+                                            </h3>
+                                            <div className="space-y-4">
+                                                {analysis.comparable_artist_news.map((article, index) => (
+                                                    <div key={index} className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                                                        <h4 className="font-medium text-gray-800 mb-2 line-clamp-2">
+                                                            <a 
+                                                                href={article.url} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="hover:text-blue-600"
+                                                            >
+                                                                {article.title}
+                                                            </a>
+                                                        </h4>
+                                                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                                            {article.description}
+                                                        </p>
+                                                        <div className="flex justify-between items-center text-xs text-gray-500">
+                                                            <span>{article.source}</span>
+                                                            <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                        )}
+                    </div>
+                )}
+
+                {(searchedArtistStats || comparableArtistStats) && (
+                    <div className="mt-8">
+                        <ArtistStatsDisplay 
+                            stats={searchedArtistStats} 
+                            comparableStats={comparableArtistStats}
+                        />
+                    </div>
+                )}
             </Card>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Disc className="h-5 w-5" />
-                Investment Insight
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-secondary/20 rounded-lg p-5 text-muted-foreground">
-                <p>
-                  Based on our analysis, {comparisonData.searchedArtist.artist.name} shows a 
-                  {comparisonData.searchedArtist.artist.popularity > 70 
-                    ? ' strong' 
-                    : comparisonData.searchedArtist.artist.popularity > 50 
-                      ? ' moderate' 
-                      : ' developing'} 
-                  market position compared to Billboard chart artist {comparisonData.comparisonArtist.artist.name}.
-                </p>
-                <p className="mt-3">
-                  With {comparisonData.searchedArtist.artist.genres.length} distinct genres and a popularity score of {comparisonData.searchedArtist.artist.popularity}%, 
-                  this artist demonstrates 
-                  {comparisonData.searchedArtist.artist.popularity > comparisonData.comparisonArtist.artist.popularity * 0.8 
-                    ? ' exceptional' 
-                    : comparisonData.searchedArtist.artist.popularity > comparisonData.comparisonArtist.artist.popularity * 0.5 
-                      ? ' significant' 
-                      : ' emerging'} 
-                  commercial potential.
-                </p>
-                <p className="mt-3 font-medium text-foreground">
-                  Estimated ROI potential: 
-                  {comparisonData.searchedArtist.artist.popularity > 80 
-                    ? ' 10-15%' 
-                    : comparisonData.searchedArtist.artist.popularity > 60 
-                      ? ' 7-10%' 
-                      : comparisonData.searchedArtist.artist.popularity > 40 
-                        ? ' 5-8%' 
-                        : ' 3-6%'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default AIRecommendationTool;

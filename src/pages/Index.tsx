@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,16 +11,16 @@ import { Music, ArrowRight, ArrowDown, DollarSign, Users } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0f1216] text-white">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="mt-16 relative overflow-hidden bg-gradient-to-b from-background to-secondary/20">
+      <section className="mt-16 relative overflow-hidden bg-[#0f1216] text-white">
         <div className="container max-w-7xl mx-auto px-4 py-20 md:py-32">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             <div className="md:w-1/2 space-y-6 animate-fade-in">
               <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold transition-colors focus:outline-none mb-4">
-                <span className="text-muted-foreground">Revolutionizing Music Investment</span>
+                <span className="text-gray-300">Revolutionizing Music Investment</span>
               </div>
               
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
@@ -29,20 +28,20 @@ const Index = () => {
                 <br /> Share Their Success.
               </h1>
               
-              <p className="text-lg text-muted-foreground max-w-xl">
+              <p className="text-lg text-gray-300 max-w-xl">
                 MusiStash connects artists with fans who want to invest in their future. 
                 Support the music you love and potentially earn returns when artists succeed.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link to="/register">
-                  <Button size="lg" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto bg-gray-700 text-white hover:bg-gray-600">
                     Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/how-it-works">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-gray-500 text-black hover:bg-green-600">
                     How It Works
                   </Button>
                 </Link>
@@ -61,50 +60,50 @@ const Index = () => {
           </div>
           
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce hidden md:block">
-            <ArrowDown className="h-6 w-6 text-muted-foreground" />
+            <ArrowDown className="h-6 w-6 text-gray-400" />
           </div>
         </div>
       </section>
       
       {/* How It Works Section */}
-      <section className="bg-background py-20">
+      <section className="bg-[#181c23] py-20 text-white">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="section-heading">How MusiStash Works</h2>
-            <p className="section-subheading max-w-3xl mx-auto">
+            <p className="section-subheading max-w-3xl mx-auto text-gray-300">
               Our platform connects artists seeking funding with listeners who want to support and invest in music projects
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-secondary/30 rounded-xl p-6 text-center animate-slide-up">
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Music className="h-6 w-6 text-primary" />
+            <div className="bg-[#232834] rounded-xl p-6 text-center animate-slide-up">
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-700 flex items-center justify-center">
+                <Music className="h-6 w-6 text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Artists List Projects</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-300">
                 Musicians create project listings with transparent funding goals, 
                 package breakdowns, and potential return on investment.
               </p>
             </div>
             
-            <div className="bg-secondary/30 rounded-xl p-6 text-center animate-slide-up" style={{ animationDelay: '100ms' }}>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-primary" />
+            <div className="bg-[#232834] rounded-xl p-6 text-center animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-700 flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Listeners Invest</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-300">
                 Music fans browse projects, choose those they believe in, 
                 and invest to help artists achieve their funding goals.
               </p>
             </div>
             
-            <div className="bg-secondary/30 rounded-xl p-6 text-center animate-slide-up" style={{ animationDelay: '200ms' }}>
-              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
+            <div className="bg-[#232834] rounded-xl p-6 text-center animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-700 flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-400" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Everyone Benefits</h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-300">
                 When projects succeed, artists achieve their goals, investors 
                 earn returns, and music gets created. It's a win for everyone.
               </p>
@@ -113,7 +112,7 @@ const Index = () => {
           
           <div className="text-center mt-12">
             <Link to="/how-it-works">
-              <Button variant="outline">
+              <Button variant="outline" className="border-gray-500 text-black hover:bg-green-600">
                 Learn More
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -123,11 +122,11 @@ const Index = () => {
       </section>
       
       {/* AI Recommendation Section */}
-      <section className="bg-primary/5 py-20 border-y">
+      <section className="bg-[#0f1216] py-20 border-y text-white">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="section-heading">AI-Powered Investment Insights</h2>
-            <p className="section-subheading max-w-3xl mx-auto">
+            <p className="section-subheading max-w-3xl mx-auto text-gray-300">
               Our AI analyzes musical similarity and provides investment recommendations based on 
               comparable successful artists
             </p>
@@ -138,17 +137,17 @@ const Index = () => {
       </section>
       
       {/* Featured Projects Section */}
-      <section className="bg-background py-20">
+      <section className="bg-[#232834] py-20 text-white">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="section-heading">Featured Projects</h2>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="text-gray-300 max-w-2xl">
                 Discover exciting music projects seeking funding and investment
               </p>
             </div>
             <Link to="/projects">
-              <Button variant="outline">
+              <Button variant="outline" className="border-gray-500 text-white">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -164,17 +163,17 @@ const Index = () => {
       </section>
       
       {/* Featured Artists Section */}
-      <section className="bg-secondary/30 py-20 border-y">
+      <section className="bg-[#0f1216] py-20 border-y text-white">
         <div className="container max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="section-heading">Featured Artists</h2>
-              <p className="text-muted-foreground max-w-2xl">
+              <p className="text-gray-300 max-w-2xl">
                 Meet the musicians raising funds and sharing their success with investors
               </p>
             </div>
             <Link to="/artists">
-              <Button variant="outline">
+              <Button variant="outline" className="border-gray-500 text-white">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -183,7 +182,7 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {artists.map((artist) => (
-              <div key={artist.id} className="bg-background p-6 rounded-xl shadow-sm">
+              <div key={artist.id} className="bg-[#232834] p-6 rounded-xl shadow-sm">
                 <ArtistInfo artist={artist} expanded={true} />
               </div>
             ))}
@@ -192,20 +191,20 @@ const Index = () => {
       </section>
       
       {/* CTA Section */}
-      <section className="bg-primary/10 py-20">
+      <section className="bg-[#232834] py-20 text-white">
         <div className="container max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Invest in the Future of Music?</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-10">
             Join thousands of music lovers who are funding their favorite artists and sharing in their success.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register">
-              <Button size="lg">
+              <Button size="lg" className="bg-gray-700 text-white hover:bg-gray-600">
                 Create an Account
               </Button>
             </Link>
             <Link to="/projects">
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="border-gray-500 text-black hover:bg-green-600">
                 Browse Projects
               </Button>
             </Link>

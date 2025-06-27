@@ -125,7 +125,7 @@ const Navbar = () => {
               <Bell className="h-5 w-5" />
             </Button>
             <Link to="/login">
-              <Button variant="outline">Log in</Button>
+              <Button className="bg-white text-black hover:bg-green-600" variant="outline">Log in</Button>
             </Link>
             <Link to="/register">
               <Button>Sign up</Button>

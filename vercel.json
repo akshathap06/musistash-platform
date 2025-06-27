@@ -1,0 +1,13 @@
+{
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://your-backend-url.vercel.app"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+} 

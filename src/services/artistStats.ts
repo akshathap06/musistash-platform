@@ -107,83 +107,156 @@ export const getSpotifyArtistInfo = async (name: string) => {
   }
 };
 
-// Combine data from all sources
+// Get ListenBrainz artist stats
+export const getListenBrainzArtist = async (artistName: string, userToken: string) => {
+  try {
+    // Search for the artist MBID using MusicBrainz
+    const mbSearch = await axios.get(
+      `https://musicbrainz.org/ws/2/artist/?query=${encodeURIComponent(artistName)}&fmt=json`
+    );
+    if (!mbSearch.data.artists || mbSearch.data.artists.length === 0) return null;
+    const mbid = mbSearch.data.artists[0].id;
+    // Fetch ListenBrainz stats for the artist using the MBID
+    const response = await axios.get(
+      `https://api.listenbrainz.org/1/artist/${mbid}/listens`,
+      {
+        headers: {
+          'Authorization': `Token ${userToken}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ListenBrainz data:', error);
+    return null;
+  }
+};
+
+// Update getArtistStats to use the backend endpoint
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
-    // Get data from all sources in parallel
-    const [mbArtist, lastFmArtist, spotifyData] = await Promise.all([
-      getMusicBrainzArtist(artistName),
-      getLastFmArtist(artistName),
-      getSpotifyArtistInfo(artistName)
-    ]);
-    
-    // Get simulated Songstats data (would be real API call in production)
-    const songstatsData = simulateSongstatsData(artistName);
-    
-    if (!mbArtist && !lastFmArtist && !spotifyData && !songstatsData) {
-      return null;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${apiUrl}/artist-stats/${encodeURIComponent(artistName)}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    // Parse Spotify
+    const spotify = data.spotify;
+    // Parse Last.fm
+    const lastfm = data.lastfm;
+    // Parse ListenBrainz
+    const listenbrainz = data.listenbrainz;
+    // Parse Billboard
+    const billboard = data.billboard;
+    // Followers from Spotify
+    const followers = spotify?.followers || 0;
+    // Monthly listeners from Last.fm (listeners)
+    const monthlyListeners = lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : 0;
+    // Total plays from Last.fm (playcount)
+    const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
+    // Engagement rate: playcount / followers * 100
+    let engagementRate = null;
+    if (playcount && followers) {
+      engagementRate = ((playcount / followers) * 100).toFixed(2) + '%';
     }
-    
-    // Find the image URL from available sources (prioritize Spotify)
-    let imageUrl;
-    if (spotifyData?.artist?.images?.length > 0) {
-      imageUrl = spotifyData.artist.images[0].url;
-    } else if (lastFmArtist?.image) {
-      const imageObject = lastFmArtist.image.find(img => img.size === 'extralarge');
-      imageUrl = imageObject ? imageObject["#text"] : undefined;
+    // ListenBrainz listens count (if available)
+    let listenBrainzListens = null;
+    if (listenbrainz && listenbrainz.payload && listenbrainz.payload.count) {
+      listenBrainzListens = listenbrainz.payload.count;
     }
-    
-    // Combine all data sources
+    // Compose combined stats
     const combinedData: ArtistStats = {
-      name: artistName,
-      mbid: mbArtist?.id,
-      image: imageUrl,
-      listeners: parseInt(lastFmArtist?.stats?.listeners || '0'),
-      playcount: parseInt(lastFmArtist?.stats?.playcount || '0'),
-      followers: spotifyData?.artist?.followers ? 
-        { 
-          total: spotifyData.artist.followers.total,
-          history: songstatsData.followers.history
-        } : 
-        songstatsData.followers,
-      monthlyListeners: songstatsData.monthlyListeners,
-      trackStats: lastFmArtist?.toptracks?.track?.map(track => ({
+      name: spotify?.name || artistName,
+      mbid: lastfm?.mbid || undefined,
+      image: spotify?.image_url || undefined,
+      listeners: monthlyListeners,
+      playcount: playcount,
+      followers: { total: followers, history: [] },
+      monthlyListeners: monthlyListeners,
+      trackStats: lastfm?.toptracks?.track?.map((track: any) => ({
         name: track.name,
         playcount: track.playcount,
         listeners: track.listeners
       })) || [],
-      albums: spotifyData?.albums?.map(album => ({
-        name: album.name,
-        releaseDate: album.release_date,
-        tracks: album.total_tracks
-      })) || [],
+      albums: [],
       stats: [
-        { 
-          category: 'Monthly Listeners', 
-          value: songstatsData.monthlyListeners.toLocaleString(), 
-          change: 5.3 
-        },
-        { 
-          category: 'Total Plays', 
-          value: parseInt(lastFmArtist?.stats?.playcount || '0').toLocaleString(), 
-          change: 8.7 
-        },
-        { 
-          category: 'Followers', 
-          value: (spotifyData?.artist?.followers?.total || songstatsData.followers.total).toLocaleString(), 
-          change: 3.2 
-        },
-        { 
-          category: 'Engagement Rate', 
-          value: `${(Math.random() * 5 + 1).toFixed(1)}%`, 
-          change: 0.5 
-        }
-      ]
+        { category: 'Monthly Listeners', value: monthlyListeners.toLocaleString() },
+        { category: 'Total Plays', value: playcount.toLocaleString() },
+        { category: 'Followers', value: followers.toLocaleString() },
+        { category: 'Engagement Rate', value: engagementRate || 'N/A' },
+        listenBrainzListens !== null ? { category: 'ListenBrainz Listens', value: listenBrainzListens.toLocaleString() } : undefined,
+        billboard ? { category: 'Billboard', value: `#${billboard.rank}: ${billboard.title}` } : undefined
+      ].filter(Boolean)
+    };
+    return combinedData;
+  } catch (error) {
+    console.error('Error fetching artist stats:', error);
+    return null;
+  }
+};
+
+// Process raw artist stats data from backend into ArtistStats format
+export const processRawArtistStats = (rawData: any, artistName: string): ArtistStats | null => {
+  if (!rawData) return null;
+  
+  try {
+    // Parse Spotify data
+    const spotify = rawData.spotify;
+    // Parse Last.fm data
+    const lastfm = rawData.lastfm;
+    // Parse ListenBrainz data
+    const listenbrainz = rawData.listenbrainz;
+    // Parse Billboard data
+    const billboard = rawData.billboard;
+    
+    // Extract followers from Spotify
+    const followers = spotify?.followers || 0;
+    
+    // Extract monthly listeners from Last.fm
+    const monthlyListeners = lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : 0;
+    
+    // Extract total plays from Last.fm
+    const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
+    
+    // Calculate engagement rate
+    let engagementRate = null;
+    if (playcount && followers) {
+      engagementRate = ((playcount / followers) * 100).toFixed(2) + '%';
+    }
+    
+    // Extract ListenBrainz listens count
+    let listenBrainzListens = null;
+    if (listenbrainz && listenbrainz.payload && listenbrainz.payload.count) {
+      listenBrainzListens = listenbrainz.payload.count;
+    }
+    
+    // Compose combined stats
+    const combinedData: ArtistStats = {
+      name: spotify?.name || artistName,
+      mbid: lastfm?.mbid || undefined,
+      image: spotify?.image_url || undefined,
+      listeners: monthlyListeners,
+      playcount: playcount,
+      followers: { total: followers, history: [] },
+      monthlyListeners: monthlyListeners,
+      trackStats: lastfm?.toptracks?.track?.map((track: any) => ({
+        name: track.name,
+        playcount: track.playcount,
+        listeners: track.listeners
+      })) || [],
+      albums: [],
+      stats: [
+        { category: 'Monthly Listeners', value: monthlyListeners.toLocaleString() },
+        { category: 'Total Plays', value: playcount.toLocaleString() },
+        { category: 'Followers', value: followers.toLocaleString() },
+        { category: 'Engagement Rate', value: engagementRate || 'N/A' },
+        listenBrainzListens !== null ? { category: 'ListenBrainz Listens', value: listenBrainzListens.toLocaleString() } : undefined,
+        billboard ? { category: 'Billboard Chart', value: `#${billboard.rank}: ${billboard.title}` } : undefined
+      ].filter(Boolean)
     };
     
     return combinedData;
   } catch (error) {
-    console.error('Error fetching artist stats:', error);
+    console.error('Error processing raw artist stats:', error);
     return null;
   }
 };

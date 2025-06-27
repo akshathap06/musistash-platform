@@ -1,30 +1,79 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Music, User, PlayCircle, BarChart3, Sparkles, Brain } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { ArtistStats } from '@/services/artistStats';
 import { ArtistInsights, getArtistInsights, getSimulatedInsights } from '@/services/openaiService';
 import { toast } from 'sonner';
+import { Brain, Music, PlayCircle, TrendingUp, TrendingDown, Users, BarChart3, Award, Star } from 'lucide-react';
 
 interface ArtistStatsDisplayProps {
   stats: ArtistStats;
+  comparableStats?: ArtistStats;
   isLoading?: boolean;
 }
 
-const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoading = false }) => {
+const getStatColor = (label: string, value: number | undefined) => {
+  if (value === undefined || value === null) return 'text-muted-foreground';
+  if (label === 'Engagement Rate') return value > 100 ? 'text-green-500' : 'text-yellow-500';
+  if (label === 'Monthly Listeners') return value > 1000000 ? 'text-green-500' : 'text-red-500';
+  if (label === 'Total Plays') return value > 10000000 ? 'text-green-500' : 'text-red-500';
+  if (label === 'Followers') return value > 1000000 ? 'text-green-500' : 'text-red-500';
+  return 'text-muted-foreground';
+};
+
+const getStatIcon = (label: string) => {
+  switch (label) {
+    case 'Monthly Listeners': return <Users className="h-5 w-5" />;
+    case 'Total Plays': return <BarChart3 className="h-5 w-5" />;
+    case 'Followers': return <Star className="h-5 w-5" />;
+    case 'Engagement Rate': return <TrendingUp className="h-5 w-5" />;
+    case 'ListenBrainz Listens': return <Award className="h-5 w-5" />;
+    case 'Billboard Chart': return <Music className="h-5 w-5" />;
+    default: return <Music className="h-5 w-5" />;
+  }
+};
+
+const statExplanations: Record<string, string> = {
+  'Monthly Listeners': 'Number of unique listeners in the last month (Last.fm)',
+  'Total Plays': 'Total number of plays (Last.fm)',
+  'Followers': 'Spotify followers',
+  'Engagement Rate': 'Plays per follower, as a percentage',
+  'ListenBrainz Listens': 'Total listens tracked by ListenBrainz',
+  'Billboard Chart': 'Current or recent Billboard Hot 100 chart position',
+};
+
+const isStatPositive = (label: string, value: number | undefined) => {
+  if (value === undefined || value === null) return null;
+  if (label === 'Engagement Rate') return value > 100;
+  if (label === 'Monthly Listeners') return value > 1000000;
+  if (label === 'Total Plays') return value > 10000000;
+  if (label === 'Followers') return value > 1000000;
+  return null;
+};
+
+const formatValue = (label: string, value: any) => {
+  if (value === undefined || value === null) return 'N/A';
+  if (label === 'Engagement Rate') return value;
+  if (typeof value === 'number') return value.toLocaleString();
+  return value;
+};
+
+const statOrder = [
+  'Monthly Listeners',
+  'Total Plays',
+  'Followers',
+  'Engagement Rate',
+  'ListenBrainz Listens',
+  'Billboard Chart',
+];
+
+const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, comparableStats, isLoading = false }) => {
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [insights, setInsights] = useState<ArtistInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState<boolean>(false);
 
-  // Effect to load OpenAI API key from localStorage if available
   useEffect(() => {
     const savedApiKey = localStorage.getItem('openai_api_key');
     if (savedApiKey) {
@@ -33,40 +82,33 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
     }
   }, [stats]);
 
-  // Function to fetch insights when API key is available
   const fetchInsights = async (key: string) => {
     if (!stats || !key) return;
-    
     setIsLoadingInsights(true);
-    
     try {
       const aiInsights = await getArtistInsights(stats, key);
-      
       if (aiInsights) {
         setInsights(aiInsights);
-        toast.success("AI insights generated successfully");
+        toast.success('AI insights generated successfully');
       } else {
-        // Fall back to simulated insights if API call fails
         setInsights(getSimulatedInsights(stats));
-        toast.error("Using simulated insights due to API error");
+        toast.error('Using simulated insights due to API error');
       }
     } catch (error) {
-      console.error("Error fetching insights:", error);
       setInsights(getSimulatedInsights(stats));
-      toast.error("Using simulated insights due to API error");
+      toast.error('Using simulated insights due to API error');
     } finally {
       setIsLoadingInsights(false);
     }
   };
 
-  // Handle API key submission
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKey.trim()) {
       localStorage.setItem('openai_api_key', apiKey);
       setShowApiKeyInput(false);
       fetchInsights(apiKey);
-      toast.success("API key saved");
+      toast.success('API key saved');
     }
   };
 
@@ -91,74 +133,83 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
     );
   }
 
-  // Create chart data from followers history if available
-  const followerChartData = stats.followers?.history?.map(item => ({
-    date: item.date,
-    followers: item.count
-  })) || [];
+  // Gather all stats into a flat object for easy card rendering
+  const statMap: Record<string, any> = {};
+  stats.stats?.forEach((s) => {
+    statMap[s.category] = s.value;
+  });
+
+  // Gather comparable stats if available
+  const comparableStatMap: Record<string, any> = {};
+  if (comparableStats && comparableStats.stats) {
+    comparableStats.stats.forEach((s) => {
+      comparableStatMap[s.category] = s.value;
+    });
+  }
+
+  // Helper function to create stat cards for an artist
+  const createStatCards = (artistStats: ArtistStats, statMap: Record<string, any>) => {
+    return statOrder.map((label) => {
+      const value = statMap[label];
+      const color = getStatColor(label, typeof value === 'string' ? parseFloat(value.replace(/[^\d.]/g, '')) : value);
+      const positive = isStatPositive(label, typeof value === 'string' ? parseFloat(value.replace(/[^\d.]/g, '')) : value);
+      return (
+        <Tooltip key={label}>
+          <TooltipTrigger asChild>
+            <Card className="flex flex-row items-center justify-between p-5 mb-4 shadow-md bg-background hover:shadow-lg transition-all border-2 border-muted-foreground/10 w-full min-w-[260px] max-w-[340px]">
+              <div className="flex items-center gap-3">
+                {getStatIcon(label)}
+                <span className="text-base font-semibold text-muted-foreground">{label}</span>
+              </div>
+              <div className={`text-2xl font-bold ${color} flex items-center gap-1`}>
+                {formatValue(label, value)}
+                {positive === true && <TrendingUp className="h-5 w-5 text-green-500" />}
+                {positive === false && <TrendingDown className="h-5 w-5 text-red-500" />}
+              </div>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent>{statExplanations[label] || label}</TooltipContent>
+        </Tooltip>
+      );
+    });
+  };
+
+  // Helper function to create artist profile section
+  const createArtistProfile = (artistStats: ArtistStats) => (
+    <div className="w-full md:w-80 flex flex-col items-center">
+      <div className="rounded-full overflow-hidden border-2 border-primary shadow-md w-28 h-28 mb-4">
+        {artistStats.image ? 
+          <img src={artistStats.image} alt="artist" className="object-cover w-full h-full" /> : 
+          <Music className="h-28 w-28 text-muted-foreground" />
+        }
+      </div>
+      <div className="text-2xl font-bold mb-1 text-center">{artistStats.name}</div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex flex-col cursor-help mb-4 text-center">
+            <span className="text-xs text-muted-foreground">MusicBrainz ID</span>
+            <span className="truncate max-w-xs text-sm font-mono bg-muted/40 rounded px-2 py-1">
+              {artistStats.mbid ? artistStats.mbid.slice(0, 8) + '...' : 'N/A'}
+            </span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>{artistStats.mbid || 'No MusicBrainz ID'}</TooltipContent>
+      </Tooltip>
+      <div className="flex flex-col w-full mt-2">
+        {createStatCards(artistStats, artistStats === stats ? statMap : comparableStatMap)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Key Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.stats?.map((stat, index) => (
-          <Card key={index}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">{stat.category}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                </div>
-                <div className={`flex items-center ${
-                  stat.change && stat.change > 0 ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {stat.change && stat.change > 0 ? (
-                    <ArrowUpRight className="mr-1 h-4 w-4" />
-                  ) : (
-                    <ArrowDownRight className="mr-1 h-4 w-4" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {stat.change ? Math.abs(stat.change).toFixed(1) + '%' : 'N/A'}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col lg:flex-row gap-8 justify-center">
+        {/* Left artist stats */}
+        {createArtistProfile(stats)}
+        
+        {/* Right artist stats - only show if comparable stats exist */}
+        {comparableStats && createArtistProfile(comparableStats)}
       </div>
-
-      {/* Growth Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2" />
-            Follower Growth
-          </CardTitle>
-          <CardDescription>Tracking follower growth over the past months</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={followerChartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="followers" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2} 
-                  activeDot={{ r: 8 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* AI Insights Section */}
       <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200 dark:from-purple-950/20 dark:to-indigo-950/20 dark:border-purple-800/30">
@@ -173,16 +224,15 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
             </CardDescription>
           </div>
           {!showApiKeyInput && (
-            <Button 
+            <Badge 
               variant="outline" 
               onClick={() => setShowApiKeyInput(true)}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               {apiKey ? 'Update API Key' : 'Add OpenAI API Key'}
-            </Button>
+            </Badge>
           )}
         </CardHeader>
-        
         <CardContent className="pt-4">
           {showApiKeyInput ? (
             <form onSubmit={handleApiKeySubmit} className="space-y-3 mb-4">
@@ -190,28 +240,27 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
                 <label htmlFor="apiKey" className="text-sm font-medium">
                   Enter your OpenAI API Key
                 </label>
-                <Input
+                <input
                   id="apiKey"
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="sk-..."
-                  className="w-full"
+                  className="w-full border rounded px-2 py-1"
                 />
                 <p className="text-xs text-muted-foreground">
                   Your API key is stored locally in your browser and never sent to our servers
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button type="submit" size="sm">Save Key</Button>
-                <Button 
+                <button type="submit" className="btn btn-primary btn-sm">Save Key</button>
+                <button 
                   type="button" 
-                  variant="ghost" 
-                  size="sm" 
+                  className="btn btn-ghost btn-sm" 
                   onClick={() => setShowApiKeyInput(false)}
                 >
                   Cancel
-                </Button>
+                </button>
               </div>
             </form>
           ) : isLoadingInsights ? (
@@ -229,17 +278,14 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
                 <h3 className="font-medium text-sm text-purple-600 dark:text-purple-400 mb-2">Investment Potential</h3>
                 <p className="text-sm">{insights.investmentPotential}</p>
               </div>
-              
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                 <h3 className="font-medium text-sm text-purple-600 dark:text-purple-400 mb-2">Market Trends</h3>
                 <p className="text-sm">{insights.marketTrends}</p>
               </div>
-              
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                 <h3 className="font-medium text-sm text-purple-600 dark:text-purple-400 mb-2">Audience Growth</h3>
                 <p className="text-sm">{insights.audienceGrowth}</p>
               </div>
-              
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                 <h3 className="font-medium text-sm text-purple-600 dark:text-purple-400 mb-2">Risk Assessment</h3>
                 <p className="text-sm">{insights.riskAssessment}</p>
@@ -250,268 +296,16 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, isLoadin
               <p className="text-muted-foreground mb-4">
                 Add your OpenAI API key to get AI-powered insights for this artist
               </p>
-              <Button onClick={() => setShowApiKeyInput(true)}>
+              <button className="btn btn-primary" onClick={() => setShowApiKeyInput(true)}>
                 Add API Key
-              </Button>
+              </button>
             </div>
           )}
-          
           {(insights && !apiKey) && (
             <div className="mt-4 text-xs text-muted-foreground text-center">
               Currently showing simulated insights. Add your OpenAI API key for personalized analysis.
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Detailed Stats Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="audience">Audience</TabsTrigger>
-          <TabsTrigger value="tracks">Tracks</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Music className="h-5 w-5 mr-2" />
-                Music Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Platform Presence</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Spotify</span>
-                        <span>{Math.floor(stats.monthlyListeners * 0.6).toLocaleString()} listeners</span>
-                      </div>
-                      <Progress value={60} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Apple Music</span>
-                        <span>{Math.floor(stats.monthlyListeners * 0.25).toLocaleString()} listeners</span>
-                      </div>
-                      <Progress value={25} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>YouTube Music</span>
-                        <span>{Math.floor(stats.monthlyListeners * 0.15).toLocaleString()} listeners</span>
-                      </div>
-                      <Progress value={15} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Key Performance Indicators</h4>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Listener Loyalty</span>
-                      <Badge variant="outline" className="bg-primary/10">
-                        {(Math.random() * 20 + 70).toFixed(1)}%
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Engagement Rate</span>
-                      <Badge variant="outline" className="bg-primary/10">
-                        {(Math.random() * 5 + 2).toFixed(1)}%
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Growth Projection</span>
-                      <Badge variant="outline" className="bg-green-500/10 text-green-500">
-                        +{(Math.random() * 15 + 10).toFixed(1)}%
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="audience" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Audience Demographics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Age Distribution</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>18-24</span>
-                        <span>{Math.floor(Math.random() * 30 + 20)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 30 + 20)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>25-34</span>
-                        <span>{Math.floor(Math.random() * 30 + 30)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 30 + 30)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>35-44</span>
-                        <span>{Math.floor(Math.random() * 20 + 15)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 20 + 15)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>45+</span>
-                        <span>{Math.floor(Math.random() * 15 + 5)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 15 + 5)} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Geographic Distribution</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>United States</span>
-                        <span>{Math.floor(Math.random() * 30 + 30)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 30 + 30)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>United Kingdom</span>
-                        <span>{Math.floor(Math.random() * 15 + 10)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 15 + 10)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Germany</span>
-                        <span>{Math.floor(Math.random() * 10 + 5)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 10 + 5)} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Other</span>
-                        <span>{Math.floor(Math.random() * 40 + 30)}%</span>
-                      </div>
-                      <Progress value={Math.floor(Math.random() * 40 + 30)} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="tracks" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <PlayCircle className="h-5 w-5 mr-2" />
-                Top Tracks Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Track</TableHead>
-                    <TableHead className="text-right">Streams</TableHead>
-                    <TableHead className="text-right">Growth</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">
-                        {i === 0 ? 'Greatest Hit' : `Track ${i + 1}`}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {(Math.floor(Math.random() * 10000000) + 1000000).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={Math.random() > 0.3 ? 'text-green-500' : 'text-red-500'}>
-                          {Math.random() > 0.3 ? '+' : '-'}
-                          {(Math.random() * 20 + 1).toFixed(1)}%
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Investment Insights */}
-      <Card className="bg-primary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle>Investment Insights</CardTitle>
-          <CardDescription>
-            Data-driven insights to help inform your investment decision
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-background rounded-lg border">
-              <h4 className="font-medium mb-2">Growth Trajectory</h4>
-              <p className="text-muted-foreground">
-                Based on the current growth rate of {(Math.random() * 15 + 5).toFixed(1)}% month-over-month,
-                this artist is projected to increase their audience by {(Math.random() * 100 + 50).toFixed(0)}% 
-                within the next 12 months.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-background rounded-lg border">
-              <h4 className="font-medium mb-2">Commercial Viability</h4>
-              <p className="text-muted-foreground">
-                The artist's engagement metrics are {Math.random() > 0.5 ? 'above' : 'on par with'} industry averages,
-                suggesting {Math.random() > 0.5 ? 'strong' : 'good'} potential for monetization through
-                streaming, licensing, and merchandise.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-background rounded-lg border">
-              <h4 className="font-medium mb-2">Risk Assessment</h4>
-              <div className="flex items-center justify-between mb-2">
-                <span>Investment Risk Level</span>
-                <Badge 
-                  variant="outline" 
-                  className={
-                    Math.random() > 0.7 
-                      ? "bg-green-500/10 text-green-500" 
-                      : Math.random() > 0.4 
-                        ? "bg-yellow-500/10 text-yellow-500" 
-                        : "bg-red-500/10 text-red-500"
-                  }
-                >
-                  {Math.random() > 0.7 ? "Low" : Math.random() > 0.4 ? "Medium" : "High"}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground">
-                Historical performance and current growth patterns indicate a 
-                {Math.random() > 0.6 ? " favorable" : " moderate"} return potential with
-                {Math.random() > 0.7 ? " manageable" : " typical"} industry risks.
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

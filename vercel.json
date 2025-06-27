@@ -5,6 +5,9 @@
       "VITE_API_URL": "https://musistash-platform.onrender.com"
     }
   },
+  "env": {
+    "VITE_API_URL": "https://musistash-platform.onrender.com"
+  },
   "rewrites": [
     {
       "source": "/(.*)",

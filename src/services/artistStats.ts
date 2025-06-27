@@ -31,6 +31,9 @@ export interface ArtistStats {
   }[];
 }
 
+// Use the live backend URL consistently
+const API_BASE_URL = 'https://musistash-platform.onrender.com';
+
 // Get MusicBrainz artist info
 export const getMusicBrainzArtist = async (name: string) => {
   try {
@@ -136,10 +139,14 @@ export const getListenBrainzArtist = async (artistName: string, userToken: strin
 // Update getArtistStats to use the live Render backend
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
-    // Use the live Render backend URL
-    const apiUrl = 'https://musistash-platform.onrender.com';
-    const response = await fetch(`${apiUrl}/artist-stats/${encodeURIComponent(artistName)}`);
-    if (!response.ok) return null;
+    console.log('Fetching artist stats for:', artistName);
+    console.log('Using API URL:', API_BASE_URL);
+    
+    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
+    if (!response.ok) {
+      console.error('API response not ok:', response.status, response.statusText);
+      return null;
+    }
     const data = await response.json();
     
     // Parse Spotify

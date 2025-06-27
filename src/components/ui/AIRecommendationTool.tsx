@@ -89,7 +89,8 @@ const AIRecommendationTool: React.FC = () => {
         setComparableArtistStats(null);
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            // Use the live Render backend URL directly
+            const apiUrl = 'https://musistash-platform.onrender.com';
             const response = await fetch(`${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`);
             if (!response.ok) {
                 let errorData = {};

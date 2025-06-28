@@ -60,7 +60,6 @@ const formatValue = (label: string, value: any) => {
 };
 
 const statOrder = [
-  'Monthly Listeners',
   'Total Plays',
   'Followers',
   'Engagement Rate',
@@ -183,18 +182,51 @@ const ArtistStatsDisplay: React.FC<ArtistStatsDisplayProps> = ({ stats, comparab
           <Music className="h-28 w-28 text-muted-foreground" />
         }
       </div>
-      <div className="text-2xl font-bold mb-1 text-center">{artistStats.name}</div>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex flex-col cursor-help mb-4 text-center">
-            <span className="text-xs text-muted-foreground">MusicBrainz ID</span>
-            <span className="truncate max-w-xs text-sm font-mono bg-muted/40 rounded px-2 py-1">
-              {artistStats.mbid ? artistStats.mbid.slice(0, 8) + '...' : 'N/A'}
-            </span>
+      <div className="text-2xl font-bold mb-1 text-center text-black dark:text-white">{artistStats.name}</div>
+      {/* Smart Popularity Breakdown */}
+      {artistStats.popularityAnalysis ? (
+        <div className="mb-4 text-center w-full max-w-xs mx-auto">
+          <div className="text-xs text-muted-foreground mb-2">Smart Popularity Score</div>
+          <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg p-3 mb-3">
+            <div className="text-2xl font-bold text-white">{artistStats.popularityAnalysis.overall_popularity_score}/100</div>
+            <div className="text-xs opacity-90 text-white">Overall Rating</div>
           </div>
-        </TooltipTrigger>
-        <TooltipContent>{artistStats.mbid || 'No MusicBrainz ID'}</TooltipContent>
-      </Tooltip>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-black dark:text-white">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                Followers
+              </span>
+              <span className="font-medium text-black dark:text-white">{artistStats.popularityAnalysis.breakdown.spotify_followers_score.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-black dark:text-white">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Spotify Pop
+              </span>
+              <span className="font-medium text-black dark:text-white">{artistStats.popularityAnalysis.breakdown.spotify_popularity_score}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-black dark:text-white">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                Trends
+              </span>
+              <span className="font-medium text-black dark:text-white">{artistStats.popularityAnalysis.breakdown.google_trends_score}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-black dark:text-white">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Charts
+              </span>
+              <span className="font-medium text-black dark:text-white">{artistStats.popularityAnalysis.breakdown.billboard_score}</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-4 text-center">
+          <div className="text-xs text-muted-foreground">Analyzing popularity...</div>
+        </div>
+      )}
       <div className="flex flex-col w-full mt-2">
         {createStatCards(artistStats, artistStats === stats ? statMap : comparableStatMap)}
       </div>

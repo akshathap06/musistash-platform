@@ -29,10 +29,20 @@ export interface ArtistStats {
     value: number | string;
     change?: number;
   }[];
+  popularityAnalysis?: {
+    overall_popularity_score: number;
+    breakdown: {
+      spotify_followers_score: number;
+      spotify_popularity_score: number;
+      google_trends_score: number;
+      billboard_score: number;
+    };
+    methodology: string;
+  };
 }
 
-// Use the live backend URL consistently
-const API_BASE_URL = 'https://musistash-platform.onrender.com';
+// Use local backend for development
+const API_BASE_URL = 'http://localhost:8000';
 
 // Get MusicBrainz artist info
 export const getMusicBrainzArtist = async (name: string) => {
@@ -160,10 +170,17 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
     
     // Followers from Spotify
     const followers = spotify?.followers || 0;
-    // Monthly listeners from Last.fm (listeners)
-    const monthlyListeners = lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : 0;
+    
+    // Monthly listeners: Use smart popularity analysis if available
+    const monthlyListeners = data.popularity_analysis?.estimated_monthly_listeners || 
+      (lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : Math.floor(followers * 0.15));
+    
     // Total plays from Last.fm (playcount)
     const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
+    
+    // Get popularity breakdown for additional insights
+    const popularityBreakdown = data.popularity_analysis?.breakdown || null;
+    const overallPopularityScore = data.popularity_analysis?.overall_popularity_score || null;
     
     // Engagement rate: playcount / followers * 100
     let engagementRate = null;
@@ -193,7 +210,6 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
       })) || [],
       albums: [],
       stats: [
-        { category: 'Monthly Listeners', value: monthlyListeners.toLocaleString() },
         { category: 'Total Plays', value: playcount.toLocaleString() },
         { category: 'Followers', value: followers.toLocaleString() },
         { category: 'Engagement Rate', value: engagementRate || 'N/A' },
@@ -226,8 +242,13 @@ export const processRawArtistStats = (rawData: any, artistName: string): ArtistS
     // Extract followers from Spotify
     const followers = spotify?.followers || 0;
     
-    // Extract monthly listeners from Last.fm
-    const monthlyListeners = lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : 0;
+    // Extract monthly listeners: Use smart popularity analysis if available
+    const monthlyListeners = rawData.popularity_analysis?.estimated_monthly_listeners || 
+      (lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : Math.floor(followers * 0.15));
+    
+    // Get popularity breakdown for additional insights
+    const popularityBreakdown = rawData.popularity_analysis?.breakdown || null;
+    const overallPopularityScore = rawData.popularity_analysis?.overall_popularity_score || null;
     
     // Extract total plays from Last.fm
     const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
@@ -259,11 +280,19 @@ export const processRawArtistStats = (rawData: any, artistName: string): ArtistS
         listeners: track.listeners
       })) || [],
       albums: [],
+      popularityAnalysis: rawData.popularity_analysis ? {
+        overall_popularity_score: rawData.popularity_analysis.overall_popularity_score,
+        breakdown: rawData.popularity_analysis.breakdown,
+        methodology: rawData.popularity_analysis.methodology
+      } : undefined,
       stats: [
-        { category: 'Monthly Listeners', value: monthlyListeners.toLocaleString() },
         { category: 'Total Plays', value: playcount.toLocaleString() },
         { category: 'Followers', value: followers.toLocaleString() },
         { category: 'Engagement Rate', value: engagementRate || 'N/A' },
+        overallPopularityScore ? { category: 'Popularity Score', value: `${overallPopularityScore}/100` } : undefined,
+        popularityBreakdown?.spotify_popularity_score ? { category: 'Spotify Popularity', value: `${popularityBreakdown.spotify_popularity_score}/100` } : undefined,
+        popularityBreakdown?.google_trends_score ? { category: 'Search Trends', value: `${popularityBreakdown.google_trends_score}/100` } : undefined,
+        popularityBreakdown?.billboard_score ? { category: 'Chart Performance', value: `${popularityBreakdown.billboard_score}/100` } : undefined,
         listenBrainzListens !== null ? { category: 'ListenBrainz Listens', value: listenBrainzListens.toLocaleString() } : undefined,
         billboard ? { category: 'Billboard Chart', value: `#${billboard.rank}: ${billboard.title}` } : undefined
       ].filter(Boolean)

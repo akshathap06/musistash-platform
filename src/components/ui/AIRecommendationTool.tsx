@@ -70,28 +70,45 @@ interface AnalysisData {
 
 const AIRecommendationTool: React.FC = () => {
     const [artistName, setArtistName] = useState('');
+    const [comparableArtistName, setComparableArtistName] = useState('');
     const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSecondSearchLoading, setIsSecondSearchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchedArtistStats, setSearchedArtistStats] = useState<ArtistStats | null>(null);
     const [comparableArtistStats, setComparableArtistStats] = useState<ArtistStats | null>(null);
 
-    const handleAnalyze = async () => {
+    const handleAnalyze = async (specificComparableArtist: string = '') => {
         if (!artistName.trim()) {
             setError("Please enter an artist's name.");
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
-        setAnalysis(null);
-        setSearchedArtistStats(null);
-        setComparableArtistStats(null);
+        // If this is a second search (for comparison artist), don't reset everything
+        const isSecondSearch = specificComparableArtist !== '';
+        
+        if (isSecondSearch) {
+            setIsSecondSearchLoading(true);
+        } else {
+            setIsLoading(true);
+            setError(null);
+            setAnalysis(null);
+            setSearchedArtistStats(null);
+            setComparableArtistStats(null);
+            setComparableArtistName('');
+        }
 
         try {
-            // Use the live Render backend URL directly
-            const apiUrl = 'https://musistash-platform.onrender.com';
-            const response = await fetch(`${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`);
+            // Use local backend for development
+            const apiUrl = 'http://localhost:8000';
+            let url = `${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`;
+            
+            // Add comparable artist parameter if specified
+            if (specificComparableArtist.trim()) {
+                url += `?comparable_artist=${encodeURIComponent(specificComparableArtist)}`;
+            }
+            
+            const response = await fetch(url);
             if (!response.ok) {
                 let errorData = {};
                 try {
@@ -113,12 +130,34 @@ const AIRecommendationTool: React.FC = () => {
                 const processedComparableStats = processRawArtistStats(data.comparable_artist_stats, data.artist_comparison.comparable.name);
                 setComparableArtistStats(processedComparableStats);
             }
+
+            // Clear the comparable artist search after successful comparison
+            if (isSecondSearch) {
+                setComparableArtistName('');
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to fetch analysis. Please try again.');
             console.error('Error in handleAnalyze:', err);
         } finally {
-            setIsLoading(false);
+            if (isSecondSearch) {
+                setIsSecondSearchLoading(false);
+            } else {
+                setIsLoading(false);
+            }
         }
+    };
+
+    const handleSecondArtistSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!comparableArtistName.trim()) {
+            setError("Please enter a second artist name to compare.");
+            return;
+        }
+        await handleAnalyze(comparableArtistName);
+    };
+
+    const handleFirstArtistSearch = async () => {
+        await handleAnalyze();
     };
 
     return (
@@ -136,13 +175,45 @@ const AIRecommendationTool: React.FC = () => {
                         placeholder="Enter an artist name..."
                         value={artistName}
                         onChange={(e) => setArtistName(e.target.value)}
-                        className="w-full md:w-1/2 bg-gray-800 border-gray-700 text-white focus:ring-blue-500"
-                        onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                        className="w-full md:w-1/2 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:ring-blue-500"
+                        onKeyPress={(e) => e.key === 'Enter' && handleFirstArtistSearch()}
                     />
-                    <Button onClick={handleAnalyze} disabled={isLoading} className="w-full md:w-auto">
+                    <Button onClick={handleFirstArtistSearch} disabled={isLoading} className="w-full md:w-auto">
                         {isLoading ? 'Analyzing...' : 'Analyze'}
                     </Button>
                 </div>
+
+                {/* Second Search Bar - Appears after first search */}
+                {analysis && (
+                    <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="text-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                                Compare with a Different Artist
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                Currently comparing with <strong>{analysis.artist_comparison.comparable.name}</strong>. 
+                                Search for a different artist to compare against <strong>{analysis.artist_comparison.searched.name}</strong>.
+                            </p>
+                        </div>
+                        
+                        <form onSubmit={handleSecondArtistSearch} className="flex flex-col md:flex-row items-center justify-center gap-4">
+                            <Input
+                                type="text"
+                                placeholder="Enter a different artist name..."
+                                value={comparableArtistName}
+                                onChange={(e) => setComparableArtistName(e.target.value)}
+                                className="w-full md:w-1/2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            />
+                            <Button 
+                                type="submit" 
+                                disabled={isSecondSearchLoading}
+                                className="w-full md:w-auto bg-blue-600 hover:bg-blue-700"
+                            >
+                                {isSecondSearchLoading ? 'Comparing...' : 'Compare Artists'}
+                            </Button>
+                        </form>
+                    </div>
+                )}
 
                 {error && <p className="text-center text-red-500 mb-4">{error}</p>}
 
@@ -163,31 +234,39 @@ const AIRecommendationTool: React.FC = () => {
                         <Card className="bg-white p-6 rounded-lg">
                             <h2 className="text-2xl font-semibold text-center mb-6">Artist Comparison</h2>
                             <div className="flex flex-col md:flex-row justify-around items-center gap-8">
-                                <ArtistInfo
-                                    artist={{
-                                        id: analysis.artist_comparison.searched.id || '',
-                                        name: analysis.artist_comparison.searched.name,
-                                        avatar: analysis.artist_comparison.searched.avatar || '',
-                                        bio: analysis.artist_comparison.searched.bio || '',
-                                        genres: analysis.artist_comparison.searched.genres,
-                                        followers: analysis.artist_comparison.searched.followers,
-                                        verified: analysis.artist_comparison.searched.verified,
-                                        successRate: analysis.artist_comparison.searched.successRate
-                                    }}
-                                />
-                                <div className="text-2xl font-bold text-white-500">vs</div>
-                                <ArtistInfo
-                                    artist={{
-                                        id: analysis.artist_comparison.comparable.id || '',
-                                        name: analysis.artist_comparison.comparable.name,
-                                        avatar: analysis.artist_comparison.comparable.avatar || '',
-                                        bio: analysis.artist_comparison.comparable.bio || '',
-                                        genres: analysis.artist_comparison.comparable.genres,
-                                        followers: analysis.artist_comparison.comparable.followers,
-                                        verified: analysis.artist_comparison.comparable.verified,
-                                        successRate: analysis.artist_comparison.comparable.successRate
-                                    }}
-                                />
+                                {/* First Artist */}
+                                <div className="flex flex-col items-center">
+                                    <ArtistInfo
+                                        artist={{
+                                            id: analysis.artist_comparison.searched.id || '',
+                                            name: analysis.artist_comparison.searched.name,
+                                            avatar: analysis.artist_comparison.searched.avatar || '',
+                                            bio: analysis.artist_comparison.searched.bio || '',
+                                            genres: analysis.artist_comparison.searched.genres,
+                                            followers: analysis.artist_comparison.searched.followers,
+                                            verified: analysis.artist_comparison.searched.verified,
+                                            successRate: analysis.artist_comparison.searched.successRate
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="text-2xl font-bold text-gray-500">vs</div>
+
+                                {/* Second Artist with Search Option */}
+                                <div className="flex flex-col items-center relative">
+                                    <ArtistInfo
+                                        artist={{
+                                            id: analysis.artist_comparison.comparable.id || '',
+                                            name: analysis.artist_comparison.comparable.name,
+                                            avatar: analysis.artist_comparison.comparable.avatar || '',
+                                            bio: analysis.artist_comparison.comparable.bio || '',
+                                            genres: analysis.artist_comparison.comparable.genres,
+                                            followers: analysis.artist_comparison.comparable.followers,
+                                            verified: analysis.artist_comparison.comparable.verified,
+                                            successRate: analysis.artist_comparison.comparable.successRate
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </Card>
 

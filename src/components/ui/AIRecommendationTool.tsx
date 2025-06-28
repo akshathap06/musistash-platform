@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from './input';
 import { Button } from './button';
@@ -7,8 +8,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import ArtistInfo from './ArtistInfo';
 import { getArtistStats, ArtistStats, processRawArtistStats } from '../../services/artistStats';
 import ArtistStatsDisplay from './ArtistStatsDisplay';
-// We are removing the direct import of mock data
-// import { mockApiResponse } from '../lib/mockData';
 
 // --- New Data Structures to Match API Response ---
 interface Artist {
@@ -78,6 +77,9 @@ const AIRecommendationTool: React.FC = () => {
     const [searchedArtistStats, setSearchedArtistStats] = useState<ArtistStats | null>(null);
     const [comparableArtistStats, setComparableArtistStats] = useState<ArtistStats | null>(null);
 
+    // Use the deployed backend URL
+    const API_BASE_URL = 'https://musistash-platform.onrender.com';
+
     const handleAnalyze = async (specificComparableArtist: string = '') => {
         if (!artistName.trim()) {
             setError("Please enter an artist's name.");
@@ -99,9 +101,7 @@ const AIRecommendationTool: React.FC = () => {
         }
 
         try {
-            // Use local backend for development
-            const apiUrl = 'http://localhost:8000';
-            let url = `${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`;
+            let url = `${API_BASE_URL}/analyze-artist/${encodeURIComponent(artistName)}`;
             
             // Add comparable artist parameter if specified
             if (specificComparableArtist.trim()) {

@@ -41,8 +41,8 @@ export interface ArtistStats {
   };
 }
 
-// Use local backend for development
-const API_BASE_URL = 'http://localhost:8000';
+// Use the deployed backend URL
+const API_BASE_URL = 'https://musistash-platform.onrender.com';
 
 // Get MusicBrainz artist info
 export const getMusicBrainzArtist = async (name: string) => {
@@ -146,7 +146,7 @@ export const getListenBrainzArtist = async (artistName: string, userToken: strin
   }
 };
 
-// Update getArtistStats to use the live Render backend
+// Main function to get artist stats from backend
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
     console.log('Fetching artist stats for:', artistName);
@@ -159,66 +159,7 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
     }
     const data = await response.json();
     
-    // Parse Spotify
-    const spotify = data.spotify;
-    // Parse Last.fm
-    const lastfm = data.lastfm;
-    // Parse ListenBrainz
-    const listenbrainz = data.listenbrainz;
-    // Parse Billboard
-    const billboard = data.billboard;
-    
-    // Followers from Spotify
-    const followers = spotify?.followers || 0;
-    
-    // Monthly listeners: Use smart popularity analysis if available
-    const monthlyListeners = data.popularity_analysis?.estimated_monthly_listeners || 
-      (lastfm?.stats?.listeners ? parseInt(lastfm.stats.listeners) : Math.floor(followers * 0.15));
-    
-    // Total plays from Last.fm (playcount)
-    const playcount = lastfm?.stats?.playcount ? parseInt(lastfm.stats.playcount) : 0;
-    
-    // Get popularity breakdown for additional insights
-    const popularityBreakdown = data.popularity_analysis?.breakdown || null;
-    const overallPopularityScore = data.popularity_analysis?.overall_popularity_score || null;
-    
-    // Engagement rate: playcount / followers * 100
-    let engagementRate = null;
-    if (playcount && followers) {
-      engagementRate = ((playcount / followers) * 100).toFixed(2) + '%';
-    }
-    
-    // ListenBrainz listens count (if available)
-    let listenBrainzListens = null;
-    if (listenbrainz && listenbrainz.payload && listenbrainz.payload.count) {
-      listenBrainzListens = listenbrainz.payload.count;
-    }
-    
-    // Compose combined stats
-    const combinedData: ArtistStats = {
-      name: spotify?.name || artistName,
-      mbid: lastfm?.mbid || undefined,
-      image: spotify?.image_url || undefined,
-      listeners: monthlyListeners,
-      playcount: playcount,
-      followers: { total: followers, history: [] },
-      monthlyListeners: monthlyListeners,
-      trackStats: lastfm?.toptracks?.track?.map((track: any) => ({
-        name: track.name,
-        playcount: track.playcount,
-        listeners: track.listeners
-      })) || [],
-      albums: [],
-      stats: [
-        { category: 'Total Plays', value: playcount.toLocaleString() },
-        { category: 'Followers', value: followers.toLocaleString() },
-        { category: 'Engagement Rate', value: engagementRate || 'N/A' },
-        listenBrainzListens !== null ? { category: 'ListenBrainz Listens', value: listenBrainzListens.toLocaleString() } : undefined,
-        billboard ? { category: 'Billboard Chart', value: `#${billboard.rank}: ${billboard.title}` } : undefined
-      ].filter(Boolean)
-    };
-    
-    return combinedData;
+    return processRawArtistStats(data, artistName);
   } catch (error) {
     console.error('Error fetching artist stats:', error);
     return null;

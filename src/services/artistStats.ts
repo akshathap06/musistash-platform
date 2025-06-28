@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import spotifyService from './spotify';
 
@@ -150,23 +149,22 @@ export const getListenBrainzArtist = async (artistName: string, userToken: strin
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
     console.log('Fetching artist stats for:', artistName);
-    console.log('Using API URL:', API_BASE_URL);
+    console.log('Using API URL:', `${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
     
-    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      mode: 'cors',
-    });
+    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
+    
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
     
     if (!response.ok) {
       console.error('API response not ok:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       return null;
     }
     
     const data = await response.json();
+    console.log('Received data:', data);
     return processRawArtistStats(data, artistName);
   } catch (error) {
     console.error('Error fetching artist stats:', error);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from './input';
 import { Button } from './button';
@@ -108,7 +107,15 @@ const AIRecommendationTool: React.FC = () => {
                 url += `?comparable_artist=${encodeURIComponent(specificComparableArtist)}`;
             }
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                mode: 'cors',
+            });
+            
             if (!response.ok) {
                 let errorData = {};
                 try {

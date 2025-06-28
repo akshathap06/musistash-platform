@@ -152,13 +152,21 @@ export const getArtistStats = async (artistName: string): Promise<ArtistStats | 
     console.log('Fetching artist stats for:', artistName);
     console.log('Using API URL:', API_BASE_URL);
     
-    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
+    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+    });
+    
     if (!response.ok) {
       console.error('API response not ok:', response.status, response.statusText);
       return null;
     }
-    const data = await response.json();
     
+    const data = await response.json();
     return processRawArtistStats(data, artistName);
   } catch (error) {
     console.error('Error fetching artist stats:', error);

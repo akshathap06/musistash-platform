@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { AlertCircle } from 'lucide-react';
+import GoogleSignIn from '@/components/ui/GoogleSignIn';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -111,6 +112,27 @@ const Login = () => {
                 >
                   {isSubmitting ? 'Signing In...' : 'Sign In'}
                 </Button>
+                
+                <div className="mt-4 text-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 w-full">
+                  <GoogleSignIn 
+                    onSuccess={() => navigate('/dashboard')}
+                    onError={(error) => setError(error)}
+                    className="w-full"
+                  />
+                </div>
                 
                 <p className="mt-4 text-center text-sm text-muted-foreground">
                   Don't have an account?{' '}

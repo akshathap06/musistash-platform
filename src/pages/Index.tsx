@@ -41,7 +41,7 @@ const Index = () => {
                   </Button>
                 </Link>
                 <Link to="/how-it-works">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-gray-500 text-black hover:bg-green-600">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-gray-500 text-white hover:bg-green-600 hover:text-white">
                     How It Works
                   </Button>
                 </Link>
@@ -65,6 +65,13 @@ const Index = () => {
         </div>
       </section>
       
+      {/* AI Recommendation Section */}
+      <section className="bg-[#0f1216] py-20 border-y text-white">
+        <div className="container max-w-7xl mx-auto px-4">
+          <AIRecommendationTool />
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="bg-[#181c23] py-20 text-white">
         <div className="container max-w-7xl mx-auto px-4">
@@ -112,27 +119,12 @@ const Index = () => {
           
           <div className="text-center mt-12">
             <Link to="/how-it-works">
-              <Button variant="outline" className="border-gray-500 text-black hover:bg-green-600">
+              <Button variant="outline" className="border-gray-500 text-white hover:bg-green-600 hover:text-white">
                 Learn More
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
-        </div>
-      </section>
-      
-      {/* AI Recommendation Section */}
-      <section className="bg-[#0f1216] py-20 border-y text-white">
-        <div className="container max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="section-heading">AI-Powered Investment Insights</h2>
-            <p className="section-subheading max-w-3xl mx-auto text-gray-300">
-              Our AI analyzes musical similarity and provides investment recommendations based on 
-              comparable successful artists
-            </p>
-          </div>
-          
-          <AIRecommendationTool />
         </div>
       </section>
       
@@ -204,7 +196,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/projects">
-              <Button size="lg" variant="outline" className="border-gray-500 text-black hover:bg-green-600">
+              <Button size="lg" variant="outline" className="border-gray-500 text-white hover:bg-green-600 hover:text-white">
                 Browse Projects
               </Button>
             </Link>

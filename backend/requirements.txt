@@ -7,4 +7,11 @@ httpx
 billboard.py
 spotipy
 numpy
-scikit-learn 
+scikit-learn
+soundcharts
+google-generativeai>=0.8.0
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pyjwt
+python-jose[cryptography] 

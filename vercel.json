@@ -2,11 +2,11 @@
 {
   "build": {
     "env": {
-      "VITE_API_URL": "https://musistash-platform.onrender.com"
+      "VITE_API_URL": "https://musistash-backend.up.railway.app"
     }
   },
   "env": {
-    "VITE_API_URL": "https://musistash-platform.onrender.com"
+    "VITE_API_URL": "https://musistash-backend.up.railway.app"
   },
   "rewrites": [
     {

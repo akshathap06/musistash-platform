@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Spotify Brand Colors */
+.bg-spotify-green {
+  background-color: #1DB954;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

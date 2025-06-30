@@ -9,6 +9,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: 'artist' | 'listener' | 'developer') => Promise<void>;
   logout: () => void;
+  loginWithGoogle: (googleUser: User, accessToken: string) => Promise<void>;
+  getAuthHeaders: () => Record<string, string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,10 +34,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Simulate API call delay
+      // Check if this is a Google OAuth login (password will be 'google_auth_token')
+      if (password === 'google_auth_token') {
+        // For Google OAuth, the user data is already stored in localStorage
+        // by the GoogleSignIn component, just retrieve it
+        const savedUser = localStorage.getItem('musistash_user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          return;
+        } else {
+          throw new Error('Google authentication data not found');
+        }
+      }
+      
+      // Traditional email/password login (mock for demo)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock login for demo purposes
       const mockUser: User = {
         id: 'user123',
         name: 'Demo User',
@@ -85,6 +100,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('musistash_user');
+    localStorage.removeItem('access_token');
+  };
+
+  const loginWithGoogle = async (googleUser: User, accessToken: string) => {
+    setIsLoading(true);
+    try {
+      setUser(googleUser);
+      localStorage.setItem('musistash_user', JSON.stringify(googleUser));
+      localStorage.setItem('access_token', accessToken);
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('access_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
   return (
@@ -95,7 +130,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
-        logout
+        logout,
+        loginWithGoogle,
+        getAuthHeaders
       }}
     >
       {children}

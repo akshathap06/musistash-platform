@@ -1,18 +1,87 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ProjectCard from '@/components/ui/ProjectCard';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
-import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
+import { Music, Users, Sparkles, BarChart, ArrowRight, TrendingUp, Target, Brain, LineChart } from 'lucide-react';
 import spotifyService from '@/services/spotify';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
+import { API_ENDPOINTS } from '@/config/api';
+
+// Interface for the new regression analysis data
+interface RegressionAnalysis {
+  musistash_resonance_score: number;
+  regression_analysis: {
+    resonance_score: number;
+    r_squared: number;
+    confidence_interval: {
+      lower_bound: number;
+      upper_bound: number;
+      margin_of_error: number;
+      confidence_level: string;
+    };
+    statistical_significance: string;
+    variable_importance: Array<{
+      variable: string;
+      contribution: number;
+      percentage_of_total: number;
+    }>;
+    regression_equation: string;
+  };
+  success_prediction: {
+    success_probability: number;
+    success_category: string;
+    confidence_score: number;
+    key_success_factors: string[];
+    risk_factors: string[];
+  };
+  growth_projections: {
+    monthly_projections: Array<{
+      month: string;
+      projected_score: number;
+      confidence: number;
+      growth_drivers: string[];
+    }>;
+    growth_summary: {
+      projected_12_month_growth: number;
+      peak_growth_period: string;
+    };
+  };
+  genre_resonance_analysis: {
+    similarity_percentage: number;
+    common_genres: string[];
+    artist1_unique_genres: string[];
+    artist2_unique_genres: string[];
+    related_genres: Array<{
+      artist1_genre: string;
+      artist2_genre: string;
+      relationship: string;
+    }>;
+    explanation: string;
+    genre_compatibility: string;
+  };
+  methodology: {
+    model_type: string;
+    r_squared: number;
+    statistical_significance: string;
+    data_sources: string[];
+  };
+}
+
+interface AnalysisData {
+  artist_comparison: {
+    searched: any;
+    comparable: any;
+  };
+  musistash_resonance_analysis: RegressionAnalysis;
+}
 
 const ArtistProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +91,8 @@ const ArtistProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [spotifyArtist, setSpotifyArtist] = useState<SpotifyArtist | null>(null);
   const [spotifyImage, setSpotifyImage] = useState('');
+  const [regressionAnalysis, setRegressionAnalysis] = useState<RegressionAnalysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
   
   useEffect(() => {
     // Simulate API fetch for artist data
@@ -56,6 +127,48 @@ const ArtistProfile = () => {
     
     fetchData();
   }, [id]);
+
+  // Fetch regression analysis data
+  const fetchRegressionAnalysis = async () => {
+    if (!artist?.name || analysisLoading) return;
+    
+    setAnalysisLoading(true);
+    try {
+      console.log('🔍 Fetching regression analysis for:', artist.name);
+      const url = API_ENDPOINTS.analyzeArtist(artist.name);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const data: AnalysisData = await response.json();
+      console.log('✅ Regression analysis received:', data.musistash_resonance_analysis);
+      setRegressionAnalysis(data.musistash_resonance_analysis);
+    } catch (error) {
+      console.error('❌ Error fetching regression analysis:', error);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  // Function to get score color based on value
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  // Function to get significance badge color
+  const getSignificanceBadge = (significance: string) => {
+    const colors = {
+      'highly_significant': 'bg-green-100 text-green-800',
+      'significant': 'bg-blue-100 text-blue-800',
+      'moderately_significant': 'bg-yellow-100 text-yellow-800',
+      'limited_significance': 'bg-red-100 text-red-800'
+    };
+    return colors[significance] || 'bg-gray-100 text-gray-800';
+  };
   
   if (isLoading || !artist) {
     return (
@@ -151,7 +264,7 @@ const ArtistProfile = () => {
             <TabsList className="mb-8">
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="analytics">Market Analysis</TabsTrigger>
+              <TabsTrigger value="analytics">MusiStash Analysis</TabsTrigger>
             </TabsList>
             
             {/* Projects Tab */}
@@ -306,157 +419,307 @@ const ArtistProfile = () => {
               </div>
             </TabsContent>
             
-            {/* Analytics Tab */}
+            {/* Analytics Tab - NEW REGRESSION ANALYSIS */}
             <TabsContent value="analytics" className="animate-fade-in">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                  <Card className="mb-8">
-                    <CardHeader>
-                      <CardTitle>Commercial Analysis</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {similarityInfo ? (
-                        <>
-                          <div className="bg-primary/5 p-6 rounded-lg">
-                            <div className="flex justify-between items-center mb-4">
-                              <h3 className="text-lg font-semibold">Similar to: {similarityInfo.similarTo}</h3>
-                              <Badge>{similarityInfo.similarity}% Match</Badge>
+              {!regressionAnalysis && !analysisLoading && (
+                <div className="mb-6">
+                  <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
+                    <CardContent className="p-6 text-center">
+                      <Brain className="h-12 w-12 mx-auto mb-3 text-primary" />
+                      <h3 className="text-lg font-semibold mb-2">Advanced MusiStash Analysis</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Get detailed regression-based insights powered by AI and real music industry data
+                      </p>
+                      <Button onClick={fetchRegressionAnalysis} className="bg-primary hover:bg-primary/90">
+                        Analyze {artist.name}
+                        <TrendingUp className="ml-2 h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {analysisLoading && (
+                <div className="text-center py-12">
+                  <div className="animate-pulse space-y-4">
+                    <Brain className="h-16 w-16 mx-auto text-primary/60 animate-spin" />
+                    <div className="text-xl font-semibold">Analyzing {artist.name}</div>
+                    <div className="text-muted-foreground">Running regression analysis on music industry data...</div>
+                  </div>
+                </div>
+              )}
+
+              {regressionAnalysis && (
+                <div className="space-y-8">
+                  {/* Main MusiStash Resonance Score */}
+                  <div className="text-center">
+                    <h2 className="text-3xl font-bold mb-2">MusiStash Resonance Score</h2>
+                    <div className="text-6xl font-bold mb-2">
+                      <span className={getScoreColor(regressionAnalysis.musistash_resonance_score)}>
+                        {regressionAnalysis.musistash_resonance_score}
+                      </span>
+                      <span className="text-3xl text-muted-foreground">/100</span>
+                    </div>
+                    <Badge className={getSignificanceBadge(regressionAnalysis.methodology.statistical_significance)}>
+                      {regressionAnalysis.methodology.statistical_significance.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column - Statistical Analysis */}
+                    <div className="lg:col-span-2 space-y-6">
+                      {/* Regression Model Stats */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <LineChart className="h-5 w-5 mr-2" />
+                            Statistical Model Analysis
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                              <div className="text-2xl font-bold text-blue-600">
+                                {(regressionAnalysis.regression_analysis.r_squared * 100).toFixed(1)}%
+                              </div>
+                              <div className="text-sm text-muted-foreground">R-Squared</div>
                             </div>
-                            
-                            <div className="space-y-4">
-                              <h4 className="font-medium">Key Similarities</h4>
-                              <ul className="space-y-2">
-                                {similarityInfo.reasons.map((reason, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-primary mr-2 mt-0.5">
-                                      <span className="text-xs">{index + 1}</span>
-                                    </div>
-                                    <span className="text-muted-foreground">{reason}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                              <div className="text-2xl font-bold text-green-600">
+                                {regressionAnalysis.regression_analysis.confidence_interval.confidence_level}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Confidence</div>
+                            </div>
+                            <div className="text-center p-4 bg-purple-50 rounded-lg">
+                              <div className="text-2xl font-bold text-purple-600">
+                                ±{regressionAnalysis.regression_analysis.confidence_interval.margin_of_error}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Margin</div>
                             </div>
                           </div>
                           
                           <div>
-                            <h3 className="text-lg font-semibold mb-3">Investment Analysis</h3>
-                            <p className="text-muted-foreground mb-4">
-                              Based on our AI analysis, {artist.name} shows significant commercial potential due to their
-                              similarities with established artist {similarityInfo.similarTo}. This similarity extends across
-                              musical style, production quality, and audience demographics.
-                            </p>
-                            
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                              <div className="bg-secondary/50 rounded-lg p-4">
-                                <div className="text-2xl font-semibold">{similarityInfo.commercialPotential}%</div>
-                                <div className="text-sm text-muted-foreground">Commercial Potential</div>
-                              </div>
-                              <div className="bg-secondary/50 rounded-lg p-4">
-                                <div className="text-2xl font-semibold">{spotifyArtist ? spotifyArtist.popularity : artist.successRate}%</div>
-                                <div className="text-sm text-muted-foreground">{spotifyArtist ? 'Spotify Popularity' : 'Project Success Rate'}</div>
-                              </div>
-                            </div>
-                            
-                            <p className="text-muted-foreground">
-                              Artists with similar profiles to {similarityInfo.similarTo} have historically 
-                              shown strong commercial performance across streaming platforms, with average 
-                              earnings growth of 15-25% year over year during their early career phase.
+                            <h4 className="font-medium mb-2">Regression Equation</h4>
+                            <p className="text-sm font-mono bg-gray-50 p-3 rounded">
+                              {regressionAnalysis.regression_analysis.regression_equation}
                             </p>
                           </div>
-                        </>
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <BarChart className="h-16 w-16 mx-auto mb-4 text-primary/40" />
-                          <p>Detailed analysis not available for this artist</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Genre Trends</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {(spotifyArtist ? spotifyArtist.genres : artist.genres).slice(0, 3).map((genre, index) => (
-                          <div key={index} className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-sm capitalize">{genre}</span>
-                              <span className="text-sm font-medium">
-                                {index === 0 ? '+12%' : index === 1 ? '+8%' : '+5%'}
+
+                          <div>
+                            <h4 className="font-medium mb-2">Confidence Interval</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Score range: {regressionAnalysis.regression_analysis.confidence_interval.lower_bound} - {regressionAnalysis.regression_analysis.confidence_interval.upper_bound} 
+                              ({regressionAnalysis.regression_analysis.confidence_interval.confidence_level} confidence level)
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Variable Importance */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <Target className="h-5 w-5 mr-2" />
+                            Key Success Drivers
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {regressionAnalysis.regression_analysis.variable_importance.slice(0, 5).map((variable, index) => (
+                              <div key={index} className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium capitalize">
+                                    {variable.variable.replace(/_/g, ' ')}
+                                  </span>
+                                  <span className="text-sm font-bold">
+                                    {variable.percentage_of_total}%
+                                  </span>
+                                </div>
+                                <Progress value={variable.percentage_of_total} className="h-2" />
+                                <p className="text-xs text-muted-foreground">
+                                  Contribution: {variable.contribution > 0 ? '+' : ''}{variable.contribution.toFixed(2)} points
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Enhanced Genre Analysis */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <Music className="h-5 w-5 mr-2" />
+                            Genre Compatibility Analysis
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="text-center">
+                            <div className="text-3xl font-bold mb-2">
+                              <span className={getScoreColor(regressionAnalysis.genre_resonance_analysis.similarity_percentage)}>
+                                {regressionAnalysis.genre_resonance_analysis.similarity_percentage}%
                               </span>
                             </div>
-                            <div className="h-2 rounded-full bg-muted overflow-hidden">
-                              <div 
-                                className="h-full bg-primary rounded-full" 
-                                style={{ width: index === 0 ? '82%' : index === 1 ? '76%' : '65%' }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {index === 0 ? 
-                                'Strong growth trend in streaming platforms' : 
-                                index === 1 ? 
-                                'Moderate but stable audience growth' :
-                                'Emerging interest from new markets'
-                              }
+                            <Badge variant="secondary">
+                              {regressionAnalysis.genre_resonance_analysis.genre_compatibility} Compatibility
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3">
+                            {regressionAnalysis.genre_resonance_analysis.common_genres.length > 0 && (
+                              <div>
+                                <h4 className="font-medium text-green-600 mb-2">Common Genres</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {regressionAnalysis.genre_resonance_analysis.common_genres.map((genre, index) => (
+                                    <Badge key={index} className="bg-green-100 text-green-800">{genre}</Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {regressionAnalysis.genre_resonance_analysis.related_genres.length > 0 && (
+                              <div>
+                                <h4 className="font-medium text-blue-600 mb-2">Related Connections</h4>
+                                <div className="space-y-2">
+                                  {regressionAnalysis.genre_resonance_analysis.related_genres.slice(0, 3).map((connection, index) => (
+                                    <div key={index} className="text-sm bg-blue-50 p-2 rounded">
+                                      <span className="font-medium">{connection.artist1_genre}</span> ↔ <span className="font-medium">{connection.artist2_genre}</span>
+                                      <span className="text-muted-foreground ml-2">({connection.relationship})</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded">
+                              {regressionAnalysis.genre_resonance_analysis.explanation}
                             </p>
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Audience Demographics</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm font-medium mb-1">Age Groups</div>
-                          <div className="grid grid-cols-4 gap-1 mb-1">
-                            <div className="bg-primary h-16 rounded-md" style={{opacity: 0.4}}></div>
-                            <div className="bg-primary h-24 rounded-md" style={{opacity: 0.6}}></div>
-                            <div className="bg-primary h-28 rounded-md" style={{opacity: 0.8}}></div>
-                            <div className="bg-primary h-12 rounded-md" style={{opacity: 0.3}}></div>
-                          </div>
-                          <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground">
-                            <div>18-24</div>
-                            <div>25-34</div>
-                            <div>35-44</div>
-                            <div>45+</div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-sm font-medium mb-2">Top Regions</div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>United States</span>
-                              <span>42%</span>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Right Column - Success Prediction & Growth */}
+                    <div className="space-y-6">
+                      {/* Success Prediction */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <Sparkles className="h-5 w-5 mr-2" />
+                            Success Prediction
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="text-center">
+                            <div className="text-4xl font-bold mb-2">
+                              <span className={getScoreColor(regressionAnalysis.success_prediction.success_probability)}>
+                                {regressionAnalysis.success_prediction.success_probability}%
+                              </span>
                             </div>
-                            <div className="flex justify-between text-sm">
-                              <span>United Kingdom</span>
-                              <span>15%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Germany</span>
-                              <span>12%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Canada</span>
-                              <span>8%</span>
+                            <Badge variant="outline" className="mb-2">
+                              {regressionAnalysis.success_prediction.success_category.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                            <div className="text-sm text-muted-foreground">
+                              Confidence: {regressionAnalysis.success_prediction.confidence_score}%
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+
+                          <div>
+                            <h4 className="font-medium text-green-600 mb-2">Success Factors</h4>
+                            <ul className="space-y-1">
+                              {regressionAnalysis.success_prediction.key_success_factors.map((factor, index) => (
+                                <li key={index} className="text-sm flex items-start">
+                                  <span className="text-green-500 mr-2">✓</span>
+                                  {factor}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium text-red-600 mb-2">Risk Factors</h4>
+                            <ul className="space-y-1">
+                              {regressionAnalysis.success_prediction.risk_factors.map((risk, index) => (
+                                <li key={index} className="text-sm flex items-start">
+                                  <span className="text-red-500 mr-2">⚠</span>
+                                  {risk}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Growth Projections */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <TrendingUp className="h-5 w-5 mr-2" />
+                            Growth Projections
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold mb-1">
+                              <span className={getScoreColor(regressionAnalysis.growth_projections.growth_summary.projected_12_month_growth)}>
+                                +{regressionAnalysis.growth_projections.growth_summary.projected_12_month_growth}%
+                              </span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">12-Month Growth</div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium mb-2">Peak Growth Period</h4>
+                            <Badge className="bg-purple-100 text-purple-800">
+                              {regressionAnalysis.growth_projections.growth_summary.peak_growth_period}
+                            </Badge>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium mb-2">Growth Trajectory</h4>
+                            <div className="space-y-2">
+                              {regressionAnalysis.growth_projections.monthly_projections.slice(0, 6).map((month, index) => (
+                                <div key={index} className="flex justify-between items-center text-sm">
+                                  <span>{month.month}</span>
+                                  <div className="flex items-center">
+                                    <span className="font-medium mr-2">{month.projected_score}</span>
+                                    <span className="text-muted-foreground">({month.confidence}%)</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Data Sources */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <BarChart className="h-5 w-5 mr-2" />
+                            Analysis Sources
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {regressionAnalysis.methodology.data_sources.map((source, index) => (
+                              <div key={index} className="flex items-center text-sm">
+                                <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
+                                {source}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-4 pt-4 border-t">
+                            <div className="text-sm text-muted-foreground">
+                              Model: {regressionAnalysis.methodology.model_type}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

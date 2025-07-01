@@ -44,17 +44,24 @@ news_api_key = os.getenv("NEWS_API_KEY")
 spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID")
 spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
 
+print(f"🔍 Debug: Spotify Client ID exists: {bool(spotify_client_id)}")
+print(f"🔍 Debug: Spotify Client Secret exists: {bool(spotify_client_secret)}")
+
 if not spotify_client_id or not spotify_client_secret:
-    print("Warning: Spotify credentials not found. Using mock data.")
+    print("❌ Warning: Spotify credentials not found. Using mock data.")
+    print(f"   Client ID: {'Present' if spotify_client_id else 'Missing'}")
+    print(f"   Client Secret: {'Present' if spotify_client_secret else 'Missing'}")
     sp = None
 else:
     try:
+        print("✅ Initializing Spotify client with credentials...")
         sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
             client_id=spotify_client_id,
             client_secret=spotify_client_secret
         ))
+        print("✅ Spotify client initialized successfully!")
     except Exception as e:
-        print(f"Error initializing Spotify client: {e}")
+        print(f"❌ Error initializing Spotify client: {e}")
         sp = None
 
 # Last.fm

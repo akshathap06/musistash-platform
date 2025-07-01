@@ -269,7 +269,7 @@ const AIRecommendationTool: React.FC = () => {
                             placeholder="🎵 Enter any artist name to analyze..."
                             value={artistName}
                             onChange={(e) => setArtistName(e.target.value)}
-                            className="flex-1 h-16 text-xl bg-transparent border-none text-white placeholder-gray-300 focus:ring-0 focus:outline-none"
+                            className="flex-1 h-16 text-2xl font-bold bg-transparent border-none text-white placeholder-gray-300 focus:ring-0 focus:outline-none"
                             onKeyPress={(e) => e.key === 'Enter' && handleFirstArtistSearch()}
                         />
                         <Button 

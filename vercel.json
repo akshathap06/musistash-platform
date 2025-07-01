@@ -2,12 +2,14 @@
 {
   "build": {
     "env": {
-      "VITE_API_URL": "https://musistash-production.up.railway.app"
+      "VITE_API_URL": "https://musistash-production.up.railway.app",
+      "VITE_GOOGLE_CLIENT_ID": "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
     }
   },
-      "env": {
-      "VITE_API_URL": "https://musistash-production.up.railway.app"
-    },
+  "env": {
+    "VITE_API_URL": "https://musistash-production.up.railway.app",
+    "VITE_GOOGLE_CLIENT_ID": "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
+  },
   "rewrites": [
     {
       "source": "/(.*)",

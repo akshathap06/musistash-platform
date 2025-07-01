@@ -39,8 +39,10 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
   }, []);
 
   const initializeGoogleSignIn = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com";
+    
     window.google.accounts.id.initialize({
-      client_id: "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com",
+      client_id: clientId,
       callback: handleCredentialResponse,
       auto_select: false,
       cancel_on_tap_outside: true,
@@ -62,8 +64,11 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
     try {
       console.log("Google credential response:", response);
       
+      // Use environment variable for backend URL (matching Vercel config)
+      const backendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+      
       // Send the credential to your backend
-      const backendResponse = await fetch('http://localhost:8000/auth/google', {
+      const backendResponse = await fetch(`${backendUrl}/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

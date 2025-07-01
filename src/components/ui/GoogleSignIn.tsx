@@ -41,6 +41,13 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
   const initializeGoogleSignIn = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com";
     
+    console.log('🔍 Google Sign In Debug:', {
+      clientId,
+      hasGoogleScript: !!window.google,
+      environment: import.meta.env.MODE,
+      allEnvVars: import.meta.env
+    });
+    
     window.google.accounts.id.initialize({
       client_id: clientId,
       callback: handleCredentialResponse,

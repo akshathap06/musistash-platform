@@ -1,6 +1,7 @@
 
 import axios from 'axios';
 import spotifyService from './spotify';
+import { API_ENDPOINTS } from '@/config/api';
 
 // Interface for combined artist stats
 export interface ArtistStats {
@@ -41,8 +42,7 @@ export interface ArtistStats {
   };
 }
 
-// Use local backend for development
-const API_BASE_URL = 'http://localhost:8000';
+// API URLs are now managed by centralized config
 
 // Get MusicBrainz artist info
 export const getMusicBrainzArtist = async (name: string) => {
@@ -150,9 +150,10 @@ export const getListenBrainzArtist = async (artistName: string, userToken: strin
 export const getArtistStats = async (artistName: string): Promise<ArtistStats | null> => {
   try {
     console.log('Fetching artist stats for:', artistName);
-    console.log('Using API URL:', API_BASE_URL);
+    const apiUrl = API_ENDPOINTS.artistStats(artistName);
+    console.log('Using API URL:', apiUrl);
     
-    const response = await fetch(`${API_BASE_URL}/artist-stats/${encodeURIComponent(artistName)}`);
+    const response = await fetch(apiUrl);
     if (!response.ok) {
       console.error('API response not ok:', response.status, response.statusText);
       return null;

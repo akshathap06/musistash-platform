@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './button';
+import { API_ENDPOINTS, GOOGLE_CLIENT_ID } from '@/config/api';
 
 interface GoogleSignInProps {
   onSuccess?: () => void;
@@ -39,17 +40,15 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
   }, []);
 
   const initializeGoogleSignIn = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com";
-    
     console.log('🔍 Google Sign In Debug:', {
-      clientId,
+      clientId: GOOGLE_CLIENT_ID,
       hasGoogleScript: !!window.google,
       environment: import.meta.env.MODE,
       allEnvVars: import.meta.env
     });
     
     window.google.accounts.id.initialize({
-      client_id: clientId,
+      client_id: GOOGLE_CLIENT_ID,
       callback: handleCredentialResponse,
       auto_select: false,
       cancel_on_tap_outside: true,
@@ -71,11 +70,8 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
     try {
       console.log("Google credential response:", response);
       
-      // Use environment variable for backend URL (matching Vercel config)
-      const backendUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-      
-      // Send the credential to your backend
-      const backendResponse = await fetch(`${backendUrl}/auth/google`, {
+      // Send the credential to your backend using centralized config
+      const backendResponse = await fetch(API_ENDPOINTS.googleAuth(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

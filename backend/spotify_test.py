@@ -46,7 +46,7 @@ try:
 except Exception as e:
     print("Error fetching audio features for first 5 tracks:", e)
 
-BASE_URL = 'http://localhost:8000'
+BASE_URL = 'https://musistash-production.up.railway.app'
 
 artists = ['Drake', 'Taylor Swift', 'Billie Eilish']
 

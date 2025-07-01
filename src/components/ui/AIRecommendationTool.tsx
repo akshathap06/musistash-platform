@@ -10,6 +10,7 @@ import { getArtistStats, ArtistStats, processRawArtistStats } from '../../servic
 import ArtistStatsDisplay from './ArtistStatsDisplay';
 import { Database, TrendingUp, Users, Music, BarChart3, CheckCircle, AlertCircle, Shield, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';
+import { API_ENDPOINTS } from '@/config/api';
 // We are removing the direct import of mock data
 // import { mockApiResponse } from '../lib/mockData';
 
@@ -183,21 +184,16 @@ const AIRecommendationTool: React.FC = () => {
         }
 
         try {
-            // Use environment variable for backend URL (matching production config)
-            const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-            let url = `${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`;
+            // Use centralized API configuration
+            const url = API_ENDPOINTS.analyzeArtist(artistName, specificComparableArtist || undefined);
             
             console.log('🔍 AI Tool Debug:', {
-                apiUrl,
+                url,
                 environment: import.meta.env.MODE,
                 VITE_API_URL: import.meta.env.VITE_API_URL,
-                fullUrl: url
+                artistName,
+                comparableArtist: specificComparableArtist
             });
-            
-            // Add comparable artist parameter if specified
-            if (specificComparableArtist.trim()) {
-                url += `?comparable_artist=${encodeURIComponent(specificComparableArtist)}`;
-            }
             
             const response = await fetch(url);
             if (!response.ok) {

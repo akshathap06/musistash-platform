@@ -183,9 +183,16 @@ const AIRecommendationTool: React.FC = () => {
         }
 
         try {
-            // Use local backend for development
-            const apiUrl = 'http://localhost:8000';
+            // Use environment variable for backend URL (matching production config)
+            const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
             let url = `${apiUrl}/analyze-artist/${encodeURIComponent(artistName)}`;
+            
+            console.log('🔍 AI Tool Debug:', {
+                apiUrl,
+                environment: import.meta.env.MODE,
+                VITE_API_URL: import.meta.env.VITE_API_URL,
+                fullUrl: url
+            });
             
             // Add comparable artist parameter if specified
             if (specificComparableArtist.trim()) {

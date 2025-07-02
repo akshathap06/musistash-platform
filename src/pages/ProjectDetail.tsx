@@ -139,7 +139,7 @@ const ProjectDetail = () => {
                 </div>
                 
                 <div className="flex gap-3">
-                  <Button variant="outline">Share</Button>
+                  <Button variant="outline" className="text-foreground">Share</Button>
                   <Button>Invest Now</Button>
                 </div>
               </div>
@@ -275,7 +275,7 @@ const ProjectDetail = () => {
                             </div>
                             <div className="flex flex-col items-end justify-between">
                               <div className="text-2xl font-bold">${pkg.cost.toLocaleString()}</div>
-                              <Button variant="outline" size="sm">
+                              <Button variant="outline" size="sm" className="text-foreground">
                                 View Details
                                 <ArrowRight className="ml-2 h-4 w-4" />
                               </Button>

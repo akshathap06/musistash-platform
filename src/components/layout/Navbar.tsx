@@ -172,7 +172,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button className="bg-white text-black hover:bg-green-600" variant="outline">Log in</Button>
+                  <Button className="bg-white text-black hover:bg-green-600 hover:text-white" variant="outline">Log in</Button>
                 </Link>
                 <Link to="/register">
                   <Button>Sign up</Button>
@@ -255,14 +255,14 @@ const Navbar = () => {
                     </div>
                   </div>
                   <Link to="/dashboard" className="w-full">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start text-foreground">
                       <User className="mr-2 h-4 w-4" />
                       Dashboard
                     </Button>
                   </Link>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start" 
+                    className="w-full justify-start text-foreground" 
                     onClick={logout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -272,7 +272,7 @@ const Navbar = () => {
               ) : (
                 <div className="flex space-x-2">
                   <Link to="/login" className="w-full">
-                    <Button variant="outline" className="w-full">Log in</Button>
+                    <Button variant="outline" className="w-full text-foreground">Log in</Button>
                   </Link>
                   <Link to="/register" className="w-full">
                     <Button className="w-full">Sign up</Button>

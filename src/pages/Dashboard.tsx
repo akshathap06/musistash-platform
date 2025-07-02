@@ -172,7 +172,7 @@ const ListenerDashboard = () => {
               </CardHeader>
               <CardContent>
                 <Link to="/projects">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full text-black">
                     Browse Projects
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -191,7 +191,7 @@ const ListenerDashboard = () => {
           
           <div className="text-center">
             <Link to="/projects">
-              <Button variant="outline">
+              <Button variant="outline" className="text-foreground">
                 View More Projects
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
@@ -278,7 +278,7 @@ const ArtistDashboard = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Active Projects</h3>
             <Link to="/create-project">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-foreground">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -387,7 +387,7 @@ const DeveloperDashboard = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Listed Services</h3>
             <Link to="/create-service">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-foreground">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Service
               </Button>
@@ -406,7 +406,7 @@ const DeveloperDashboard = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-bold">${pkg.cost.toLocaleString()}</div>
-                      <Button size="sm" variant="outline" className="mt-2">Edit Service</Button>
+                      <Button size="sm" variant="outline" className="mt-2 text-foreground">Edit Service</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -434,7 +434,7 @@ const DeveloperDashboard = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">Decline</Button>
+                      <Button size="sm" variant="outline" className="text-foreground">Decline</Button>
                       <Button size="sm">Accept</Button>
                     </div>
                   </div>

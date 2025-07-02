@@ -17,44 +17,52 @@ const Index = () => {
       {/* Hero Section */}
       <section className="mt-16 relative overflow-hidden bg-[#0f1216] text-white">
         <div className="container max-w-7xl mx-auto px-4 py-20 md:py-32">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-            <div className="md:w-1/2 space-y-6 animate-fade-in">
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold transition-colors focus:outline-none mb-4">
-                <span className="text-gray-300">Revolutionizing Music Investment</span>
+          <div className="flex flex-col items-center justify-center text-center max-w-5xl mx-auto">
+            <div className="space-y-8">
+              <div className="inline-flex items-center rounded-full border border-purple-500/30 bg-purple-900/20 px-4 py-2 text-sm font-semibold transition-colors focus:outline-none mb-6 opacity-0 animate-fade-in-scale">
+                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Revolutionizing Music Investment</span>
               </div>
               
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-                <span className="gradient-text">Invest in Artists.</span>
-                <br /> Share Their Success.
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent opacity-0 animate-slide-in-left animate-delay-300 block">
+                  Let Artists Own Their Future.
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent opacity-0 animate-slide-in-right animate-delay-600 block">
+                  Let Fans Profit From It.
+                </span>
               </h1>
               
-              <p className="text-lg text-gray-300 max-w-xl">
-                MusiStash connects artists with fans who want to invest in their future. 
-                Support the music you love and potentially earn returns when artists succeed.
-              </p>
+              <div className="max-w-4xl mx-auto space-y-4">
+                <p className="text-xl md:text-2xl font-medium text-white leading-relaxed opacity-0 animate-fade-in-scale animate-delay-900">
+                  We're breaking the <span className="bg-gradient-to-r from-gray-400 to-gray-500 bg-clip-text text-transparent font-bold">industry model</span>. 
+                  No more <span className="bg-gradient-to-r from-red-400 to-red-500 bg-clip-text text-transparent font-bold">middlemen</span>. 
+                  No more labels taking the <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-bold">lion's share</span>.
+                </p>
+                
+                <p className="text-lg md:text-xl text-white leading-relaxed opacity-0 animate-fade-in-scale animate-delay-1200">
+                  Artists raise capital <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-bold">directly from fans</span>. 
+                  Fans invest in the talent they believe in, and share in the <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-bold">upside</span> when that artist wins.
+                </p>
+                
+                <p className="text-xl md:text-2xl font-bold text-white opacity-0 animate-fade-in-scale" style={{animationDelay: '1.5s'}}>
+                  <span className="text-gray-400">This isn't crowdfunding.</span>{" "}
+                  This is <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">equity for the culture</span>.
+                </p>
+              </div>
               
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-6 pt-8 justify-center opacity-0 animate-fade-in-scale" style={{animationDelay: '1.8s'}}>
                 <Link to="/register">
-                  <Button size="lg" className="w-full sm:w-auto bg-gray-700 text-white hover:bg-gray-600">
+                  <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 text-lg shadow-lg transform transition-all duration-200 hover:scale-105">
                     Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/how-it-works">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-gray-500 text-white hover:bg-green-600 hover:text-white">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-black font-semibold px-8 py-4 text-lg transition-all duration-200">
                     How It Works
                   </Button>
                 </Link>
-              </div>
-            </div>
-            
-            <div className="md:w-1/2 animate-scale-in">
-              <div className="rounded-xl overflow-hidden shadow-2xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=1200&h=675" 
-                  alt="MusiStash Platform" 
-                  className="w-full h-auto aspect-video object-cover"
-                />
               </div>
             </div>
           </div>
@@ -119,7 +127,7 @@ const Index = () => {
           
           <div className="text-center mt-12">
             <Link to="/how-it-works">
-              <Button variant="outline" className="border-gray-500 text-white hover:bg-green-600 hover:text-white">
+              <Button variant="outline" className="border-gray-500 text-black hover:bg-green-600 hover:text-white">
                 Learn More
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -139,7 +147,7 @@ const Index = () => {
               </p>
             </div>
             <Link to="/projects">
-              <Button variant="outline" className="border-gray-500 text-white">
+              <Button variant="outline" className="border-gray-500 text-black">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -165,7 +173,7 @@ const Index = () => {
               </p>
             </div>
             <Link to="/artists">
-              <Button variant="outline" className="border-gray-500 text-white">
+              <Button variant="outline" className="border-gray-500 text-black">
                 View All
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -196,7 +204,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/projects">
-              <Button size="lg" variant="outline" className="border-gray-500 text-white hover:bg-green-600 hover:text-white">
+              <Button size="lg" variant="outline" className="border-gray-500 text-black hover:bg-green-600 hover:text-white">
                 Browse Projects
               </Button>
             </Link>

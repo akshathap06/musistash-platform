@@ -325,7 +325,7 @@ const ContractDialog = ({ service, provider }: { service: Service, provider: Ser
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full sm:flex-1">
+        <Button variant="outline" className="w-full sm:flex-1 text-foreground">
           <FileText className="mr-2 h-4 w-4" />
           View Contract
         </Button>
@@ -436,7 +436,7 @@ const ContractDialog = ({ service, provider }: { service: Service, provider: Ser
         </div>
         
         <div className="flex justify-between items-center">
-          <Button variant="outline">Download PDF</Button>
+          <Button variant="outline" className="text-foreground">Download PDF</Button>
           <Button>Request Customization</Button>
         </div>
       </DialogContent>

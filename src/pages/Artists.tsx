@@ -254,7 +254,7 @@ const FeaturedArtistCard = ({ artist, similarityInfo }) => {
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t">
-        <Button variant="outline">View Projects</Button>
+        <Button variant="outline" className="text-foreground">View Projects</Button>
         <Link to={`/artist/${artist.id}`}>
           <Button>
             View Full Profile

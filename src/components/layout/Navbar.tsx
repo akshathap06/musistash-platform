@@ -15,7 +15,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const Navbar = () => {
+interface NavbarProps {
+  isAITheme?: boolean;
+}
+
+const Navbar = ({ isAITheme = false }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -52,8 +56,12 @@ const Navbar = () => {
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-background/80 backdrop-blur-md shadow-sm' : 'bg-transparent'
-      }`}
+        isScrolled 
+          ? isAITheme 
+            ? 'bg-gradient-to-r from-[#1a1a2e]/90 to-[#16213e]/90 backdrop-blur-md shadow-lg border-b border-blue-500/20' 
+            : 'bg-background/80 backdrop-blur-md shadow-sm'
+          : 'bg-transparent'
+      } ${isAITheme ? 'text-white' : ''}`}
     >
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between">

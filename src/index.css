@@ -205,13 +205,94 @@
   }
 }
 
+/* Typewriter animations */
 @keyframes typewriter {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes typewriterText {
   0% {
     width: 0;
   }
   100% {
     width: 100%;
   }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Tech typewriter effects */
+.typewriter-line {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  animation: typewriter 2s steps(20, end) forwards;
+}
+
+.typewriter-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typewriterText 3s steps(35, end) forwards;
+  animation-delay: 0.5s;
+}
+
+.typewriter-cursor {
+  animation: blink 1s infinite;
+}
+
+/* Glitch effect for tech feel */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.glitch:hover {
+  animation: glitch 0.3s;
+}
+
+/* Theme transition */
+.theme-transition {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-theme {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f4c75 100%);
 }
 
 .animate-slide-in-left {

@@ -139,11 +139,11 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <div className="flex flex-col items-center text-gray-400">
-              <span className="font-mono text-sm mb-2">SCROLL_TO_ANALYZE</span>
-              <ArrowDown className="h-6 w-6" />
+          {/* Scroll Indicator - Moved to bottom corner */}
+          <div className="absolute bottom-6 right-6 animate-bounce">
+            <div className="flex flex-col items-center text-gray-400/60 hover:text-gray-300 transition-colors cursor-pointer">
+              <span className="font-mono text-xs mb-1">SCROLL_TO_ANALYZE</span>
+              <ArrowDown className="h-4 w-4" />
             </div>
           </div>
         </div>

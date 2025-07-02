@@ -60,6 +60,17 @@ LASTFM_API_KEY=your_lastfm_api_key_here
 
 ```
 NEWS_API_KEY=your_news_api_key_here
+
+## YouTube Data API
+YOUTUBE_API_KEY=your_youtube_api_key_here
+
+## Shazam API (via RapidAPI)
+SHAZAM_API_KEY=your_rapidapi_key_here
+
+## Genius API
+GENIUS_CLIENT_ID=your_genius_client_id_here
+GENIUS_CLIENT_SECRET=your_genius_client_secret_here
+GENIUS_ACCESS_TOKEN=your_genius_access_token_here
 ```
 
 - Get your API key from: https://newsapi.org/register

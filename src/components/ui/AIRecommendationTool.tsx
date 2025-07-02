@@ -253,50 +253,40 @@ const AIRecommendationTool: React.FC = () => {
     return (
         <div className={`transition-all duration-500 ${analysis ? 'min-h-screen bg-[#0f1216]' : 'bg-[#0f1216]'}`}>
             <div className={`container mx-auto px-6 max-w-7xl transition-all duration-500 ${analysis ? 'py-12' : 'py-8'}`}>
-                {/* Dynamic Hero Section - Compact when no data, expanded when data loaded */}
-                <div className={`text-center transition-all duration-500 ${analysis ? 'mb-16' : 'mb-8'}`}>
-                    <div className={`transition-all duration-500 ${analysis ? 'mb-8' : 'mb-6'}`}>
-                        <h1 className={`font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-500 ${analysis ? 'text-6xl mb-6' : 'text-5xl md:text-6xl mb-4'}`}>
-                            AI Artist Analysis & Investment Intelligence
-                        </h1>
-                        <p className={`text-white/80 mx-auto leading-relaxed transition-all duration-500 ${analysis ? 'text-xl max-w-3xl' : 'text-lg max-w-2xl'}`}>
-                            Compare artists using advanced AI, predict commercial success, and discover investment opportunities with our comprehensive analysis platform
-                        </p>
-                    </div>
-
-                    {/* Search Section */}
-                    <div className={`mx-auto transition-all duration-500 ${analysis ? 'max-w-4xl' : 'max-w-3xl'}`}>
-                        <div className={`grid gap-6 transition-all duration-500 ${analysis ? 'grid-cols-1 md:grid-cols-2 mb-8' : 'grid-cols-1 md:grid-cols-2 mb-6'}`}>
+                {/* Search Section */}
+                <div className="text-center">
+                    <div className="mx-auto max-w-4xl">
+                        <div className="grid gap-8 md:grid-cols-2 mb-8">
                             {/* Primary Search */}
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                                <CardHeader className={`transition-all duration-300 ${analysis ? 'pb-4' : 'pb-3'}`}>
-                                    <CardTitle className={`font-semibold text-gray-800 flex items-center gap-2 transition-all duration-300 ${analysis ? 'text-lg' : 'text-base'}`}>
-                                        <Target className={`text-blue-600 transition-all duration-300 ${analysis ? 'h-5 w-5' : 'h-4 w-4'}`} />
+                            <Card className="bg-gray-900/70 backdrop-blur-sm border border-gray-700 shadow-xl hover:border-blue-500/50 transition-all duration-300">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="text-xl font-semibold text-white flex items-center gap-3">
+                                        <Target className="h-6 w-6 text-blue-400" />
                                         Artist to Analyze
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className={`transition-all duration-300 ${analysis ? 'space-y-4' : 'space-y-3'}`}>
+                                <CardContent className="space-y-4">
                                     <Input
                                         type="text"
                                         placeholder="Enter artist name (e.g., Drake, Taylor Swift)"
                                         value={artistName}
                                         onChange={(e) => setArtistName(e.target.value)}
-                                        className={`border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 ${analysis ? 'text-lg py-3' : 'text-base py-2'}`}
+                                        className="bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/20 py-3 text-lg"
                                         disabled={isLoading}
                                     />
                                     <Button 
                                         onClick={handleFirstArtistSearch}
                                         disabled={isLoading || !artistName.trim()}
-                                        className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transform transition-all duration-200 hover:scale-105 ${analysis ? 'py-3 text-lg' : 'py-2 text-base'}`}
+                                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                     >
                                         {isLoading ? (
                                             <>
-                                                <Brain className={`mr-2 animate-spin transition-all duration-300 ${analysis ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                                                <Brain className="mr-2 w-5 h-5 animate-spin" />
                                                 Analyzing...
                                             </>
                                         ) : (
                                             <>
-                                                <Sparkles className={`mr-2 transition-all duration-300 ${analysis ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                                                <Sparkles className="mr-2 w-5 h-5" />
                                                 Analyze Artist
                                             </>
                                         )}
@@ -305,36 +295,36 @@ const AIRecommendationTool: React.FC = () => {
                             </Card>
 
                             {/* Comparison Search */}
-                            <Card className={`transition-all duration-500 ${analysis ? 'bg-white/80 backdrop-blur-sm border-0 shadow-lg' : 'bg-gray-50/50 border-dashed border-2 border-gray-300'}`}>
-                                <CardHeader className={`transition-all duration-300 ${analysis ? 'pb-4' : 'pb-3'}`}>
-                                    <CardTitle className={`font-semibold flex items-center gap-2 transition-all duration-300 ${analysis ? 'text-lg text-gray-800' : 'text-base text-gray-400'}`}>
-                                        <Users className={`text-green-600 transition-all duration-300 ${analysis ? 'h-5 w-5' : 'h-4 w-4'}`} />
+                            <Card className={`backdrop-blur-sm shadow-xl transition-all duration-300 ${analysis ? 'bg-gray-900/70 border border-gray-700 hover:border-green-500/50' : 'bg-gray-800/30 border border-gray-600/50'}`}>
+                                <CardHeader className="pb-4">
+                                    <CardTitle className={`text-xl font-semibold flex items-center gap-3 ${analysis ? 'text-white' : 'text-gray-400'}`}>
+                                        <Users className={`h-6 w-6 ${analysis ? 'text-green-400' : 'text-gray-500'}`} />
                                         Compare with Another Artist
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className={`transition-all duration-300 ${analysis ? 'space-y-4' : 'space-y-3'}`}>
+                                <CardContent className="space-y-4">
                                     <Input
                                         type="text"
                                         placeholder={analysis ? "Enter another artist for comparison" : "Analyze an artist first"}
                                         value={comparableArtistName}
                                         onChange={(e) => setComparableArtistName(e.target.value)}
-                                        className={`border-gray-200 focus:border-green-500 focus:ring-green-500 transition-all duration-300 ${analysis ? 'text-lg py-3' : 'text-base py-2'}`}
+                                        className={`border-gray-600 placeholder-gray-400 py-3 text-lg transition-all duration-300 ${analysis ? 'bg-gray-800/50 text-white focus:border-green-400 focus:ring-green-400/20' : 'bg-gray-700/30 text-gray-500'}`}
                                         disabled={!analysis || isSecondSearchLoading}
                                     />
                                     <Button 
                                         onClick={handleSecondArtistSearch}
                                         disabled={!analysis || isSecondSearchLoading || !comparableArtistName.trim()}
                                         variant="outline"
-                                        className={`w-full border-green-500 text-green-600 hover:bg-green-50 shadow-lg transform transition-all duration-200 hover:scale-105 ${analysis ? 'py-3 text-lg' : 'py-2 text-base'}`}
+                                        className={`w-full py-3 text-lg font-semibold shadow-lg transition-all duration-200 ${analysis ? 'border-green-500 text-green-400 hover:bg-green-500 hover:text-white' : 'border-gray-600 text-gray-500'}`}
                                     >
                                         {isSecondSearchLoading ? (
                                             <>
-                                                <Brain className={`mr-2 animate-spin transition-all duration-300 ${analysis ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                                                <Brain className="mr-2 w-5 h-5 animate-spin" />
                                                 Comparing...
                                             </>
                                         ) : (
                                             <>
-                                                <CheckCircle className={`mr-2 transition-all duration-300 ${analysis ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                                                <CheckCircle className="mr-2 w-5 h-5" />
                                                 Compare Artists
                                             </>
                                         )}

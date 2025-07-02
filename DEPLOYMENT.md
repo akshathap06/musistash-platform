@@ -20,10 +20,16 @@ This guide will help you deploy MusiStash to production on `musistash.com` with 
 3. **Environment Variables**: Add these in Vercel dashboard:
    ```
    OPENAI_API_KEY=your_openai_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
    SPOTIFY_CLIENT_ID=your_spotify_client_id_here
    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
    LASTFM_API_KEY=your_lastfm_api_key_here
    NEWS_API_KEY=your_news_api_key_here
+   YOUTUBE_API_KEY=your_youtube_api_key_here
+   SHAZAM_API_KEY=your_shazam_rapidapi_key_here
+   GENIUS_CLIENT_ID=your_genius_client_id_here
+   GENIUS_CLIENT_SECRET=your_genius_client_secret_here
+   GENIUS_ACCESS_TOKEN=your_genius_access_token_here
    ```
 4. **Deploy**: Vercel will give you a URL like `https://musistash-backend.vercel.app`
 

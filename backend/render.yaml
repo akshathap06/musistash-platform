@@ -6,13 +6,25 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: SPOTIFY_CLIENT_ID
-        sync: false
-      - key: SPOTIFY_CLIENT_SECRET
-        sync: false
-      - key: LASTFM_API_KEY
-        sync: false
-      - key: NEWS_API_KEY
-        sync: false
+- key: OPENAI_API_KEY
+  sync: false
+- key: GEMINI_API_KEY
+  sync: false
+- key: SPOTIFY_CLIENT_ID
+  sync: false
+- key: SPOTIFY_CLIENT_SECRET
+  sync: false
+- key: LASTFM_API_KEY
+  sync: false
+- key: NEWS_API_KEY
+  sync: false
+- key: YOUTUBE_API_KEY
+  sync: false
+- key: SHAZAM_API_KEY
+  sync: false
+- key: GENIUS_CLIENT_ID
+  sync: false
+- key: GENIUS_CLIENT_SECRET
+  sync: false
+- key: GENIUS_ACCESS_TOKEN
+  sync: false

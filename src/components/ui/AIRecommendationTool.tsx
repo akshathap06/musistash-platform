@@ -222,6 +222,12 @@ const AIRecommendationTool: React.FC = () => {
             }
             
             const data = await response.json();
+            
+            // Debug logging for resonance score
+            console.log('🎯 API Response Data:', data);
+            console.log('🎯 AI Similarity Analysis:', data.ai_similarity_analysis);
+            console.log('🎯 Resonance Score:', data.ai_similarity_analysis?.musistash_resonance_score);
+            
             setAnalysis(data);
             
             if (data.searched_artist_stats) {

@@ -2168,6 +2168,67 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
                 comp_artist_name
             )
             
+            # 🎯 ENSURE RESONANCE SCORE IS ALWAYS INCLUDED - Core MusiStash Feature
+            if "musistash_resonance_score" not in ai_similarity_analysis:
+                print(f"🔄 Resonance score missing from fallback, calculating now: {artist_name} vs {comp_artist_name}")
+                try:
+                    # Determine which artist is the "lesser" one (should be the target for analysis)
+                    if searched_artist.followers <= comparable_artist_obj.followers:
+                        target_artist = searched_artist
+                        target_name = artist_name
+                        mentor_artist = comparable_artist_obj
+                        mentor_name = comp_artist_name
+                    else:
+                        target_artist = comparable_artist_obj
+                        target_name = comp_artist_name
+                        mentor_artist = searched_artist
+                        mentor_name = artist_name
+                    
+                    # Get audio features
+                    target_audio_features = await get_artist_audio_features(target_name, target_artist)
+                    mentor_audio_features = await get_artist_audio_features(mentor_name, mentor_artist)
+                    
+                    # Build stats for resonance calculation
+                    target_stats = {
+                        "spotify": {
+                            **target_artist.dict(),
+                            **target_audio_features
+                        }
+                    }
+                    mentor_stats = {
+                        "spotify": {
+                            **mentor_artist.dict(),
+                            **mentor_audio_features
+                        }
+                    }
+                    
+                    # Calculate resonance score
+                    genre_similarity = ai_similarity_analysis.get("category_scores", {}).get("genre_similarity", 50.0)
+                    theme_similarity = ai_similarity_analysis.get("category_scores", {}).get("theme_similarity", 50.0)
+                    
+                    resonance_score = await calculate_musistash_resonance_score(
+                        target_stats, 
+                        mentor_stats, 
+                        target_name, 
+                        mentor_name,
+                        genre_similarity,
+                        theme_similarity
+                    )
+                    
+                    ai_similarity_analysis["musistash_resonance_score"] = resonance_score
+                    print(f"✅ Fallback Resonance Score calculated: {resonance_score.get('resonance_score', 'N/A')}%")
+                    
+                except Exception as resonance_error:
+                    print(f"⚠️ Fallback resonance score calculation failed: {resonance_error}")
+                    # Create a basic fallback resonance score
+                    fallback_resonance = create_fallback_resonance_score(
+                        artist_name, comp_artist_name,
+                        {"spotify": searched_artist.dict()},
+                        {"spotify": comparable_artist_obj.dict()}
+                    )
+                    ai_similarity_analysis["musistash_resonance_score"] = fallback_resonance
+                    print(f"✅ Basic fallback resonance score created: {fallback_resonance.get('resonance_score', 'N/A')}%")
+            
             # Try to use Gemini even as fallback for better insights
             if "actionable_insights" not in ai_similarity_analysis or not ai_similarity_analysis["actionable_insights"]:
                 try:

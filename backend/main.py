@@ -2016,256 +2016,183 @@ class RealAudienceAnalyzer:
 
 @app.get("/analyze-artist/{artist_name}")
 async def analyze_artist(artist_name: str, comparable_artist: str = None):
+    """
+    Analyze an artist and provide comprehensive insights
+    """
     try:
-        print(f"Analyzing artist: {artist_name}")
+        print(f"🎯 ANALYZE ARTIST REQUEST: {artist_name} vs {comparable_artist}")
+        print(f"🔍 Environment Check - Spotify: {spotify_client_id is not None}, Gemini: {gemini_api_key != 'dummy_key'}")
         
+        # Search for the main artist
         searched_artist = await get_artist_info(artist_name)
         if not searched_artist:
-            raise HTTPException(status_code=404, detail="Artist not found.")
+            print(f"❌ Artist not found: {artist_name}")
+            raise HTTPException(status_code=404, detail=f"Artist '{artist_name}' not found")
         
-        # Get a comparable artist - either specified or random
-        if comparable_artist:
-            print(f"Using specified comparable artist: {comparable_artist}")
-            comp_artist_name = comparable_artist
-            comparable_artist_obj = await get_artist_info(comp_artist_name)
-            if not comparable_artist_obj:
-                # If specified artist not found, fall back to random
-                mock_artists = ["Taylor Swift", "Drake", "Billie Eilish", "The Weeknd", "Olivia Rodrigo"]
-                comp_artist_name = random.choice([a for a in mock_artists if a.lower() != artist_name.lower()])
-                comparable_artist_obj = await get_artist_info(comp_artist_name)
-        else:
-            # Get a random comparable artist
-            mock_artists = ["Taylor Swift", "Drake", "Billie Eilish", "The Weeknd", "Olivia Rodrigo"]
-            comp_artist_name = random.choice([a for a in mock_artists if a.lower() != artist_name.lower()])
-            comparable_artist_obj = await get_artist_info(comp_artist_name)
+        print(f"✅ Found artist: {searched_artist.name} ({searched_artist.followers:,} followers)")
         
+        # Handle comparable artist
+        comp_artist_name = comparable_artist if comparable_artist else "Taylor Swift"
+        comparable_artist_obj = await get_artist_info(comp_artist_name)
         if not comparable_artist_obj:
-            raise HTTPException(status_code=404, detail=f"Comparable artist not found.")
+            print(f"⚠️ Comparable artist not found: {comp_artist_name}, using fallback")
+            comp_artist_name = "Taylor Swift"
+            comparable_artist_obj = await get_artist_info(comp_artist_name)
         
-        # Use Gemini for real AI insights directly
-        try:
-            print(f"🔍 Getting real AI insights using Gemini for {artist_name} vs {comp_artist_name}")
-            insights_result = await generate_real_ai_insights_with_search(
-                artist_name, 
-                comp_artist_name, 
-                {"artist1_monthly_listeners": searched_artist.followers, "artist2_monthly_listeners": comparable_artist_obj.followers},
-                {"artist1_subscribers": searched_artist.followers * 0.3, "artist2_subscribers": comparable_artist_obj.followers * 0.3}
-            )
-            use_real_data = True
-            audience_analysis = {
-                "actionable_insights": insights_result["insights"],
-                "growth_target": insights_result["growth_target"],
-                "mentor_artist": insights_result["mentor_artist"]
+        print(f"✅ Comparable artist: {comparable_artist_obj.name} ({comparable_artist_obj.followers:,} followers)")
+        
+        # Initialize response structure with defaults
+        response = {
+            "artist": await map_spotify_artist_to_frontend(searched_artist),
+            "comparable_artist": await map_spotify_artist_to_frontend(comparable_artist_obj),
+            "analysis": {
+                "overall_similarity": 0.0,
+                "genre_similarity": 0.0,
+                "popularity_similarity": 0.0,
+                "audience_similarity": 0.0,
+                "chart_similarity": 0.0,
+                "streaming_similarity": 0.0,
+                "insights": [],
+                "data_sources": []
+            },
+            "musistash_resonance_score": 0.0,  # 🎯 ALWAYS INCLUDE THIS
+            "resonance_details": {
+                "score": 0.0,
+                "confidence": "low",
+                "calculation_method": "fallback",
+                "success_drivers": [],
+                "risk_factors": []
             }
-        except Exception as e:
-            print(f"Gemini AI insights failed, using fallback: {e}")
-            audience_analysis = None
-            use_real_data = False
+        }
         
-        # Calculate smart popularity scores and monthly listeners
-        searched_popularity = await calculate_popularity_score(searched_artist, artist_name)
-        comparable_popularity = await calculate_popularity_score(comparable_artist_obj, comp_artist_name)
+        # Try to get enhanced analysis with real data
+        use_real_data = (gemini_api_key and gemini_api_key != "dummy_key" and 
+                        spotify_client_id and spotify_client_secret)
         
-        # Build similarity analysis
-        if use_real_data and audience_analysis:
-            # Calculate detailed genre analysis for Venn diagram
-            detailed_genre_analysis = calculate_enhanced_genre_similarity(
-                searched_artist.genres, 
-                comparable_artist_obj.genres, 
-                artist_name, 
-                comp_artist_name
-            )
-            
-            ai_similarity_analysis = {
-                "similarity_score": 85.0,  # High similarity score for comparison
-                "category_scores": {
-                    "genre_similarity": detailed_genre_analysis["similarity_percentage"],
-                    "popularity_similarity": 85.0,
-                    "audience_similarity": 80.0,
-                    "chart_performance_similarity": 90.0,
-                    "streaming_similarity": 88.0
-                },
-                "detailed_genre_analysis": detailed_genre_analysis,
-                "actionable_insights": audience_analysis["actionable_insights"],
-                "growth_target": audience_analysis.get("growth_target"),
-                "mentor_artist": audience_analysis.get("mentor_artist"),
-                "analysis_method": "gemini_search_with_resonance",
-                "key_similarities": [
-                    f"Both {artist_name} and {comp_artist_name} have strong streaming presence",
-                    f"Similar fan engagement patterns across platforms",
-                    f"Comparable market positioning and audience reach"
-                ],
-                "key_differences": [
-                    f"Different musical styles and genre approaches",
-                    f"Distinct social media strategies and content",
-                    f"Varying touring and collaboration patterns"
-                ],
-                "reasoning": f"Analysis based on real-time Gemini search data for {artist_name} vs {comp_artist_name}"
-            }
-            
-            # 🎯 ALWAYS CALCULATE RESONANCE SCORE - Core MusiStash Feature
-            # Determine which artist is the "lesser" one (should be the target for analysis)
-            if searched_artist.followers <= comparable_artist_obj.followers:
-                target_artist = searched_artist
-                target_name = artist_name
-                mentor_artist = comparable_artist_obj
-                mentor_name = comp_artist_name
-            else:
-                target_artist = comparable_artist_obj
-                target_name = comp_artist_name
-                mentor_artist = searched_artist
-                mentor_name = artist_name
-            
-            print(f"🎯 Calculating MusiStash Resonance Score for {target_name} (Followers: {target_artist.followers:,}) vs {mentor_name} (Followers: {mentor_artist.followers:,})")
+        print(f"🔍 Analysis method: {'Real data + AI' if use_real_data else 'Fallback only'}")
+        
+        if use_real_data:
             try:
-                # Get real audio features from Spotify or calculate based on artist data
-                target_audio_features = await get_artist_audio_features(target_name, target_artist)
-                mentor_audio_features = await get_artist_audio_features(mentor_name, mentor_artist)
-                
-                # 🎭 Analyze musical ecosystem compatibility for realistic scoring
-                ecosystem_compatibility = await analyze_musical_ecosystem_compatibility(
-                    target_name, mentor_name,
-                    getattr(target_artist, 'genres', []), getattr(mentor_artist, 'genres', []),
-                    target_artist.followers, mentor_artist.followers
+                # Get real AI insights
+                ai_similarity_analysis = await get_real_music_industry_data_with_gemini(
+                    artist_name, comp_artist_name
                 )
                 
-                # Build comprehensive stats for resonance calculation
-                target_stats = {
-                    "spotify": {
-                        **target_artist.dict(),
-                        **target_audio_features
-                    }
-                }
-                mentor_stats = {
-                    "spotify": {
-                        **mentor_artist.dict(),
-                        **mentor_audio_features
-                    }
-                }
-                
-                # Calculate resonance score with ecosystem-aware compatibility
-                resonance_score = await calculate_musistash_resonance_score(
-                    target_stats, 
-                    mentor_stats, 
-                    target_name, 
-                    mentor_name,
-                    detailed_genre_analysis["similarity_percentage"],  # genre_similarity
-                    75.0,  # theme_similarity - estimated from genre compatibility
-                    ecosystem_compatibility  # NEW: ecosystem analysis for realistic scoring
-                )
-                
-                ai_similarity_analysis["musistash_resonance_score"] = resonance_score
-                print(f"✅ MusiStash Resonance Score calculated: {resonance_score.get('resonance_score', 'N/A')}%")
-                
-            except Exception as resonance_error:
-                print(f"⚠️ Resonance score calculation failed: {resonance_error}")
-                # Don't fail the whole request, just log the error
-                pass
-        else:
-            # Use original similarity calculation as fallback
-            ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
-                {"spotify": searched_artist.dict()}, 
-                {"spotify": comparable_artist_obj.dict()}, 
-                artist_name, 
-                comp_artist_name
-            )
-            
-            # 🎯 ENSURE RESONANCE SCORE IS ALWAYS INCLUDED - Core MusiStash Feature
-            if "musistash_resonance_score" not in ai_similarity_analysis:
-                print(f"🔄 Resonance score missing from fallback, calculating now: {artist_name} vs {comp_artist_name}")
-                try:
-                    # Determine which artist is the "lesser" one (should be the target for analysis)
-                    if searched_artist.followers <= comparable_artist_obj.followers:
-                        target_artist = searched_artist
-                        target_name = artist_name
-                        mentor_artist = comparable_artist_obj
-                        mentor_name = comp_artist_name
-                    else:
-                        target_artist = comparable_artist_obj
-                        target_name = comp_artist_name
-                        mentor_artist = searched_artist
-                        mentor_name = artist_name
+                if ai_similarity_analysis and "audience_analysis" in ai_similarity_analysis:
+                    print("✅ Gemini AI analysis successful")
+                    response["analysis"] = ai_similarity_analysis
                     
-                    # Get audio features
-                    target_audio_features = await get_artist_audio_features(target_name, target_artist)
-                    mentor_audio_features = await get_artist_audio_features(mentor_name, mentor_artist)
+                    # Calculate resonance score with real data
+                    genre_similarity = ai_similarity_analysis.get("genre_similarity", 0.5)
+                    theme_similarity = ai_similarity_analysis.get("theme_similarity", 0.5)
                     
-                    # Build stats for resonance calculation
-                    target_stats = {
-                        "spotify": {
-                            **target_artist.dict(),
-                            **target_audio_features
-                        }
-                    }
-                    mentor_stats = {
-                        "spotify": {
-                            **mentor_artist.dict(),
-                            **mentor_audio_features
-                        }
-                    }
-                    
-                    # Calculate resonance score
-                    genre_similarity = ai_similarity_analysis.get("category_scores", {}).get("genre_similarity", 50.0)
-                    theme_similarity = ai_similarity_analysis.get("category_scores", {}).get("theme_similarity", 50.0)
-                    
-                    resonance_score = await calculate_musistash_resonance_score(
-                        target_stats, 
-                        mentor_stats, 
-                        target_name, 
-                        mentor_name,
+                    resonance_result = await calculate_musistash_resonance_score(
+                        {"spotify": searched_artist.dict()},
+                        {"spotify": comparable_artist_obj.dict()},
+                        artist_name,
+                        comp_artist_name,
                         genre_similarity,
                         theme_similarity
                     )
                     
-                    ai_similarity_analysis["musistash_resonance_score"] = resonance_score
-                    print(f"✅ Fallback Resonance Score calculated: {resonance_score.get('resonance_score', 'N/A')}%")
+                    if resonance_result and "musistash_resonance_score" in resonance_result:
+                        response["musistash_resonance_score"] = resonance_result["musistash_resonance_score"]
+                        response["resonance_details"] = resonance_result.get("resonance_details", response["resonance_details"])
+                        print(f"✅ Resonance score calculated: {response['musistash_resonance_score']}%")
+                    else:
+                        print("⚠️ Resonance score calculation failed, using fallback")
+                        raise Exception("Resonance calculation failed")
+                        
+                else:
+                    print("⚠️ Gemini analysis failed, using fallback")
+                    raise Exception("Gemini analysis failed")
                     
-                except Exception as resonance_error:
-                    print(f"⚠️ Fallback resonance score calculation failed: {resonance_error}")
-                    # Create a basic fallback resonance score
-                    fallback_resonance = create_fallback_resonance_score(
-                        artist_name, comp_artist_name,
-                        {"spotify": searched_artist.dict()},
-                        {"spotify": comparable_artist_obj.dict()}
-                    )
-                    ai_similarity_analysis["musistash_resonance_score"] = fallback_resonance
-                    print(f"✅ Basic fallback resonance score created: {fallback_resonance.get('resonance_score', 'N/A')}%")
-            
-            # Try to use Gemini even as fallback for better insights
-            if "actionable_insights" not in ai_similarity_analysis or not ai_similarity_analysis["actionable_insights"]:
-                try:
-                    print(f"🔄 Using Gemini for fallback insights: {artist_name} vs {comp_artist_name}")
-                    insights_result = await generate_real_ai_insights_with_search(
-                        artist_name, 
-                        comp_artist_name,
-                        {"artist1_monthly_listeners": searched_artist.followers, "artist2_monthly_listeners": comparable_artist_obj.followers},
-                        {"artist1_subscribers": searched_artist.followers * 0.3, "artist2_subscribers": comparable_artist_obj.followers * 0.3}
-                    )
-                    ai_similarity_analysis["actionable_insights"] = insights_result["insights"]
-                    ai_similarity_analysis["growth_target"] = insights_result["growth_target"]
-                    ai_similarity_analysis["mentor_artist"] = insights_result["mentor_artist"]
-                except Exception as gemini_error:
-                    print(f"⚠️ Gemini fallback also failed: {gemini_error}")
-                    # Only use basic fallback if Gemini completely fails
-                    basic_insights = generate_basic_fallback_insights(artist_name, comp_artist_name)
-                    ai_similarity_analysis["actionable_insights"] = basic_insights
+            except Exception as e:
+                print(f"❌ Real data analysis failed: {str(e)}")
+                use_real_data = False
         
-        response_data = {
-            "artist_comparison": {
-                "searched": await map_spotify_artist_to_frontend(searched_artist),
-                "comparable": await map_spotify_artist_to_frontend(comparable_artist_obj)
-            },
-            "ai_similarity_analysis": ai_similarity_analysis
-        }
+        # Fallback analysis (always runs if real data fails)
+        if not use_real_data:
+            print("🔄 Using fallback analysis method")
+            try:
+                # Use enhanced Spotify similarity as fallback
+                ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
+                    {"spotify": searched_artist.dict()}, 
+                    {"spotify": comparable_artist_obj.dict()}, 
+                    artist_name, 
+                    comp_artist_name
+                )
+                
+                if ai_similarity_analysis:
+                    response["analysis"] = ai_similarity_analysis
+                    
+                    # Extract or calculate resonance score from fallback
+                    if "musistash_resonance_score" in ai_similarity_analysis:
+                        response["musistash_resonance_score"] = ai_similarity_analysis["musistash_resonance_score"]
+                        response["resonance_details"] = ai_similarity_analysis.get("resonance_details", response["resonance_details"])
+                        print(f"✅ Fallback resonance score: {response['musistash_resonance_score']}%")
+                    else:
+                        # Force calculate resonance score if missing
+                        print("🔄 Forcing resonance score calculation")
+                        fallback_resonance = create_fallback_resonance_score(
+                            artist_name, comp_artist_name,
+                            {"spotify": searched_artist.dict()},
+                            {"spotify": comparable_artist_obj.dict()}
+                        )
+                        response["musistash_resonance_score"] = fallback_resonance["musistash_resonance_score"]
+                        response["resonance_details"] = fallback_resonance.get("resonance_details", response["resonance_details"])
+                        print(f"✅ Forced resonance score: {response['musistash_resonance_score']}%")
+                
+            except Exception as e:
+                print(f"❌ Fallback analysis failed: {str(e)}")
+                # Final emergency fallback
+                print("🚨 Using emergency fallback resonance score")
+                emergency_score = min(max(
+                    (searched_artist.popularity + comparable_artist_obj.popularity) / 2.0,
+                    10.0
+                ), 90.0)
+                response["musistash_resonance_score"] = emergency_score
+                response["resonance_details"] = {
+                    "score": emergency_score,
+                    "confidence": "low",
+                    "calculation_method": "emergency_fallback",
+                    "success_drivers": ["Basic popularity analysis"],
+                    "risk_factors": ["Limited data available"]
+                }
+                print(f"🚨 Emergency resonance score: {emergency_score}%")
         
+        # Final validation - ensure resonance score is always present
+        if "musistash_resonance_score" not in response or response["musistash_resonance_score"] == 0.0:
+            print("🚨 Final safety check: Adding missing resonance score")
+            safety_score = min(max(
+                (searched_artist.popularity + comparable_artist_obj.popularity) / 2.0,
+                15.0
+            ), 85.0)
+            response["musistash_resonance_score"] = safety_score
+            response["resonance_details"] = {
+                "score": safety_score,
+                "confidence": "low",
+                "calculation_method": "safety_fallback",
+                "success_drivers": ["Basic compatibility analysis"],
+                "risk_factors": ["Limited API access"]
+            }
+            print(f"🚨 Safety resonance score: {safety_score}%")
+        
+        print(f"🎯 FINAL RESPONSE: Resonance Score = {response['musistash_resonance_score']}%")
         print(f"Successfully analyzed: {artist_name} vs {comp_artist_name}")
-        return response_data
+        
+        return response
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error in analyze_artist: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        print(f"❌ Critical error in analyze_artist: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Analysis failed: {str(e)}"
+        )
 
 @app.get("/soundcharts-data/{artist_name}")
 async def get_soundcharts_data_endpoint(artist_name: str):
@@ -3979,6 +3906,42 @@ def create_fallback_ecosystem_analysis(target_artist: str, mentor_artist: str, t
         "market_positioning": f"{'Compatible' if market_overlap > 60 else 'Cross-genre'} market comparison",
         "realistic_ceiling": f"{'High potential' if realistic_probability > 70 else 'Moderate potential'} in mentor's market segment"
     }
+
+# Debug environment variables at startup
+print("🔍 ENVIRONMENT VARIABLES CHECK:")
+print(f"  OPENAI_API_KEY: {'✅ Set' if openai_api_key != 'dummy_key' else '❌ Missing/Default'}")
+print(f"  GEMINI_API_KEY: {'✅ Set' if gemini_api_key != 'dummy_key' else '❌ Missing/Default'}")
+print(f"  SPOTIFY_CLIENT_ID: {'✅ Set' if spotify_client_id else '❌ Missing'}")
+print(f"  SPOTIFY_CLIENT_SECRET: {'✅ Set' if spotify_client_secret else '❌ Missing'}")
+print(f"  LASTFM_API_KEY: {'✅ Set' if lastfm_api_key else '❌ Missing'}")
+print(f"  NEWS_API_KEY: {'✅ Set' if news_api_key else '❌ Missing'}")
+print(f"  YOUTUBE_API_KEY: {'✅ Set' if youtube_api_key else '❌ Missing'}")
+print(f"  SHAZAM_API_KEY: {'✅ Set' if shazam_api_key else '❌ Missing'}")
+print(f"  GENIUS_ACCESS_TOKEN: {'✅ Set' if genius_access_token else '❌ Missing'}")
+print(f"  JWT_SECRET_KEY: {'✅ Set' if JWT_SECRET_KEY != 'your-super-secret-key-change-this-in-production' else '❌ Using Default'}")
+
+# Calculate API availability score
+available_apis = sum([
+    openai_api_key != "dummy_key",
+    gemini_api_key != "dummy_key", 
+    spotify_client_id is not None,
+    spotify_client_secret is not None,
+    lastfm_api_key is not None,
+    news_api_key is not None,
+    youtube_api_key is not None,
+    shazam_api_key is not None,
+    genius_access_token is not None
+])
+total_apis = 9
+print(f"🎯 API AVAILABILITY: {available_apis}/{total_apis} ({(available_apis/total_apis)*100:.1f}%)")
+
+if available_apis < 3:
+    print("⚠️  WARNING: Low API availability may affect resonance score calculation!")
+    print("   Make sure to set environment variables in Railway dashboard.")
+
+# Initialize Spotify client with better error handling
+print("🔍 Debug: Spotify Client ID exists:", spotify_client_id is not None)
+print("🔍 Debug: Spotify Client Secret exists:", spotify_client_secret is not None)
 
 if __name__ == "__main__":
     import uvicorn

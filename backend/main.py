@@ -268,12 +268,12 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             
             response = call_gemini_api(prompt, max_tokens=100)
             if response is not None:
-                response = response.strip()
+                response = response.strip() if response else ""
                 if response.startswith('```json'):
                     response = response[7:]
                 if response.endswith('```'):
                     response = response[:-3]
-                response = response.strip()
+                response = response.strip() if response else ""
                 
                 genres_from_ai = json.loads(response)
                 if isinstance(genres_from_ai, list):
@@ -398,12 +398,12 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
         response = call_gemini_api(prompt, max_tokens=400)
         # Clean the response to extract just the JSON
         if response is not None:
-            response = response.strip()
-        if response.startswith('```json'):
+            response = response.strip() if response else ""
+        if response and response.startswith('```json'):
             response = response[7:]
-        if response.endswith('```'):
+        if response and response.endswith('```'):
             response = response[:-3]
-        response = response.strip()
+        response = response.strip() if response else ""
         
         data = json.loads(response)
         return data
@@ -1269,7 +1269,7 @@ async def get_billboard_performance_score(artist_name: str) -> int:
             ai_response = call_gemini_api(billboard_prompt, max_tokens=100)
             if ai_response is not None:
                 # Extract numerical score from AI response
-                score_text = ai_response.strip()
+                score_text = ai_response.strip() if ai_response else ""
                 # Try to extract just the number
                 import re
                 score_match = re.search(r'\b(\d{1,3})\b', score_text)
@@ -1575,14 +1575,14 @@ async def generate_real_ai_insights_with_search(artist1_name: str, artist2_name:
                 text = text.replace('###', '').replace('##', '').replace('#', '')
                 # Remove markdown italics
                 text = text.replace('*', '').replace('_', '')
-                return text.strip()
+                return text.strip() if text else ""
             
             insights = []
             for line in response.split('\n'):
-                line = line.strip()
+                line = line.strip() if line else ""
                 if line and (line[0].isdigit() or line.startswith('-')):
                     clean_line = line.split('.', 1)[-1].strip() if '.' in line else line
-                    clean_line = clean_line.lstrip('- •').strip()
+                    clean_line = clean_line.lstrip('- •').strip() if clean_line else ""
                     if clean_line:
                         # Clean any markdown formatting
                         clean_line = clean_markdown(clean_line)
@@ -1750,7 +1750,7 @@ async def health_check():
 async def version_check():
     """Deployment verification endpoint"""
     return {
-        "version": "v2.1.0-resonance-fix",
+        "version": "v2.2.0-production-sync",
         "deployment_date": "2025-01-02",
         "features": [
             "comprehensive_resonance_score_fix",
@@ -3849,7 +3849,7 @@ async def analyze_musical_ecosystem_compatibility(target_artist: str, mentor_art
         
         # Parse JSON response
         try:
-            ecosystem_data = json.loads(response.strip())
+            ecosystem_data = json.loads(response.strip() if response else "{}")
             
             # Validate and sanitize the response
             ecosystem_analysis = {

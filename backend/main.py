@@ -269,15 +269,15 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             response = call_gemini_api(prompt, max_tokens=100)
             if response is not None:
                 response = response.strip() if response else ""
-                if response.startswith('```json'):
-                    response = response[7:]
-                if response.endswith('```'):
-                    response = response[:-3]
+            if response.startswith('```json'):
+                response = response[7:]
+            if response.endswith('```'):
+                response = response[:-3]
                 response = response.strip() if response else ""
-                
+            
                 if response:  # Only parse if we have actual content
-                    genres_from_ai = json.loads(response)
-                    if isinstance(genres_from_ai, list):
+            genres_from_ai = json.loads(response)
+            if isinstance(genres_from_ai, list):
                         all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
         except Exception as e:
             print(f"Gemini genre fetch failed for {artist_name}: {e}")
@@ -407,8 +407,8 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
         response = response.strip() if response else ""
         
         if response:  # Only parse if we have actual content
-            data = json.loads(response)
-            return data
+        data = json.loads(response)
+        return data
         else:
             # Return default if no response
             return {
@@ -2080,8 +2080,8 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
         
         # Handle comparable artist
         comp_artist_name = comparable_artist if comparable_artist else "Taylor Swift"
-        comparable_artist_obj = await get_artist_info(comp_artist_name)
-        if not comparable_artist_obj:
+            comparable_artist_obj = await get_artist_info(comp_artist_name)
+            if not comparable_artist_obj:
             print(f"⚠️ Comparable artist not found: {comp_artist_name}, using fallback")
             comp_artist_name = "Taylor Swift"
             comparable_artist_obj = await get_artist_info(comp_artist_name)
@@ -2150,7 +2150,7 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
                         print("⚠️ Resonance score calculation failed, using fallback")
                         raise Exception("Resonance calculation failed")
                         
-                else:
+        else:
                     print("⚠️ Gemini analysis failed, using fallback")
                     raise Exception("Gemini analysis failed")
                     
@@ -2163,13 +2163,13 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
             print("🔄 Using fallback analysis method")
             try:
                 # Use enhanced Spotify similarity as fallback
-                ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
-                    {"spotify": searched_artist.dict()}, 
-                    {"spotify": comparable_artist_obj.dict()}, 
-                    artist_name, 
-                    comp_artist_name
-                )
-                
+            ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
+                {"spotify": searched_artist.dict()}, 
+                {"spotify": comparable_artist_obj.dict()}, 
+                artist_name, 
+                comp_artist_name
+            )
+            
                 if ai_similarity_analysis:
                     response["analysis"] = ai_similarity_analysis
                     

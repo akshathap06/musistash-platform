@@ -275,9 +275,10 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
                     response = response[:-3]
                 response = response.strip() if response else ""
                 
-                genres_from_ai = json.loads(response)
-                if isinstance(genres_from_ai, list):
-                    all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
+                if response:  # Only parse if we have actual content
+                    genres_from_ai = json.loads(response)
+                    if isinstance(genres_from_ai, list):
+                        all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
         except Exception as e:
             print(f"Gemini genre fetch failed for {artist_name}: {e}")
     
@@ -405,8 +406,20 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
             response = response[:-3]
         response = response.strip() if response else ""
         
-        data = json.loads(response)
-        return data
+        if response:  # Only parse if we have actual content
+            data = json.loads(response)
+            return data
+        else:
+            # Return default if no response
+            return {
+                "instagram_followers": 0,
+                "net_worth_millions": 0,
+                "youtube_subscribers": 0,
+                "career_achievements": [],
+                "major_awards": [],
+                "monthly_streams_millions": 0,
+                "top_song_streams_billions": 0.0
+            }
     except Exception as e:
         print(f"Error getting enhanced artist data for {artist_name}: {e}")
         # Return default data structure

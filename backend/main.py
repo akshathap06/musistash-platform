@@ -243,7 +243,7 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
     
     # Use Spotify genres if available
     if spotify_genres:
-        all_genres.update([g.lower().strip() for g in spotify_genres if g])
+        all_genres.update([g.lower().strip() for g in spotify_genres if isinstance(g, str) and g])
     
     # Try LastFM for additional genres
     try:
@@ -254,7 +254,7 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             if isinstance(tags, dict) and 'tag' in tags:
                 tags = tags['tag']
             if isinstance(tags, list):
-                lastfm_genres = [tag['name'].lower().strip() for tag in tags[:5] if isinstance(tag, dict)]
+                lastfm_genres = [tag['name'].lower().strip() for tag in tags[:5] if isinstance(tag, dict) and isinstance(tag.get('name'), str)]
                 all_genres.update(lastfm_genres)
     except Exception as e:
         print(f"LastFM genre fetch failed for {artist_name}: {e}")
@@ -267,7 +267,8 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             Be specific and accurate. Return ONLY the JSON array, no other text."""
             
             response = call_gemini_api(prompt, max_tokens=100)
-            response = response.strip()
+            if response is not None:
+                response = response.strip()
             if response.startswith('```json'):
                 response = response[7:]
             if response.endswith('```'):
@@ -276,7 +277,7 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             
             genres_from_ai = json.loads(response)
             if isinstance(genres_from_ai, list):
-                all_genres.update([g.lower().strip() for g in genres_from_ai if g])
+                all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
         except Exception as e:
             print(f"Gemini genre fetch failed for {artist_name}: {e}")
     
@@ -396,7 +397,8 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
     try:
         response = call_gemini_api(prompt, max_tokens=400)
         # Clean the response to extract just the JSON
-        response = response.strip()
+        if response is not None:
+            response = response.strip()
         if response.startswith('```json'):
             response = response[7:]
         if response.endswith('```'):
@@ -799,8 +801,8 @@ async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dic
 def calculate_genre_similarity(metadata1: Dict, metadata2: Dict) -> float:
     """Calculate genre similarity from metadata using enhanced relationships"""
     try:
-        genres1 = [g.lower().strip() for g in metadata1.get('genres', []) if g]
-        genres2 = [g.lower().strip() for g in metadata2.get('genres', []) if g]
+        genres1 = [g.lower().strip() for g in metadata1.get('genres', []) if isinstance(g, str) and g]
+        genres2 = [g.lower().strip() for g in metadata2.get('genres', []) if isinstance(g, str) and g]
         
         if not genres1 or not genres2:
             return 50.0  # Default when no genre data
@@ -1064,7 +1066,7 @@ async def calculate_ai_similarity_score(artist1_stats: dict, artist2_stats: dict
         
         response = call_gemini_api(prompt)
         
-        if response:
+        if response is not None:
             result = json.loads(response)
         else:
             return fallback_response
@@ -1265,7 +1267,7 @@ async def get_billboard_performance_score(artist_name: str) -> int:
         
         try:
             ai_response = call_gemini_api(billboard_prompt, max_tokens=100)
-            if ai_response:
+            if ai_response is not None:
                 # Extract numerical score from AI response
                 score_text = ai_response.strip()
                 # Try to extract just the number
@@ -1466,7 +1468,7 @@ async def get_real_music_industry_data_with_gemini(artist1_name: str, artist2_na
             response = call_gemini_api(search_prompt)
         
         # Parse the JSON response
-        if response:
+        if response is not None:
             try:
                 data = json.loads(response)
                 print(f"Successfully retrieved real music industry data via Gemini search")
@@ -2326,8 +2328,8 @@ def calculate_enhanced_genre_similarity(genres1: list, genres2: list, artist1_na
     """Calculate detailed genre similarity with visual breakdown"""
     
     # Convert to sets for easier operations
-    genres1_set = set([g.lower().strip() for g in genres1 if g])
-    genres2_set = set([g.lower().strip() for g in genres2 if g])
+    genres1_set = set([g.lower().strip() for g in genres1 if isinstance(g, str) and g])
+    genres2_set = set([g.lower().strip() for g in genres2 if isinstance(g, str) and g])
     
     # Handle empty genre lists
     if not genres1_set or not genres2_set:
@@ -2612,7 +2614,7 @@ Focus on their most popular and representative songs."""
 
         response = call_gemini_api(prompt)
         
-        if response:
+        if response is not None:
             result = json.loads(response)
             result["confidence"] = "high"
             return result

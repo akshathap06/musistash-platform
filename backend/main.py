@@ -113,11 +113,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://musistash.com",
-        "https://www.musistash.com",
-        "https://musistash-production.up.railway.app"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

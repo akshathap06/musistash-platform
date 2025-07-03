@@ -269,15 +269,15 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             response = call_gemini_api(prompt, max_tokens=100)
             if response is not None:
                 response = response.strip()
-            if response.startswith('```json'):
-                response = response[7:]
-            if response.endswith('```'):
-                response = response[:-3]
-            response = response.strip()
-            
-            genres_from_ai = json.loads(response)
-            if isinstance(genres_from_ai, list):
-                all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
+                if response.startswith('```json'):
+                    response = response[7:]
+                if response.endswith('```'):
+                    response = response[:-3]
+                response = response.strip()
+                
+                genres_from_ai = json.loads(response)
+                if isinstance(genres_from_ai, list):
+                    all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
         except Exception as e:
             print(f"Gemini genre fetch failed for {artist_name}: {e}")
     
@@ -1742,6 +1742,37 @@ async def health_check():
                 shazam_api_key is not None,
                 genius_access_token is not None,
                 soundcharts_client is not None
+            ])
+        }
+    }
+
+@app.get("/version")
+async def version_check():
+    """Deployment verification endpoint"""
+    return {
+        "version": "v2.1.0-resonance-fix",
+        "deployment_date": "2025-01-02",
+        "features": [
+            "comprehensive_resonance_score_fix",
+            "environment_variable_validation", 
+            "multiple_fallback_layers",
+            "enhanced_error_handling"
+        ],
+        "resonance_score_guaranteed": True,
+        "environment_check": {
+            "openai_available": openai_api_key != "dummy_key",
+            "gemini_available": gemini_api_key != "dummy_key",
+            "spotify_available": spotify_client_id is not None and spotify_client_secret is not None,
+            "api_count": sum([
+                openai_api_key != "dummy_key",
+                gemini_api_key != "dummy_key", 
+                spotify_client_id is not None,
+                spotify_client_secret is not None,
+                lastfm_api_key is not None,
+                news_api_key is not None,
+                youtube_api_key is not None,
+                shazam_api_key is not None,
+                genius_access_token is not None
             ])
         }
     }

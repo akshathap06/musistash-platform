@@ -1723,6 +1723,9 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
+        "version": "v2.2.0-production-sync",
+        "deployment_timestamp": "2025-01-02T12:00:00Z",
+        "resonance_score_enabled": True,
         "spotify_available": sp is not None,
         "gemini_available": gemini_api_key is not None and gemini_api_key != "dummy_key",
         "lastfm_available": lastfm_api_key is not None,

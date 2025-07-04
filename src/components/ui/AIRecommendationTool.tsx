@@ -222,70 +222,43 @@ const AIRecommendationTool: React.FC = () => {
             }
             
             const data = await response.json();
+            console.log('Backend response:', data);
 
             // Map backend response to expected frontend structure
             const mappedData = {
                 ...data,
                 artist_comparison: {
-                    searched: {
-                        ...data.artist,
-                        avatar: data.artist?.image_url || data.artist?.avatar
-                    },
-                    comparable: {
-                        ...data.comparable_artist,
-                        avatar: data.comparable_artist?.image_url || data.comparable_artist?.avatar
-                    },
+                    searched: data.artist,
+                    comparable: data.comparable_artist,
                 },
                 // Map resonance score to expected location
-                resonance_score: data.musistash_resonance_score,
-                // Map analysis data to ai_similarity_analysis
+                resonance_score: data.analysis?.musistash_resonance_score?.resonance_score || data.musistash_resonance_score?.resonance_score,
+                // Map analysis data to ai_similarity_analysis - use the rich data from analysis
                 ai_similarity_analysis: {
                     ...data.analysis,
-                    similarity_score: data.analysis?.overall_similarity || 75,
-                    key_similarities: data.analysis?.insights?.filter(insight => insight.includes('similar') || insight.includes('match')) || [
-                        'Both artists have strong commercial appeal',
-                        'Similar audience demographics',
-                        'Comparable market positioning'
-                    ],
-                    key_differences: data.analysis?.insights?.filter(insight => insight.includes('different') || insight.includes('unique')) || [
-                        'Different musical styles',
-                        'Unique artistic approaches',
-                        'Distinct brand positioning'
-                    ],
-                    category_scores: {
-                        genre_similarity: data.analysis?.genre_similarity || 0.7,
-                        popularity_similarity: data.analysis?.popularity_similarity || 0.8,
-                        audience_similarity: data.analysis?.audience_similarity || 0.6,
-                        chart_performance_similarity: data.analysis?.chart_similarity || 0.7,
-                        streaming_similarity: data.analysis?.streaming_similarity || 0.8
-                    },
-                    actionable_insights: data.analysis?.insights || [
-                        'Focus on collaborative opportunities',
-                        'Leverage similar audience demographics',
-                        'Consider cross-promotional strategies'
-                    ],
-                    musistash_resonance_score: {
-                        resonance_score: data.musistash_resonance_score,
-                        confidence_level: data.resonance_details?.confidence || 90,
-                        key_drivers: data.resonance_details?.success_drivers || [
+                    // Use the musistash_resonance_score from analysis (it has more complete data)
+                    musistash_resonance_score: data.analysis?.musistash_resonance_score || {
+                        resonance_score: data.musistash_resonance_score?.resonance_score || 75,
+                        confidence_level: 90,
+                        key_drivers: [
                             'Strong commercial appeal',
                             'Established market presence',
                             'Proven audience engagement'
                         ],
-                        risk_factors: data.resonance_details?.risk_factors || [
+                        risk_factors: [
                             'Market saturation considerations',
                             'Competitive landscape challenges'
                         ],
-                        success_probability: data.resonance_details?.success_probability || data.musistash_resonance_score,
+                        success_probability: data.musistash_resonance_score?.resonance_score || 75,
                         regression_summary: {
                             r_squared: 0.82,
-                            model_accuracy: data.resonance_details?.calculation_method || 'High',
+                            model_accuracy: 'High',
                             prediction_interval: '77-95%'
                         },
                         musistash_analysis: {
                             benchmark_artist: data.comparable_artist?.name || 'Taylor Swift',
                             target_artist: data.artist?.name || '',
-                            analysis_method: data.resonance_details?.calculation_method || 'advanced_statistical_regression',
+                            analysis_method: 'advanced_statistical_regression',
                             data_completeness: 88,
                             market_comparison: {
                                 relative_market_position: 'Established artist maintaining strong commercial position',
@@ -296,6 +269,7 @@ const AIRecommendationTool: React.FC = () => {
                 }
             };
 
+            console.log('Mapped data:', mappedData);
             setAnalysis(mappedData);
 
             if (mappedData.searched_artist_stats) {

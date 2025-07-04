@@ -124,6 +124,7 @@ app.add_middleware(
         "https://musistash.com",
         "https://www.musistash.com",
         "https://*.vercel.app"
+        "https://musistash-production.up.railway.app"
     ],  # Specific origins for security - updated to include all dev ports
     allow_credentials=True,
     allow_methods=["*"],

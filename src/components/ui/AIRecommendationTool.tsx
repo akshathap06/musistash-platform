@@ -17,7 +17,8 @@ import {
     Users,
     Sparkles,
     Target,
-    Brain
+    Brain,
+    Lightbulb
 } from 'lucide-react';
 
 interface Artist {
@@ -192,6 +193,12 @@ interface AnalysisData {
         url: string;
         published_at: string;
         source: string;
+    }>;
+    actionable_recommendations?: Array<{
+        category: string;
+        recommendation: string;
+        resources: string[];
+        priority: 'high' | 'medium' | 'low';
     }>;
 }
 
@@ -768,6 +775,56 @@ const AIRecommendationTool: React.FC = () => {
                                                             {analysis.ai_similarity_analysis.theme_analysis.compatibility.style_match ? '✓ Similar' : '✗ Different'}
                                                         </Badge>
                                                     </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+
+                                    {/* Enhanced Actionable Recommendations */}
+                                    {analysis.actionable_recommendations && (
+                                        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 shadow-lg">
+                                            <CardContent className="p-6">
+                                                <h3 className="text-xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                                                    <Lightbulb className="h-6 w-6" />
+                                                    Actionable Growth Recommendations
+                                                    <Badge className="bg-emerald-200 text-emerald-800 ml-2">
+                                                        {analysis.actionable_recommendations.length} Steps
+                                                    </Badge>
+                                                </h3>
+                                                <div className="space-y-4">
+                                                    {analysis.actionable_recommendations.map((rec, index) => (
+                                                        <div key={index} className="bg-white/70 rounded-lg p-4 border border-emerald-200">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge className={`${
+                                                                        rec.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                                                        rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                                        'bg-blue-100 text-blue-700'
+                                                                    } text-xs`}>
+                                                                        {rec.priority?.toUpperCase()} PRIORITY
+                                                                    </Badge>
+                                                                    <span className="font-semibold text-emerald-800 text-sm">{rec.category}</span>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-emerald-700 text-sm mb-3 leading-relaxed">{rec.recommendation}</p>
+                                                            {rec.resources && rec.resources.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <span className="text-xs text-emerald-600 font-medium">Resources:</span>
+                                                                    {rec.resources.slice(0, 3).map((resource, resIndex) => (
+                                                                        <a 
+                                                                            key={resIndex}
+                                                                            href={resource}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-xs bg-emerald-200 text-emerald-800 px-2 py-1 rounded hover:bg-emerald-300 transition-colors"
+                                                                        >
+                                                                            {resource.replace('https://', '').split('/')[0]}
+                                                                        </a>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </CardContent>
                                         </Card>

@@ -4,14 +4,14 @@
 const isDevelopment = import.meta.env.MODE === 'development';
 
 // Main API base URL - uses environment variable with Railway as fallback
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://musistash-production.up.railway.app';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://musistash-platform-production-3168.up.railway.app';
 
 // Development fallback for local testing (if needed)
 export const DEV_API_URL = 'http://localhost:8000';
 
 // Use Railway in production, localhost in development (if Railway env var not set)
 export const BACKEND_URL = import.meta.env.VITE_API_URL || 
-  (isDevelopment ? DEV_API_URL : 'https://musistash-production.up.railway.app');
+  (isDevelopment ? DEV_API_URL : 'https://musistash-platform-production-3168.up.railway.app');
 
 // API endpoints
 export const API_ENDPOINTS = {

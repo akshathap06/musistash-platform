@@ -56,8 +56,7 @@ print(f"🔍 Debug: Spotify Client Secret exists: {bool(spotify_client_secret)}"
 if not spotify_client_id or not spotify_client_secret:
     print("❌ Warning: Spotify credentials not found. Using mock data.")
     print(f"   Client ID: {'Present' if spotify_client_id else 'Missing'}")
-    print(f"   Client Secret: {
-          'Present' if spotify_client_secret else 'Missing'}")
+    print(f"   Client Secret: {'Present' if spotify_client_secret else 'Missing'}")
     sp = None
 else:
     try:
@@ -81,7 +80,7 @@ youtube_api_key = os.getenv("YOUTUBE_API_KEY")
 shazam_api_key = os.getenv("SHAZAM_API_KEY")
 shazam_api_host = "shazam.p.rapidapi.com"
 
-# Genius API
+# Genius API  
 genius_client_id = os.getenv("GENIUS_CLIENT_ID")
 genius_client_secret = os.getenv("GENIUS_CLIENT_SECRET")
 genius_access_token = os.getenv("GENIUS_ACCESS_TOKEN")
@@ -96,8 +95,7 @@ soundcharts_client = soundcharts.SoundchartsClient(
 GOOGLE_CLIENT_ID = "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
 
 # JWT Configuration
-JWT_SECRET_KEY = os.getenv(
-    "JWT_SECRET_KEY", "your-super-secret-key-change-this-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-this-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_TIME = timedelta(days=7)
 
@@ -113,15 +111,26 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173", 
+        "http://localhost:8080",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://localhost:8083",
+        "http://localhost:8084",
+        "http://localhost:8085",
+        "http://localhost:8086",
+        "https://musistash.com",
+        "https://www.musistash.com",
+        "https://*.vercel.app"
+    ],  # Specific origins for security - updated to include all dev ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- Pydantic Models ---
-
-
 class Artist(BaseModel):
     name: str
     id: str = ""
@@ -129,7 +138,6 @@ class Artist(BaseModel):
     popularity: int = 0
     followers: int = 0
     image_url: Optional[str] = None
-
 
 class TopTrack(BaseModel):
     id: str
@@ -140,18 +148,14 @@ class TopTrack(BaseModel):
     external_url: Optional[str] = None
 
 # Authentication Models
-
-
 class GoogleAuthRequest(BaseModel):
     token: str
-
 
 class UserCreate(BaseModel):
     name: str
     email: str
     avatar: Optional[str] = None
     role: str = "listener"
-
 
 class User(BaseModel):
     id: str
@@ -161,66 +165,55 @@ class User(BaseModel):
     role: str
     created_at: str
 
-
 class AuthResponse(BaseModel):
     user: User
     access_token: str
     token_type: str = "bearer"
 
 # --- Authentication Helper Functions ---
-
-
 def create_access_token(data: dict):
     """Create a JWT access token"""
     to_encode = data.copy()
     expire = datetime.utcnow() + JWT_EXPIRATION_TIME
     to_encode.update({"exp": expire})
-    encoded_jwt = jose_jwt.encode(
-        to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    encoded_jwt = jose_jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt
-
 
 def verify_token(token: str):
     """Verify JWT token"""
     try:
-        payload = jose_jwt.decode(
-            token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        payload = jose_jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except JWTError:
         return None
-
 
 async def verify_google_token(token: str) -> Optional[Dict]:
     """Verify Google OAuth token"""
     try:
         # Specify the CLIENT_ID of the app that accesses the backend
-        idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), GOOGLE_CLIENT_ID)
-
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
-
+            
         return idinfo
     except ValueError as e:
         print(f"Token verification failed: {e}")
         return None
 
-
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current user from JWT token"""
     if not credentials:
         return None
-
+    
     payload = verify_token(credentials.credentials)
     if not payload:
         return None
-
+    
     return payload
-
 
 # Simple in-memory user storage (replace with database in production)
 users_db = {}
-
 
 def save_user(user_data: dict) -> User:
     """Save user to database (in-memory for demo)"""
@@ -236,7 +229,6 @@ def save_user(user_data: dict) -> User:
     users_db[user.email] = user.dict()
     return user
 
-
 def get_user_by_email(email: str) -> Optional[User]:
     """Get user by email"""
     user_data = users_db.get(email)
@@ -245,17 +237,14 @@ def get_user_by_email(email: str) -> Optional[User]:
     return None
 
 # --- Helper Functions ---
-
-
 async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: list = None) -> list:
     """Get genres from multiple sources with fallbacks"""
     all_genres = set()
-
+    
     # Use Spotify genres if available
     if spotify_genres:
-        all_genres.update([g.lower().strip()
-                          for g in spotify_genres if isinstance(g, str) and g])
-
+        all_genres.update([g.lower().strip() for g in spotify_genres if isinstance(g, str) and g])
+    
     # Try LastFM for additional genres
     try:
         lastfm_data = await get_lastfm_artist(artist_name)
@@ -265,36 +254,33 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
             if isinstance(tags, dict) and 'tag' in tags:
                 tags = tags['tag']
             if isinstance(tags, list):
-                lastfm_genres = [tag['name'].lower().strip() for tag in tags[:5] if isinstance(
-                    tag, dict) and isinstance(tag.get('name'), str)]
+                lastfm_genres = [tag['name'].lower().strip() for tag in tags[:5] if isinstance(tag, dict) and isinstance(tag.get('name'), str)]
                 all_genres.update(lastfm_genres)
     except Exception as e:
         print(f"LastFM genre fetch failed for {artist_name}: {e}")
-
+    
     # If still no genres, use Gemini AI as fallback
     if not all_genres:
         try:
-            prompt = f"""What are the main music genres for the artist "{artist_name}"?
+            prompt = f"""What are the main music genres for the artist "{artist_name}"? 
             Provide 2-4 specific genres as a JSON array. Examples: ["pop", "r&b"], ["hip-hop", "rap"], ["alternative rock", "indie"].
             Be specific and accurate. Return ONLY the JSON array, no other text."""
-
+            
             response = call_gemini_api(prompt, max_tokens=100)
             if response is not None:
-                response = response.strip() if response else ""
-            if response.startswith('```json'):
-                response = response[7:]
-            if response.endswith('```'):
-                response = response[:-3]
-                response = response.strip() if response else ""
-
-                if response:  # Only parse if we have actual content
-                    genres_from_ai = json.loads(response)
-                    if isinstance(genres_from_ai, list):
-                        all_genres.update(
-                            [g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
+                response = response.strip()
+                if response.startswith('```json'):
+                    response = response[7:]
+                if response.endswith('```'):
+                    response = response[:-3]
+                response = response.strip()
+                
+                genres_from_ai = json.loads(response)
+                if isinstance(genres_from_ai, list):
+                    all_genres.update([g.lower().strip() for g in genres_from_ai if isinstance(g, str) and g])
         except Exception as e:
             print(f"Gemini genre fetch failed for {artist_name}: {e}")
-
+    
     # Absolute fallback based on known artist patterns
     if not all_genres:
         artist_lower = artist_name.lower()
@@ -311,9 +297,8 @@ async def get_genres_from_multiple_sources(artist_name: str, spotify_genres: lis
         else:
             # Generic fallback
             all_genres.update(['pop', 'contemporary'])
-
+    
     return list(all_genres)[:6]  # Limit to 6 genres max
-
 
 async def get_artist_info(artist_name: str) -> Optional[Artist]:
     """Search for an artist on Spotify and return their details with enhanced genre data."""
@@ -328,20 +313,20 @@ async def get_artist_info(artist_name: str) -> Optional[Artist]:
             followers=1000000,
             image_url=None
         )
-
+    
     try:
         results = sp.search(q=f'artist:{artist_name}', type='artist', limit=1)
         if not results['artists']['items']:
             return None
-
+        
         artist_data = results['artists']['items'][0]
         spotify_genres = artist_data['genres']
-
+        
         # Always try to enhance genres from multiple sources
         enhanced_genres = await get_genres_from_multiple_sources(artist_name, spotify_genres)
-
+        
         print(f"Enhanced genres for {artist_name}: {enhanced_genres}")
-
+        
         return Artist(
             name=artist_data['name'],
             id=artist_data['id'],
@@ -354,7 +339,6 @@ async def get_artist_info(artist_name: str) -> Optional[Artist]:
         print(f"Error fetching Spotify artist info: {e}")
         return None
 
-
 async def get_top_track_info(artist_id: str) -> Optional[TopTrack]:
     if sp is None:
         return TopTrack(
@@ -365,7 +349,7 @@ async def get_top_track_info(artist_id: str) -> Optional[TopTrack]:
             preview_url=None,
             external_url=None
         )
-
+    
     try:
         top_tracks = sp.artist_top_tracks(artist_id)
         if not top_tracks['tracks']:
@@ -384,11 +368,9 @@ async def get_top_track_info(artist_id: str) -> Optional[TopTrack]:
         return None
 
 # Add enhanced artist tier calculation with Gemini integration
-
-
 async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
     """Get comprehensive artist data including Instagram followers and net worth using Gemini"""
-
+    
     prompt = f"""
     Get real-time comprehensive data for the artist "{artist_name}". Return ONLY a valid JSON object with this exact structure:
 
@@ -411,32 +393,20 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
     - Keep arrays concise (max 3-4 items each)
     - Return ONLY the JSON, no other text
     """
-
+    
     try:
         response = call_gemini_api(prompt, max_tokens=400)
         # Clean the response to extract just the JSON
         if response is not None:
-            response = response.strip() if response else ""
-        if response and response.startswith('```json'):
+            response = response.strip()
+        if response.startswith('```json'):
             response = response[7:]
-        if response and response.endswith('```'):
+        if response.endswith('```'):
             response = response[:-3]
-        response = response.strip() if response else ""
-
-        if response:  # Only parse if we have actual content
-            data = json.loads(response)
-            return data
-        else:
-            # Return default if no response
-            return {
-                "instagram_followers": 0,
-                "net_worth_millions": 0,
-                "youtube_subscribers": 0,
-                "career_achievements": [],
-                "major_awards": [],
-                "monthly_streams_millions": 0,
-                "top_song_streams_billions": 0.0
-            }
+        response = response.strip()
+        
+        data = json.loads(response)
+        return data
     except Exception as e:
         print(f"Error getting enhanced artist data for {artist_name}: {e}")
         # Return default data structure
@@ -450,41 +420,36 @@ async def get_enhanced_artist_data_with_gemini(artist_name: str) -> dict:
             "top_song_streams_billions": 0.0
         }
 
-
 async def calculate_enhanced_artist_tier(artist_name: str, spotify_followers: int, spotify_popularity: int) -> dict:
     """
     Enhanced artist tier calculation using Gemini AI to get comprehensive data
     including Instagram followers, net worth, and other metrics
     """
-
+    
     try:
         # Get enhanced data from Gemini
         enhanced_data = await get_enhanced_artist_data_with_gemini(artist_name)
-
+        
         # Calculate composite score based on multiple factors
         instagram_followers = enhanced_data.get("instagram_followers", 0)
         net_worth_millions = enhanced_data.get("net_worth_millions", 0)
         youtube_subscribers = enhanced_data.get("youtube_subscribers", 0)
-        monthly_streams_millions = enhanced_data.get(
-            "monthly_streams_millions", 0)
+        monthly_streams_millions = enhanced_data.get("monthly_streams_millions", 0)
         major_awards = len(enhanced_data.get("major_awards", []))
-
+        
         # Weight different factors for tier calculation
-        spotify_score = min(spotify_followers / 1_000_000,
-                            100)  # Max 100 points
-        instagram_score = min(instagram_followers /
-                              1_000_000, 80)  # Max 80 points
+        spotify_score = min(spotify_followers / 1_000_000, 100)  # Max 100 points
+        instagram_score = min(instagram_followers / 1_000_000, 80)  # Max 80 points  
         net_worth_score = min(net_worth_millions, 60)  # Max 60 points
-        youtube_score = min(youtube_subscribers /
-                            1_000_000, 40)  # Max 40 points
+        youtube_score = min(youtube_subscribers / 1_000_000, 40)  # Max 40 points
         streams_score = min(monthly_streams_millions, 30)  # Max 30 points
         awards_score = min(major_awards * 5, 20)  # Max 20 points
         popularity_score = min(spotify_popularity, 30)  # Max 30 points
-
+        
         # Calculate total composite score (max 360)
-        composite_score = (spotify_score + instagram_score + net_worth_score +
+        composite_score = (spotify_score + instagram_score + net_worth_score + 
                           youtube_score + streams_score + awards_score + popularity_score)
-
+        
         # Determine tier based on composite score and key metrics
         if composite_score >= 250 or spotify_followers >= 80_000_000 or net_worth_millions >= 300:
             tier = "Global Icon"
@@ -507,20 +472,20 @@ async def calculate_enhanced_artist_tier(artist_name: str, spotify_followers: in
             color = "#45B7D1"  # Blue
             description = "Growing artist gaining momentum"
         elif composite_score >= 30 or spotify_followers >= 100_000:
-            tier = "Developing"
+            tier = "Developing" 
             color = "#96CEB4"  # Green
             description = "Emerging talent building audience"
         else:
             tier = "Emerging"
             color = "#FFEAA7"  # Yellow
             description = "New artist starting their journey"
-
+        
         # Special adjustments for high popularity with lower followers (viral artists)
         if spotify_popularity >= 90 and tier in ["Developing", "Emerging"]:
             tier = "Viral Sensation"
             color = "#FF7F50"  # Coral
             description = "Rapidly rising with viral content"
-
+        
         return {
             "tier": tier,
             "color": color,
@@ -537,25 +502,24 @@ async def calculate_enhanced_artist_tier(artist_name: str, spotify_followers: in
                 "major_awards_count": major_awards
             }
         }
-
+        
     except Exception as e:
         print(f"Error in enhanced tier calculation for {artist_name}: {e}")
         # Fallback to basic calculation
         return calculate_artist_tier(spotify_followers, spotify_popularity)
-
 
 def calculate_artist_tier(followers: int, popularity: int) -> dict:
     """
     Calculate artist tier based on followers and popularity
     Returns tier info with level, color, and description
     """
-
+    
     # Define tier thresholds
     if followers >= 50_000_000:  # 50M+ followers
         tier = "Superstar"
         color = "#FFD700"  # Gold
         description = "Global icon with massive fanbase"
-    elif followers >= 20_000_000:  # 20M+ followers
+    elif followers >= 20_000_000:  # 20M+ followers  
         tier = "Megastar"
         color = "#FF6B6B"  # Red
         description = "Major artist with worldwide recognition"
@@ -568,38 +532,37 @@ def calculate_artist_tier(followers: int, popularity: int) -> dict:
         color = "#45B7D1"  # Blue
         description = "Growing artist gaining momentum"
     elif followers >= 100_000:     # 100K+ followers
-        tier = "Developing"
+        tier = "Developing" 
         color = "#96CEB4"  # Green
         description = "Emerging talent building audience"
     else:                           # Under 100K
         tier = "Emerging"
         color = "#FFEAA7"  # Yellow
         description = "New artist starting their journey"
-
+    
     # Adjust based on popularity score
     if popularity >= 85:
         if tier in ["Rising", "Developing"]:
             tier = "Breakout Star"
             color = "#A29BFE"  # Purple
             description = "Rapidly rising with high engagement"
-
+    
     return {
         "tier": tier,
-        "color": color,
+        "color": color, 
         "description": description,
         "followers": followers,
         "popularity": popularity
     }
 
-
 async def map_spotify_artist_to_frontend(artist):
     """Map Spotify artist data to frontend format with enhanced tier information"""
     if not artist:
         return None
-
+    
     # Calculate enhanced artist tier using AI
     tier_info = await calculate_enhanced_artist_tier(artist.name, artist.followers, artist.popularity)
-
+    
     return {
         "id": artist.id,
         "name": artist.name,
@@ -613,16 +576,13 @@ async def map_spotify_artist_to_frontend(artist):
     }
 
 # Helper to get Last.fm artist info with timeout
-
-
 async def get_lastfm_artist(artist_name: str):
     if not lastfm_api_key:
         # Instead of random data, return None so we can use Spotify data
         print("Last.fm API key not available, will use Spotify data instead")
         return None
-
-    url = f"https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist={
-        artist_name}&api_key={lastfm_api_key}&format=json"
+    
+    url = f"https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist={artist_name}&api_key={lastfm_api_key}&format=json"
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(url)
@@ -634,24 +594,21 @@ async def get_lastfm_artist(artist_name: str):
         return None
 
 # Helper to get ListenBrainz artist listens with timeout
-
-
 async def get_listenbrainz_artist(artist_name: str, user_token: str):
     try:
         # Get MBID from MusicBrainz with timeout
         async with httpx.AsyncClient(timeout=5.0) as client:
-            mb_url = f"https://musicbrainz.org/ws/2/artist/?query={
-                artist_name}&fmt=json"
+            mb_url = f"https://musicbrainz.org/ws/2/artist/?query={artist_name}&fmt=json"
             mb_resp = await client.get(mb_url)
             if mb_resp.status_code != 200:
                 return None
-
+            
             mb_data = mb_resp.json()
             if not mb_data.get('artists'):
                 return None
-
+            
             mbid = mb_data['artists'][0]['id']
-
+            
             # Get ListenBrainz data
             lb_url = f"https://api.listenbrainz.org/1/artist/{mbid}/listens"
             headers = {"Authorization": f"Token {user_token}"}
@@ -664,43 +621,36 @@ async def get_listenbrainz_artist(artist_name: str, user_token: str):
         return None
 
 # SoundCharts helper functions
-
-
 async def get_soundcharts_artist_data(artist_name: str, allow_fallback: bool = True) -> Optional[Dict]:
     """Search for an artist on SoundCharts and return comprehensive data"""
-
+    
     # SoundCharts sandbox allowed values
     SANDBOX_ALLOWED_ARTISTS = [
         "billie eilish", "billie eillish", "billi eilish",
-        "let's dance david bowie", "let's dance david",
+        "let's dance david bowie", "let's dance david", 
         "let's bance david bowie", "let's danse david bowie",
         "rap caviar", "bbc"
     ]
-
+    
     try:
         search_term = artist_name.lower()
         is_sandbox_available = search_term in SANDBOX_ALLOWED_ARTISTS
-
+        
         # If artist is available in sandbox, use real SoundCharts data
         if is_sandbox_available:
             print(f"Using real SoundCharts data for '{artist_name}'")
-            search_results = soundcharts_client.search.search_artist_by_name(
-                search_term, limit=1)
-
+            search_results = soundcharts_client.search.search_artist_by_name(search_term, limit=1)
+            
             if search_results and search_results.get('items'):
                 artist_data = search_results['items'][0]
                 artist_id = artist_data['uuid']
-
+                
                 # Get comprehensive artist data
-                metadata = soundcharts_client.artist.get_artist_metadata(
-                    artist_id)
-                current_stats = soundcharts_client.artist.get_current_stats(
-                    artist_id)
-                audience_data = soundcharts_client.artist.get_audience(
-                    artist_id)
-                popularity_data = soundcharts_client.artist.get_popularity(
-                    artist_id)
-
+                metadata = soundcharts_client.artist.get_artist_metadata(artist_id)
+                current_stats = soundcharts_client.artist.get_current_stats(artist_id)
+                audience_data = soundcharts_client.artist.get_audience(artist_id)
+                popularity_data = soundcharts_client.artist.get_popularity(artist_id)
+                
                 return {
                     'metadata': metadata,
                     'stats': current_stats,
@@ -712,27 +662,24 @@ async def get_soundcharts_artist_data(artist_name: str, allow_fallback: bool = T
                     'is_sandbox_demo': False,
                     'data_source': 'soundcharts_real'
                 }
-
+        
         # If not available in sandbox and fallback is disabled, return None
         if not allow_fallback:
-            print(
-                f"Artist '{artist_name}' not available in SoundCharts sandbox")
+            print(f"Artist '{artist_name}' not available in SoundCharts sandbox")
             return None
-
+            
         # Return None to indicate SoundCharts data not available
         # This allows the system to use alternative analysis methods
-        print(f"SoundCharts data not available for '{
-              artist_name}' - will use enhanced Spotify/AI analysis")
+        print(f"SoundCharts data not available for '{artist_name}' - will use enhanced Spotify/AI analysis")
         return None
-
+        
     except Exception as e:
         print(f"Error fetching SoundCharts data for {artist_name}: {e}")
         return None
 
-
 async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dict, artist1_name: str, artist2_name: str) -> Dict:
     """Calculate similarity using SoundCharts comprehensive data"""
-
+    
     # Default similarity if data is missing
     default_similarity = {
         "similarity_score": 50,
@@ -751,49 +698,49 @@ async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dic
             "comparison_confidence": "low"
         }
     }
-
+    
     try:
         if not artist1_data or not artist2_data:
             return default_similarity
-
+        
         # Extract key metrics for comparison
         artist1_stats = artist1_data.get('stats', {})
         artist2_stats = artist2_data.get('stats', {})
-
+        
         artist1_audience = artist1_data.get('audience', {})
         artist2_audience = artist2_data.get('audience', {})
-
+        
         artist1_popularity = artist1_data.get('popularity', {})
         artist2_popularity = artist2_data.get('popularity', {})
-
+        
         # Calculate individual similarity scores
-
+        
         # 1. Genre similarity based on metadata
         genre_similarity = calculate_genre_similarity(
             artist1_data.get('metadata', {}),
             artist2_data.get('metadata', {})
         )
-
+        
         # 2. Popularity similarity
         popularity_similarity = calculate_popularity_similarity(
             artist1_popularity, artist2_popularity
         )
-
+        
         # 3. Audience similarity
         audience_similarity = calculate_audience_similarity(
             artist1_audience, artist2_audience
         )
-
+        
         # 4. Chart performance similarity
         chart_similarity = calculate_chart_similarity(
             artist1_stats, artist2_stats
         )
-
+        
         # 5. Streaming similarity
         streaming_similarity = calculate_streaming_similarity(
             artist1_stats, artist2_stats
         )
-
+        
         # Calculate overall similarity (weighted average)
         weights = {
             'genre': 0.25,
@@ -802,7 +749,7 @@ async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dic
             'chart': 0.20,
             'streaming': 0.15
         }
-
+        
         overall_similarity = (
             genre_similarity * weights['genre'] +
             popularity_similarity * weights['popularity'] +
@@ -810,25 +757,25 @@ async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dic
             chart_similarity * weights['chart'] +
             streaming_similarity * weights['streaming']
         )
-
+        
         # Generate insights
         similarities = []
         differences = []
-
+        
         if genre_similarity > 70:
             similarities.append("Similar musical genres and styles")
         if popularity_similarity > 70:
             similarities.append("Comparable popularity levels")
         if audience_similarity > 70:
             similarities.append("Similar audience demographics")
-
+        
         if genre_similarity < 40:
             differences.append("Different musical genres")
         if popularity_similarity < 40:
             differences.append("Different popularity levels")
         if audience_similarity < 40:
             differences.append("Different audience demographics")
-
+        
         return {
             "similarity_score": round(overall_similarity, 1),
             "reasoning": f"Comprehensive analysis using SoundCharts data shows {overall_similarity:.1f}% similarity between {artist1_name} and {artist2_name}",
@@ -846,31 +793,26 @@ async def calculate_soundcharts_similarity(artist1_data: Dict, artist2_data: Dic
                 "comparison_confidence": "high" if overall_similarity > 30 else "medium"
             }
         }
-
+        
     except Exception as e:
         print(f"Error calculating SoundCharts similarity: {e}")
         return default_similarity
 
-
 def calculate_genre_similarity(metadata1: Dict, metadata2: Dict) -> float:
     """Calculate genre similarity from metadata using enhanced relationships"""
     try:
-        genres1 = [g.lower().strip() for g in metadata1.get(
-            'genres', []) if isinstance(g, str) and g]
-        genres2 = [g.lower().strip() for g in metadata2.get(
-            'genres', []) if isinstance(g, str) and g]
-
+        genres1 = [g.lower().strip() for g in metadata1.get('genres', []) if isinstance(g, str) and g]
+        genres2 = [g.lower().strip() for g in metadata2.get('genres', []) if isinstance(g, str) and g]
+        
         if not genres1 or not genres2:
             return 50.0  # Default when no genre data
-
+        
         # Use the enhanced genre similarity calculation
-        result = calculate_enhanced_genre_similarity(
-            genres1, genres2, "Artist1", "Artist2")
+        result = calculate_enhanced_genre_similarity(genres1, genres2, "Artist1", "Artist2")
         return result["similarity_percentage"]
-
+        
     except Exception:
         return 50.0
-
 
 def calculate_popularity_similarity(pop1: Dict, pop2: Dict) -> float:
     """Calculate popularity similarity"""
@@ -878,18 +820,17 @@ def calculate_popularity_similarity(pop1: Dict, pop2: Dict) -> float:
         # Use various popularity metrics
         score1 = pop1.get('score', 0)
         score2 = pop2.get('score', 0)
-
+        
         if score1 == 0 or score2 == 0:
             return 50.0
-
+        
         # Calculate percentage difference
         diff = abs(score1 - score2) / max(score1, score2)
         similarity = (1 - diff) * 100
-
+        
         return max(0, min(100, similarity))
     except Exception:
         return 50.0
-
 
 def calculate_audience_similarity(audience1: Dict, audience2: Dict) -> float:
     """Calculate audience similarity"""
@@ -898,16 +839,15 @@ def calculate_audience_similarity(audience1: Dict, audience2: Dict) -> float:
         # This is simplified - in practice you'd compare detailed demographics
         total1 = audience1.get('total', 0)
         total2 = audience2.get('total', 0)
-
+        
         if total1 == 0 or total2 == 0:
             return 50.0
-
+        
         # Simple size comparison
         ratio = min(total1, total2) / max(total1, total2)
         return ratio * 100
     except Exception:
         return 50.0
-
 
 def calculate_chart_similarity(stats1: Dict, stats2: Dict) -> float:
     """Calculate chart performance similarity"""
@@ -916,70 +856,64 @@ def calculate_chart_similarity(stats1: Dict, stats2: Dict) -> float:
         # This is a simplified version
         chart_score1 = stats1.get('chart_score', 0)
         chart_score2 = stats2.get('chart_score', 0)
-
+        
         if chart_score1 == 0 and chart_score2 == 0:
             return 70.0  # Both have no chart data
-
+        
         if chart_score1 == 0 or chart_score2 == 0:
             return 30.0  # One has chart data, one doesn't
-
-        diff = abs(chart_score1 - chart_score2) / \
-                   max(chart_score1, chart_score2)
+        
+        diff = abs(chart_score1 - chart_score2) / max(chart_score1, chart_score2)
         return (1 - diff) * 100
     except Exception:
         return 50.0
-
 
 def calculate_streaming_similarity(stats1: Dict, stats2: Dict) -> float:
     """Calculate streaming performance similarity"""
     try:
         streams1 = stats1.get('streaming_total', 0)
         streams2 = stats2.get('streaming_total', 0)
-
+        
         if streams1 == 0 or streams2 == 0:
             return 50.0
-
+        
         ratio = min(streams1, streams2) / max(streams1, streams2)
         return ratio * 100
     except Exception:
         return 50.0
 
 # Enhanced AI similarity calculation with theme analysis
-
-
 async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_stats: dict, artist1_name: str, artist2_name: str) -> dict:
     """Calculate enhanced similarity using Spotify data with AI insights and theme analysis for any artist"""
-
+    
     try:
         # Extract Spotify data
         artist1_spotify = artist1_stats.get('spotify', {})
         artist2_spotify = artist2_stats.get('spotify', {})
-
+        
         if not artist1_spotify or not artist2_spotify:
             return await calculate_ai_similarity_score(artist1_stats, artist2_stats, artist1_name, artist2_name)
-
+        
         # Calculate enhanced similarity scores using Spotify data
-
+        
         # 1. Genre Similarity (enhanced with detailed breakdown)
         genres1 = artist1_spotify.get('genres', [])
         genres2 = artist2_spotify.get('genres', [])
-        genre_analysis = calculate_enhanced_genre_similarity(
-            genres1, genres2, artist1_name, artist2_name)
+        genre_analysis = calculate_enhanced_genre_similarity(genres1, genres2, artist1_name, artist2_name)
         genre_similarity = genre_analysis["similarity_percentage"]
-
+        
         # 2. NEW: Content Theme Analysis
         theme_analysis1 = await analyze_artist_content_themes(artist1_name)
         theme_analysis2 = await analyze_artist_content_themes(artist2_name)
-        theme_compatibility = calculate_theme_compatibility(
-            theme_analysis1, theme_analysis2)
+        theme_compatibility = calculate_theme_compatibility(theme_analysis1, theme_analysis2)
         theme_similarity = theme_compatibility["theme_compatibility_score"]
-
+        
         # 3. ⭐ MUSISTASH RESONANCE SCORE - Commercial Success Prediction
         resonance_analysis = await calculate_musistash_resonance_score(
-            artist1_stats, artist2_stats, artist1_name, artist2_name,
+            artist1_stats, artist2_stats, artist1_name, artist2_name, 
             genre_similarity, theme_similarity
         )
-
+        
         # 4. Popularity Similarity (enhanced)
         pop1 = artist1_spotify.get('popularity', 0)
         pop2 = artist2_spotify.get('popularity', 0)
@@ -988,7 +922,7 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
             popularity_similarity = (1 - pop_diff) * 100
         else:
             popularity_similarity = 50.0
-
+        
         # 5. Audience Size Similarity (enhanced)
         followers1 = artist1_spotify.get('followers', 0)
         followers2 = artist2_spotify.get('followers', 0)
@@ -997,12 +931,11 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
             import math
             log_followers1 = math.log10(max(followers1, 1))
             log_followers2 = math.log10(max(followers2, 1))
-            followers_diff = abs(log_followers1 - log_followers2) / \
-                                 max(log_followers1, log_followers2)
+            followers_diff = abs(log_followers1 - log_followers2) / max(log_followers1, log_followers2)
             audience_similarity = (1 - followers_diff) * 100
         else:
             audience_similarity = 50.0
-
+        
         # 6. Market Tier Similarity (based on popularity + followers)
         def get_market_tier(popularity, followers):
             if popularity >= 80 and followers >= 10000000:
@@ -1013,16 +946,14 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
                 return "emerging"
             else:
                 return "developing"
-
+        
         tier1 = get_market_tier(pop1, followers1)
         tier2 = get_market_tier(pop2, followers2)
-        tier_similarity = 100.0 if tier1 == tier2 else 60.0 if abs(["developing", "emerging", "mainstream", "superstar"].index(
-            tier1) - ["developing", "emerging", "mainstream", "superstar"].index(tier2)) == 1 else 30.0
-
+        tier_similarity = 100.0 if tier1 == tier2 else 60.0 if abs(["developing", "emerging", "mainstream", "superstar"].index(tier1) - ["developing", "emerging", "mainstream", "superstar"].index(tier2)) == 1 else 30.0
+        
         # 7. Enhanced Chart Performance (simulated based on popularity)
-        chart_similarity = min(100, (pop1 + pop2) /
-                               2) if pop1 > 70 and pop2 > 70 else 40.0
-
+        chart_similarity = min(100, (pop1 + pop2) / 2) if pop1 > 70 and pop2 > 70 else 40.0
+        
         # Calculate overall similarity with ENHANCED weights including theme analysis
         weights = {
             'genre': 0.20,          # Reduced to make room for theme analysis
@@ -1032,7 +963,7 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
             'market_tier': 0.15,
             'chart': 0.10
         }
-
+        
         overall_similarity = (
             genre_similarity * weights['genre'] +
             theme_similarity * weights['theme'] +
@@ -1041,37 +972,31 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
             tier_similarity * weights['market_tier'] +
             chart_similarity * weights['chart']
         )
-
+        
         # Generate enhanced insights with theme analysis
         similarities = []
         differences = []
-
+        
         if genre_similarity > 70:
-            similarities.append(
-                "Strong genre overlap and musical compatibility")
+            similarities.append("Strong genre overlap and musical compatibility")
         if theme_similarity > 70:
-            similarities.append(
-                "Very similar lyrical themes and content focus")
+            similarities.append("Very similar lyrical themes and content focus")
         elif theme_similarity > 50:
-            similarities.append(
-                "Overlapping lyrical themes and artistic approach")
-
+            similarities.append("Overlapping lyrical themes and artistic approach")
+        
         if popularity_similarity > 70:
-            similarities.append(
-                "Similar market recognition and popularity levels")
+            similarities.append("Similar market recognition and popularity levels")
         if audience_similarity > 70:
             similarities.append("Comparable audience size and reach")
         if tier1 == tier2:
             similarities.append(f"Both artists are in the {tier1} market tier")
-
+        
         # Theme-specific insights
         if theme_compatibility["mood_match"]:
-            similarities.append(
-                f"Both create {theme_analysis1.get('mood', 'similar')} mood music")
+            similarities.append(f"Both create {theme_analysis1.get('mood', 'similar')} mood music")
         if len(theme_compatibility["common_themes"]) > 2:
-            similarities.append(
-                f"Share {len(theme_compatibility['common_themes'])} major lyrical themes")
-
+            similarities.append(f"Share {len(theme_compatibility['common_themes'])} major lyrical themes")
+        
         if genre_similarity < 40:
             differences.append("Different musical genres and styles")
         if theme_similarity < 40:
@@ -1080,7 +1005,7 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
             differences.append("Significant difference in popularity metrics")
         if audience_similarity < 40:
             differences.append("Different audience size categories")
-
+        
         return {
             "similarity_score": round(overall_similarity, 1),
             "reasoning": f"Enhanced analysis with content themes shows {overall_similarity:.1f}% similarity between {artist1_name} and {artist2_name} using multi-dimensional music industry metrics plus lyrical content analysis",
@@ -1109,17 +1034,15 @@ async def calculate_enhanced_spotify_similarity(artist1_stats: dict, artist2_sta
                 "comparable_artist": tier2
             }
         }
-
+        
     except Exception as e:
         print(f"Error in enhanced Spotify similarity with themes: {e}")
         return await calculate_ai_similarity_score(artist1_stats, artist2_stats, artist1_name, artist2_name)
 
 # Simplified AI similarity calculation with timeout and fallback
-
-
 async def calculate_ai_similarity_score(artist1_stats: dict, artist2_stats: dict, artist1_name: str, artist2_name: str) -> dict:
     """Use OpenAI to calculate a comprehensive similarity score between two artists"""
-
+    
     # Fallback response in case AI fails
     fallback_response = {
         "similarity_score": random.randint(40, 80),
@@ -1133,30 +1056,27 @@ async def calculate_ai_similarity_score(artist1_stats: dict, artist2_stats: dict
             "chart_performance_similarity": random.randint(20, 80)
         }
     }
-
+    
     if not gemini_api_key:
         return fallback_response
-
+    
     try:
         # Simplified prompt for faster response
-        prompt = f"Compare {artist1_name} and {
-            artist2_name} artists. Provide a JSON response with similarity_score (0-100), brief reasoning, key_similarities array, key_differences array, and category_scores object with genre_similarity, popularity_similarity, audience_size_similarity, chart_performance_similarity (all 0-100)."
-
+        prompt = f"Compare {artist1_name} and {artist2_name} artists. Provide a JSON response with similarity_score (0-100), brief reasoning, key_similarities array, key_differences array, and category_scores object with genre_similarity, popularity_similarity, audience_size_similarity, chart_performance_similarity (all 0-100)."
+        
         response = call_gemini_api(prompt)
-
+        
         if response is not None:
             result = json.loads(response)
         else:
             return fallback_response
         return result
-
+        
     except Exception as e:
         print(f"Error calculating AI similarity score: {e}")
         return fallback_response
 
 # Google Trends integration - Enhanced growth tracking (Facebook API replacement)
-
-
 async def get_google_trends_data(artist_name: str) -> dict:
     """
     Get comprehensive Google Trends data for growth tracking (Facebook API replacement)
@@ -1168,65 +1088,57 @@ async def get_google_trends_data(artist_name: str) -> dict:
         import time
         import random
         import asyncio
-
+        
         # Initialize Google Trends client with rate limiting
-        pytrends = TrendReq(hl='en-US', tz=360, timeout=(10,
-                            25), retries=2, backoff_factor=0.1)
-
+        pytrends = TrendReq(hl='en-US', tz=360, timeout=(10, 25), retries=2, backoff_factor=0.1)
+        
         # Add random delay to avoid rate limiting
         await asyncio.sleep(random.uniform(1, 3))
-
+        
         # Get search interest over time (last 12 months)
-        pytrends.build_payload([artist_name], cat=0,
-                               timeframe='today 12-m', geo='', gprop='')
+        pytrends.build_payload([artist_name], cat=0, timeframe='today 12-m', geo='', gprop='')
         interest_over_time = pytrends.interest_over_time()
-
+        
         # Add delay between requests
         await asyncio.sleep(random.uniform(1, 2))
-
+        
         # Get related queries (shows audience interest patterns)
         related_queries = pytrends.related_queries()
-
+        
         # Add delay between requests
         await asyncio.sleep(random.uniform(1, 2))
-
+        
         # Get regional interest (shows market reach)
-        regional_interest = pytrends.interest_by_region(
-            resolution='COUNTRY', inc_low_vol=True, inc_geo_code=False)
-
+        regional_interest = pytrends.interest_by_region(resolution='COUNTRY', inc_low_vol=True, inc_geo_code=False)
+        
         # Calculate growth metrics
         if not interest_over_time.empty and artist_name in interest_over_time.columns:
             search_data = interest_over_time[artist_name].values
-
+            
             # Calculate trend slope (growth rate)
             if len(search_data) >= 4:
                 recent_avg = search_data[-4:].mean()  # Last 4 weeks
-                # 4 weeks before that
-                previous_avg = search_data[-12:-8].mean()
-                growth_rate = ((recent_avg - previous_avg) /
-                               max(previous_avg, 1)) * 100
+                previous_avg = search_data[-12:-8].mean()  # 4 weeks before that
+                growth_rate = ((recent_avg - previous_avg) / max(previous_avg, 1)) * 100
             else:
                 growth_rate = 0
-
+            
             # Calculate momentum (recent peaks)
             max_interest = search_data.max()
             current_interest = search_data[-1] if len(search_data) > 0 else 0
             momentum_score = (current_interest / max(max_interest, 1)) * 100
-
+            
             # Calculate consistency (how steady the interest is)
-            consistency_score = 100 - \
-                (search_data.std() / max(search_data.mean(), 1)) * 20
+            consistency_score = 100 - (search_data.std() / max(search_data.mean(), 1)) * 20
             consistency_score = max(0, min(100, consistency_score))
-
+            
             # Regional diversity (how many regions show interest)
             if not regional_interest.empty:
-                regional_diversity = len(
-                    regional_interest[regional_interest[artist_name] > 0])
-                global_reach_score = min(
-                    100, (regional_diversity / 50) * 100)  # 50 countries = 100%
+                regional_diversity = len(regional_interest[regional_interest[artist_name] > 0])
+                global_reach_score = min(100, (regional_diversity / 50) * 100)  # 50 countries = 100%
             else:
                 global_reach_score = 25
-
+                
         else:
             # No search data found
             search_data = []
@@ -1236,7 +1148,7 @@ async def get_google_trends_data(artist_name: str) -> dict:
             global_reach_score = 15
             current_interest = 0
             max_interest = 0
-
+        
         # Generate overall trends score (0-100)
         trends_score = (
             min(100, max(0, 50 + growth_rate)) * 0.3 +  # Growth rate impact
@@ -1244,7 +1156,7 @@ async def get_google_trends_data(artist_name: str) -> dict:
             consistency_score * 0.25 +                   # Interest consistency
             global_reach_score * 0.2                     # Global reach
         )
-
+        
         return {
             "trends_score": round(trends_score, 1),
             "growth_metrics": {
@@ -1268,7 +1180,7 @@ async def get_google_trends_data(artist_name: str) -> dict:
             },
             "data_quality": "high" if len(search_data) >= 10 else "medium" if len(search_data) >= 5 else "low"
         }
-
+        
     except ImportError:
         print("pytrends not installed. Install with: pip install pytrends")
         return create_trends_fallback(artist_name)
@@ -1276,15 +1188,14 @@ async def get_google_trends_data(artist_name: str) -> dict:
         print(f"Error getting Google Trends data for {artist_name}: {e}")
         return create_trends_fallback(artist_name)
 
-
 def create_trends_fallback(artist_name: str) -> dict:
     """Fallback trends data when Google Trends API unavailable"""
     import hashlib
-
+    
     # Create deterministic but realistic-looking data based on artist name
     score_hash = int(hashlib.md5(artist_name.encode()).hexdigest(), 16)
     base_score = (score_hash % 40) + 30  # 30-70 base range
-
+    
     return {
         "trends_score": base_score,
         "growth_metrics": {
@@ -1310,39 +1221,34 @@ def create_trends_fallback(artist_name: str) -> dict:
     }
 
 # Legacy function for backward compatibility
-
-
 async def get_google_trends_score(artist_name: str) -> int:
     """Get Google Trends search volume score (0-100) for an artist - Legacy compatibility"""
     trends_data = await get_google_trends_data(artist_name)
     return int(trends_data["trends_score"])
 
 # Enhanced Billboard chart performance with AI fallback
-
-
 async def get_billboard_performance_score(artist_name: str) -> int:
     """Get Billboard chart performance score (0-100) using AI when Billboard API is unavailable"""
     try:
         # Billboard API is currently returning 403 errors due to anti-scraping measures
         # Using Gemini AI to get reliable chart performance data
-        print(f"Billboard API unavailable (403 errors), using AI fallback for {
-              artist_name}")
-
+        print(f"Billboard API unavailable (403 errors), using AI fallback for {artist_name}")
+        
         if not gemini_api_key:
             print("Gemini API not available, using basic estimation")
             return await get_basic_billboard_estimation(artist_name)
-
+        
         # Create AI prompt for Billboard chart performance
         billboard_prompt = f"""
         Analyze the Billboard chart performance history for the artist: {artist_name}
-
+        
         Please provide information about their chart performance including:
         1. Highest Billboard Hot 100 position ever achieved
         2. Number of Billboard Hot 100 entries (total songs that charted)
         3. Highest Billboard 200 album position
         4. Total weeks spent on Billboard Hot 100
         5. Number-one hits (if any)
-
+        
         Based on this data, provide a Billboard Performance Score from 0-100 where:
         - 90-100: Multiple #1 hits, consistent top 10 presence
         - 80-89: At least one #1 hit or multiple top 5 hits
@@ -1354,16 +1260,16 @@ async def get_billboard_performance_score(artist_name: str) -> int:
         - 20-29: Rare chart appearances
         - 10-19: Very limited mainstream success
         - 0-9: No significant Billboard chart history
-
+        
         Respond with just the numerical score (0-100) based on verified Billboard data.
         If you cannot find reliable Billboard data for this artist, respond with "50".
         """
-
+        
         try:
             ai_response = call_gemini_api(billboard_prompt, max_tokens=100)
             if ai_response is not None:
                 # Extract numerical score from AI response
-                score_text = ai_response.strip() if ai_response else ""
+                score_text = ai_response.strip()
                 # Try to extract just the number
                 import re
                 score_match = re.search(r'\b(\d{1,3})\b', score_text)
@@ -1372,22 +1278,19 @@ async def get_billboard_performance_score(artist_name: str) -> int:
                     if 0 <= score <= 100:
                         print(f"AI Billboard score for {artist_name}: {score}")
                         return score
-
-            print(f"Could not parse AI response for {
-                  artist_name}, using basic estimation")
+                
+            print(f"Could not parse AI response for {artist_name}, using basic estimation")
             return await get_basic_billboard_estimation(artist_name)
-
+            
         except Exception as ai_error:
             print(f"AI Billboard lookup failed for {artist_name}: {ai_error}")
             return await get_basic_billboard_estimation(artist_name)
-
+            
     except Exception as e:
         print(f"Error getting Billboard performance for {artist_name}: {e}")
         return 25
 
 # Basic estimation fallback when AI is also unavailable
-
-
 async def get_basic_billboard_estimation(artist_name: str) -> int:
     """Basic Billboard score estimation based on Spotify metrics"""
     try:
@@ -1395,24 +1298,22 @@ async def get_basic_billboard_estimation(artist_name: str) -> int:
         if spotify_artist:
             popularity = spotify_artist.popularity
             followers = spotify_artist.followers
-
+            
             # Estimate Billboard potential based on mainstream appeal
-            mainstream_genres = ['pop', 'hip-hop',
-                'rap', 'r&b', 'country', 'rock']
-            has_mainstream_appeal = any(
-                genre.lower() in mainstream_genres for genre in spotify_artist.genres)
-
+            mainstream_genres = ['pop', 'hip-hop', 'rap', 'r&b', 'country', 'rock']
+            has_mainstream_appeal = any(genre.lower() in mainstream_genres for genre in spotify_artist.genres)
+            
             # Calculate estimated Billboard score
             base_score = min(60, popularity * 0.6)  # Cap at 60 for base score
-
+            
             if has_mainstream_appeal:
                 base_score += 8  # Bonus for mainstream genres
-
+            
             if followers > 50000000:  # 50M+ followers likely chart
                 base_score += 12
             elif followers > 10000000:  # 10M+ followers might chart
                 base_score += 6
-
+                
             return min(75, int(base_score))  # Cap at 75 for estimated scores
         else:
             return 25  # Default for unknown artists
@@ -1421,18 +1322,15 @@ async def get_basic_billboard_estimation(artist_name: str) -> int:
         return 25
 
 # Smart popularity score calculator
-
-
 async def calculate_popularity_score(artist: Artist, artist_name: str) -> dict:
     """Calculate a comprehensive popularity score using multiple metrics"""
-
+    
     # Get individual metric scores
-    # 100M followers = 100 points
-    spotify_followers_score = min(100, (artist.followers / 100000000) * 100)
+    spotify_followers_score = min(100, (artist.followers / 100000000) * 100)  # 100M followers = 100 points
     spotify_popularity_score = artist.popularity  # Already 0-100
     google_trends_score = await get_google_trends_score(artist_name)
     billboard_score = await get_billboard_performance_score(artist_name)
-
+    
     # Weights for different metrics (total should equal 1.0)
     weights = {
         'spotify_followers': 0.35,    # Spotify followers are very important
@@ -1440,7 +1338,7 @@ async def calculate_popularity_score(artist: Artist, artist_name: str) -> dict:
         'google_trends': 0.25,        # Search interest shows cultural relevance
         'billboard_charts': 0.15      # Chart performance shows mainstream success
     }
-
+    
     # Calculate weighted popularity score
     popularity_score = (
         spotify_followers_score * weights['spotify_followers'] +
@@ -1448,21 +1346,21 @@ async def calculate_popularity_score(artist: Artist, artist_name: str) -> dict:
         google_trends_score * weights['google_trends'] +
         billboard_score * weights['billboard_charts']
     )
-
+    
     # Calculate estimated monthly listeners based on popularity
     # Top artists (90+ score) might have 20-25% of followers as monthly listeners
     # Mid-tier (60-89) might have 12-19%
     # Lower-tier (below 60) might have 6-11%
-
+    
     if popularity_score >= 90:
         listener_percentage = 0.20 + (popularity_score - 90) * 0.005  # 20-25%
     elif popularity_score >= 60:
         listener_percentage = 0.12 + (popularity_score - 60) * 0.0027  # 12-19%
     else:
         listener_percentage = 0.06 + (popularity_score / 60) * 0.06  # 6-11%
-
+    
     estimated_monthly_listeners = int(artist.followers * listener_percentage)
-
+    
     return {
         'overall_popularity_score': round(popularity_score, 1),
         'estimated_monthly_listeners': estimated_monthly_listeners,
@@ -1472,17 +1370,15 @@ async def calculate_popularity_score(artist: Artist, artist_name: str) -> dict:
             'google_trends_score': google_trends_score,
             'billboard_score': billboard_score
         },
-        'methodology': f"Based on {int(listener_percentage * 100)}% of followers estimated as monthly listeners"
+        'methodology': f"Based on {int(listener_percentage*100)}% of followers estimated as monthly listeners"
     }
 
 # Simplified news fetching with timeout
-
-
 async def fetch_artist_news(artist_name: str, limit: int = 3) -> list:
     """Fetch recent news articles about an artist"""
     if not news_api_key:
         return []
-
+    
     try:
         url = "https://newsapi.org/v2/everything"
         params = {
@@ -1492,7 +1388,7 @@ async def fetch_artist_news(artist_name: str, limit: int = 3) -> list:
             "language": "en",
             "apiKey": news_api_key
         }
-
+        
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(url, params=params)
             if response.status_code == 200:
@@ -1513,36 +1409,34 @@ async def fetch_artist_news(artist_name: str, limit: int = 3) -> list:
         return []
 
 # Add new Gemini-powered search function after the existing helper functions
-
-
 async def get_real_music_industry_data_with_gemini(artist1_name: str, artist2_name: str) -> dict:
     """
     Use Gemini with Google Search to get REAL music industry data
     This replaces the inaccurate hardcoded estimates with actual facts
     """
-
+    
     if not gemini_api_key:
         print("Gemini client not available, using fallback data")
         return None
-
+    
     try:
         # Create a comprehensive prompt for real data
         search_prompt = f"""
         Search for and provide the most recent, accurate data about these two artists:
-
+        
         Artist 1: {artist1_name}
         Artist 2: {artist2_name}
-
+        
         Find the following information for BOTH artists:
-
+        
         1. TOUR REVENUE: Most recent tour gross revenue (in millions, e.g., "$350M")
         2. TOP SONG STREAMS: Highest streamed song and its stream count (in billions, e.g., "2.1B")
         3. SONG DURATION: Average song length of their recent hits (e.g., "3:20")
         4. MUSICAL KEY: Most common key they perform in (research actual data)
         5. COLLABORATION PARTNERS: Recent high-profile collaborations
-
+        
         CRITICAL: Search for actual, verifiable data. For tour revenue, look for official reports from Billboard Boxscore, Pollstar, or major music publications.
-
+        
         Format your response as JSON:
         {{
             "{artist1_name}": {{
@@ -1553,33 +1447,31 @@ async def get_real_music_industry_data_with_gemini(artist1_name: str, artist2_na
                 "recent_collaborations": ["Artist A", "Artist B"]
             }},
             "{artist2_name}": {{
-                "tour_revenue": "$XXXm",
+                "tour_revenue": "$XXXm", 
                 "top_song_streams": "X.XB",
                 "avg_song_duration": "X:XX",
                 "common_key": "X major/minor",
                 "recent_collaborations": ["Artist C", "Artist D"]
             }}
         }}
-
+        
         Only return verified, factual data from reliable music industry sources.
         """
-
+        
         # Use Gemini with search grounding for real-time data
         try:
             # Try with search grounding
             response = call_gemini_api(search_prompt)
         except Exception as search_error:
-            print(f"Search grounding failed, trying basic model: {
-                  search_error}")
+            print(f"Search grounding failed, trying basic model: {search_error}")
             # Fallback to basic model without search
             response = call_gemini_api(search_prompt)
-
+        
         # Parse the JSON response
         if response is not None:
             try:
                 data = json.loads(response)
-                print(
-                    f"Successfully retrieved real music industry data via Gemini search")
+                print(f"Successfully retrieved real music industry data via Gemini search")
                 return data
             except json.JSONDecodeError:
                 # If JSON parsing fails, extract key data points manually
@@ -1589,34 +1481,31 @@ async def get_real_music_industry_data_with_gemini(artist1_name: str, artist2_na
         else:
             print("No response from Gemini API")
             return None
-
+            
     except Exception as e:
         print(f"Error getting real music industry data: {e}")
         return None
 
 # Enhanced AI insights generator using real Gemini search data
-
-
 async def generate_real_ai_insights_with_search(artist1_name: str, artist2_name: str, spotify_data: dict, youtube_data: dict) -> dict:
     """
     Generate AI insights using REAL data from Gemini search instead of guesses
     Determines which artist needs growth advice based on follower count
     """
-
+    
     if not gemini_api_key:
         print("Gemini client not available, using basic fallback")
-        basic_insights = generate_basic_fallback_insights(
-            artist1_name, artist2_name)
+        basic_insights = generate_basic_fallback_insights(artist1_name, artist2_name)
         return {
             "insights": basic_insights,
             "growth_target": artist1_name,  # Default fallback
             "mentor_artist": artist2_name
         }
-
+    
     # Determine which artist has fewer followers (needs growth advice)
     artist1_followers = spotify_data.get('artist1_monthly_listeners', 0)
     artist2_followers = spotify_data.get('artist2_monthly_listeners', 0)
-
+    
     if artist1_followers < artist2_followers:
         growth_target = artist1_name
         mentor_artist = artist2_name
@@ -1624,85 +1513,81 @@ async def generate_real_ai_insights_with_search(artist1_name: str, artist2_name:
         mentor_followers = artist2_followers
     else:
         growth_target = artist2_name
-        mentor_artist = artist1_name
+        mentor_artist = artist1_name  
         growth_followers = artist2_followers
         mentor_followers = artist1_followers
-
+    
     print(f"🎯 Growth Target: {growth_target} ({growth_followers:,} followers)")
     print(f"👑 Mentor Artist: {mentor_artist} ({mentor_followers:,} followers)")
-
+    
     # Get real music industry data
     real_data = await get_real_music_industry_data_with_gemini(artist1_name, artist2_name)
-
+    
     if not real_data or "raw_response" in real_data:
         # Use the raw response to generate insights if JSON parsing failed
         raw_response = real_data.get("raw_response", "") if real_data else ""
-
+        
         try:
             # Create focused insights for growth target using real search data
             insights_prompt = f"""
-            Search for and compare {artist1_name} and {artist2_name}.
-
+            Search for and compare {artist1_name} and {artist2_name}. 
+            
             Focus on helping {growth_target} ({growth_followers:,} followers) learn from {mentor_artist} ({mentor_followers:,} followers).
-
+            
             Search Results Available:
-            {raw_response[:1000]
-                if raw_response else "Limited search data available"}
-
+            {raw_response[:1000] if raw_response else "Limited search data available"}
+            
             Current Follower Data:
             - {artist1_name}: {spotify_data.get('artist1_monthly_listeners', 0):,} followers
             - {artist2_name}: {spotify_data.get('artist2_monthly_listeners', 0):,} followers
-
+            
             Provide 5 actionable growth insights for {growth_target} to learn from {mentor_artist}.
-
+            
             CRITICAL FORMATTING RULES:
             - Use plain text only, NO markdown formatting (no ** or __ or ##)
             - Each insight must include a specific actionable resource/website where they can take action
             - Format: [Insight description]. [Actionable step with specific resource/website/platform]
-
+            
             Examples of actionable resources to include:
             - For booking shows: "Visit Bandsintown.com, Songkick.com, or GigSalad.com to book local venues"
             - For collaborations: "Use BeatStars.com, Splice.com, or reach out via Instagram DMs"
             - For streaming: "Submit to SubmitHub.com, Playlist Push, or contact playlist curators on Twitter"
             - For music production: "Learn from tutorials on Point Blank Music School or Berklee Online"
             - For marketing: "Use Buffer.com, Hootsuite, or Later.com for social media scheduling"
-
+            
             Focus on specific, actionable advice with real resources the artist can use immediately.
-
+            
             Use REAL search data. Each insight must end with where exactly they can take that action.
             """
-
+            
             response = call_gemini_api(insights_prompt)
-
+            
             # Parse insights from response
             if not response:
                 return generate_basic_fallback_insights(artist1_name, artist2_name)
-
+            
             # Clean markdown formatting from response
             def clean_markdown(text):
                 # Remove markdown bold formatting
                 text = text.replace('**', '')
                 text = text.replace('__', '')
                 # Remove markdown headers
-                text = text.replace('###', '').replace(
-                    '##', '').replace('#', '')
+                text = text.replace('###', '').replace('##', '').replace('#', '')
                 # Remove markdown italics
                 text = text.replace('*', '').replace('_', '')
-                return text.strip() if text else ""
-
+                return text.strip()
+            
             insights = []
             for line in response.split('\n'):
-                line = line.strip() if line else ""
+                line = line.strip()
                 if line and (line[0].isdigit() or line.startswith('-')):
-                    clean_line = line.split(
-                        '.', 1)[-1].strip() if '.' in line else line
-                    clean_line = clean_line.lstrip(
-                        '- •').strip() if clean_line else ""
+                    clean_line = line.split('.', 1)[-1].strip() if '.' in line else line
+                    clean_line = clean_line.lstrip('- •').strip()
                     if clean_line:
                         # Clean any markdown formatting
                         clean_line = clean_markdown(clean_line)
                         insights.append(clean_line)
-
+            
             if insights:
                 return {
                     "insights": insights[:5],
@@ -1710,111 +1595,96 @@ async def generate_real_ai_insights_with_search(artist1_name: str, artist2_name:
                     "mentor_artist": mentor_artist
                 }
             else:
-                basic_insights = generate_basic_fallback_insights(
-                    artist1_name, artist2_name)
+                basic_insights = generate_basic_fallback_insights(artist1_name, artist2_name)
                 return {
                     "insights": basic_insights,
                     "growth_target": growth_target,
                     "mentor_artist": mentor_artist
                 }
-
+            
         except Exception as e:
             print(f"Error generating insights with Gemini: {e}")
-            basic_insights = generate_basic_fallback_insights(
-                artist1_name, artist2_name)
+            basic_insights = generate_basic_fallback_insights(artist1_name, artist2_name)
             return {
                 "insights": basic_insights,
                 "growth_target": growth_target,
                 "mentor_artist": mentor_artist
             }
-
+    
     # Use structured real data to create growth-focused insights
     try:
         artist1_data = real_data.get(artist1_name, {})
         artist2_data = real_data.get(artist2_name, {})
-
+        
         # Get data for growth target and mentor artist
         growth_data = real_data.get(growth_target, {})
         mentor_data = real_data.get(mentor_artist, {})
-
+        
         insights = []
-
+        
         # Insight 1: Musical key - growth target should learn from mentor
         mentor_key = mentor_data.get('common_key', 'C major')
-        insights.append(f"{mentor_artist} performs mostly in {mentor_key}, so {
-                        growth_target} can try creating music in this key for similar tonal appeal and audience connection. Use music theory resources like MusicTheory.net or take online courses at Berklee Online to learn about key signatures and chord progressions.")
-
+        insights.append(f"{mentor_artist} performs mostly in {mentor_key}, so {growth_target} can try creating music in this key for similar tonal appeal and audience connection. Use music theory resources like MusicTheory.net or take online courses at Berklee Online to learn about key signatures and chord progressions.")
+        
         # Insight 2: Song duration optimization
         mentor_duration = mentor_data.get('avg_song_duration', '3:20')
         growth_duration = growth_data.get('avg_song_duration', '3:15')
-        insights.append(f"{mentor_artist} makes songs averaging {mentor_duration} while {growth_target} averages {growth_duration}, showing {
-                        growth_target} can optimize song length for better engagement. Analyze successful songs on Spotify for Artists analytics or use TuneCore's songwriting tips to structure your tracks effectively.")
-
+        insights.append(f"{mentor_artist} makes songs averaging {mentor_duration} while {growth_target} averages {growth_duration}, showing {growth_target} can optimize song length for better engagement. Analyze successful songs on Spotify for Artists analytics or use TuneCore's songwriting tips to structure your tracks effectively.")
+        
         # Insight 3: Tour revenue scaling strategy
         mentor_revenue = mentor_data.get('tour_revenue', 'significant revenue')
-        growth_revenue = growth_data.get('tour_revenue', 'developing revenue')
+        growth_revenue = growth_data.get('tour_revenue', 'developing revenue') 
         if mentor_revenue != 'significant revenue':
-            insights.append(f"{mentor_artist} generated {mentor_revenue} from recent tours, showing {
-                            growth_target} the potential tour revenue scale and market expansion opportunities. Start booking local shows through Bandsintown.com, Songkick.com, or reach out to venue bookers on social media to build your touring experience.")
+            insights.append(f"{mentor_artist} generated {mentor_revenue} from recent tours, showing {growth_target} the potential tour revenue scale and market expansion opportunities. Start booking local shows through Bandsintown.com, Songkick.com, or reach out to venue bookers on social media to build your touring experience.")
         else:
-            insights.append(f"{mentor_artist} demonstrates strong touring capabilities that {
-                            growth_target} can learn from for market expansion and revenue growth. Start booking local shows through Bandsintown.com, Songkick.com, or GigSalad.com to build your touring foundation.")
-
+            insights.append(f"{mentor_artist} demonstrates strong touring capabilities that {growth_target} can learn from for market expansion and revenue growth. Start booking local shows through Bandsintown.com, Songkick.com, or GigSalad.com to build your touring foundation.")
+        
         # Insight 4: Streaming performance targets
         mentor_streams = mentor_data.get('top_song_streams', '2.1B')
         growth_streams = growth_data.get('top_song_streams', '1.8B')
-        insights.append(f"{mentor_artist} has {mentor_streams} streams on their top song, providing {
-                        growth_target} with a clear streaming milestone to target for broader audience reach. Submit your music to playlist curators via SubmitHub.com, Playlist Push, or Daily Playlists to increase your streaming numbers.")
-
+        insights.append(f"{mentor_artist} has {mentor_streams} streams on their top song, providing {growth_target} with a clear streaming milestone to target for broader audience reach. Submit your music to playlist curators via SubmitHub.com, Playlist Push, or Daily Playlists to increase your streaming numbers.")
+        
         # Insight 5: Collaboration strategy learning
-        mentor_collabs = mentor_data.get(
-            'recent_collaborations', ['mainstream artists'])
-        collab_text = ', '.join(mentor_collabs[:2]) if isinstance(
-            mentor_collabs, list) else str(mentor_collabs)
-        insights.append(f"{mentor_artist} collaborates with {collab_text}, showing {
-                        growth_target} the type of high-profile partnerships that can accelerate career growth. Find collaborators on BeatStars.com, Splice.com, or connect with artists in your genre through Instagram DMs and Twitter.")
-
+        mentor_collabs = mentor_data.get('recent_collaborations', ['mainstream artists'])
+        collab_text = ', '.join(mentor_collabs[:2]) if isinstance(mentor_collabs, list) else str(mentor_collabs)
+        insights.append(f"{mentor_artist} collaborates with {collab_text}, showing {growth_target} the type of high-profile partnerships that can accelerate career growth. Find collaborators on BeatStars.com, Splice.com, or connect with artists in your genre through Instagram DMs and Twitter.")
+        
         return {
             "insights": insights[:5],
             "growth_target": growth_target,
             "mentor_artist": mentor_artist
         }
-
+        
     except Exception as e:
         print(f"Error processing real data: {e}")
-        basic_insights = generate_basic_fallback_insights(
-            artist1_name, artist2_name)
+        basic_insights = generate_basic_fallback_insights(artist1_name, artist2_name)
         return {
             "insights": basic_insights,
             "growth_target": growth_target,
             "mentor_artist": mentor_artist
         }
 
-
 def generate_basic_fallback_insights(artist1_name: str, artist2_name: str) -> list:
     """Basic fallback when all AI search fails - provides actionable insights with resources"""
     return [
         f"Both {artist1_name} and {artist2_name} operate in similar market segments with potential for cross-promotion strategies. Reach out to similar artists through Instagram DMs or Twitter to propose collaboration ideas, or use platforms like BeatStars.com to find artists in your genre.",
-        f"Musical style analysis suggests {artist1_name} and {
-            artist2_name} could benefit from collaborative opportunities. Use Splice.com to find beats and collaborate with producers, or join artist communities on Discord and Reddit to network with other musicians.",
+        f"Musical style analysis suggests {artist1_name} and {artist2_name} could benefit from collaborative opportunities. Use Splice.com to find beats and collaborate with producers, or join artist communities on Discord and Reddit to network with other musicians.",
         f"Streaming patterns indicate both artists have room for strategic playlist placement and audience expansion. Submit your music to playlist curators via SubmitHub.com, Playlist Push, or reach out to independent playlist curators on Twitter and Instagram.",
         f"Social media engagement strategies can be improved by learning from successful artists. Use Buffer.com or Later.com to schedule consistent posts, and analyze successful artists' content strategies using Social Blade analytics.",
         f"Both artists show potential for expanding their reach through touring and live performances. Start booking local shows through Bandsintown.com, Songkick.com, or GigSalad.com to build your live performance experience and fanbase."
     ]
 
 # Gemini API helper function (moved up for proper definition order)
-
-
 def call_gemini_api(prompt: str, max_tokens: int = 500) -> str:
     """
     Call Gemini API using direct HTTP requests (working approach)
     """
     if gemini_api_key == "dummy_key":
         return None
-
+    
     url = f"{gemini_base_url}?key={gemini_api_key}"
     headers = {"Content-Type": "application/json"}
-
+    
     payload = {
         "contents": [
             {
@@ -1830,7 +1700,7 @@ def call_gemini_api(prompt: str, max_tokens: int = 500) -> str:
             "maxOutputTokens": max_tokens
         }
     }
-
+    
     try:
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 200:
@@ -1845,20 +1715,14 @@ def call_gemini_api(prompt: str, max_tokens: int = 500) -> str:
         return None
 
 # --- API Endpoints ---
-
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to the MusiStash Artist Analysis API!", "status": "active"}
-
 
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
-        "version": "v2.2.0-production-sync",
-        "deployment_timestamp": "2025-01-02T12:00:00Z",
-        "resonance_score_enabled": True,
         "spotify_available": sp is not None,
         "gemini_available": gemini_api_key is not None and gemini_api_key != "dummy_key",
         "lastfm_available": lastfm_api_key is not None,
@@ -1882,16 +1746,15 @@ async def health_check():
         }
     }
 
-
 @app.get("/version")
 async def version_check():
     """Deployment verification endpoint"""
     return {
-        "version": "v2.2.0-production-sync",
+        "version": "v2.1.0-resonance-fix",
         "deployment_date": "2025-01-02",
         "features": [
             "comprehensive_resonance_score_fix",
-            "environment_variable_validation",
+            "environment_variable_validation", 
             "multiple_fallback_layers",
             "enhanced_error_handling"
         ],
@@ -1902,7 +1765,7 @@ async def version_check():
             "spotify_available": spotify_client_id is not None and spotify_client_secret is not None,
             "api_count": sum([
                 openai_api_key != "dummy_key",
-                gemini_api_key != "dummy_key",
+                gemini_api_key != "dummy_key", 
                 spotify_client_id is not None,
                 spotify_client_secret is not None,
                 lastfm_api_key is not None,
@@ -1915,8 +1778,6 @@ async def version_check():
     }
 
 # --- Authentication Endpoints ---
-
-
 @app.post("/auth/google", response_model=AuthResponse)
 async def google_auth(auth_request: GoogleAuthRequest):
     """Authenticate user with Google OAuth token"""
@@ -1928,18 +1789,18 @@ async def google_auth(auth_request: GoogleAuthRequest):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Google token"
             )
-
+        
         # Extract user information from Google
         email = google_user_info.get('email')
         name = google_user_info.get('name')
         avatar = google_user_info.get('picture')
-
+        
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email not provided by Google"
             )
-
+        
         # Check if user already exists
         existing_user = get_user_by_email(email)
         if existing_user:
@@ -1952,7 +1813,7 @@ async def google_auth(auth_request: GoogleAuthRequest):
                 'avatar': avatar,
                 'role': 'listener'  # Default role
             })
-
+        
         # Create JWT token
         access_token = create_access_token(data={
             "sub": user.email,
@@ -1960,19 +1821,18 @@ async def google_auth(auth_request: GoogleAuthRequest):
             "name": user.name,
             "role": user.role
         })
-
+        
         return AuthResponse(
             user=user,
             access_token=access_token
         )
-
+        
     except Exception as e:
         print(f"Authentication error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Authentication failed"
         )
-
 
 @app.get("/auth/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
@@ -1982,16 +1842,15 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-
+    
     user = get_user_by_email(current_user.get('sub'))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-
+    
     return user
-
 
 @app.post("/auth/logout")
 async def logout():
@@ -1999,8 +1858,6 @@ async def logout():
     return {"message": "Logged out successfully"}
 
 # Real Audience Analysis Class
-
-
 class RealAudienceAnalyzer:
     def __init__(self):
         self.spotify_client_id = os.getenv('SPOTIFY_CLIENT_ID')
@@ -2008,27 +1865,26 @@ class RealAudienceAnalyzer:
         self.youtube_api_key = os.getenv('YOUTUBE_API_KEY')
         self.lastfm_api_key = os.getenv('LASTFM_API_KEY')
         self.gemini_api_key = os.getenv('GEMINI_API_KEY')
-
+        
     async def get_real_audience_similarity(self, artist1_name: str, artist2_name: str):
         """
         Calculate real audience similarity using Spotify, YouTube, and Last.fm APIs
         """
         # Get Spotify data for both artists
         spotify_data = await self.get_spotify_audience_data(artist1_name, artist2_name)
-
+        
         # Get YouTube subscriber data
         youtube_data = await self.get_youtube_audience_data(artist1_name, artist2_name)
-
+        
         # Get Last.fm listening data
         lastfm_data = await self.get_lastfm_audience_data(artist1_name, artist2_name)
-
+        
         # Calculate overall audience overlap score
-        total_overlap_score = self.calculate_total_overlap(
-            spotify_data, youtube_data, lastfm_data)
-
+        total_overlap_score = self.calculate_total_overlap(spotify_data, youtube_data, lastfm_data)
+        
         # Generate AI insights using OpenAI
         ai_insights = await self.generate_ai_insights(artist1_name, artist2_name, spotify_data, youtube_data)
-
+        
         return {
             "audience_similarity": total_overlap_score,
             "real_audience_analysis": {
@@ -2042,33 +1898,33 @@ class RealAudienceAnalyzer:
             },
             "actionable_insights": ai_insights
         }
-
+    
     async def get_spotify_audience_data(self, artist1: str, artist2: str):
         """
         Get real Spotify data for audience analysis
         """
         # Get Spotify access token
         token = await self.get_spotify_token()
-
+        
         headers = {'Authorization': f'Bearer {token}'}
-
+        
         # Search for artists
         artist1_data = await self.search_spotify_artist(artist1, headers)
         artist2_data = await self.search_spotify_artist(artist2, headers)
-
+        
         # Get detailed artist info
         artist1_details = await self.get_spotify_artist_details(artist1_data['id'], headers)
         artist2_details = await self.get_spotify_artist_details(artist2_data['id'], headers)
-
+        
         # Calculate genre overlap
         genre_overlap = self.calculate_genre_overlap(
-            artist1_details['genres'],
+            artist1_details['genres'], 
             artist2_details['genres']
         )
-
+        
         # Estimate shared playlist appearances (would need more complex implementation)
         shared_playlists = await self.estimate_shared_playlists(artist1_data['id'], artist2_data['id'], headers)
-
+        
         return {
             "artist1_monthly_listeners": artist1_details.get('followers', {}).get('total', 0),
             "artist2_monthly_listeners": artist2_details.get('followers', {}).get('total', 0),
@@ -2076,7 +1932,7 @@ class RealAudienceAnalyzer:
             "genre_overlap_percentage": genre_overlap,
             "confidence": "high" if genre_overlap > 0 else "medium"
         }
-
+    
     async def get_youtube_audience_data(self, artist1: str, artist2: str):
         """
         Get real YouTube data for audience analysis
@@ -2084,17 +1940,15 @@ class RealAudienceAnalyzer:
         # Search for artist channels
         artist1_channel = await self.search_youtube_channel(artist1)
         artist2_channel = await self.search_youtube_channel(artist2)
-
+        
         # Get subscriber counts
         artist1_stats = await self.get_youtube_channel_stats(artist1_channel)
         artist2_stats = await self.get_youtube_channel_stats(artist2_channel)
-
+        
         # Estimate audience overlap based on subscriber counts and engagement
-        overlap_estimate = self.calculate_youtube_overlap(
-            artist1_stats, artist2_stats)
-        engagement_similarity = self.calculate_engagement_similarity(
-            artist1_stats, artist2_stats)
-
+        overlap_estimate = self.calculate_youtube_overlap(artist1_stats, artist2_stats)
+        engagement_similarity = self.calculate_engagement_similarity(artist1_stats, artist2_stats)
+        
         return {
             "artist1_subscribers": artist1_stats.get('subscriberCount', 0),
             "artist2_subscribers": artist2_stats.get('subscriberCount', 0),
@@ -2102,7 +1956,7 @@ class RealAudienceAnalyzer:
             "engagement_similarity": engagement_similarity,
             "confidence": "medium"  # YouTube API has limited audience overlap data
         }
-
+    
     async def get_lastfm_audience_data(self, artist1: str, artist2: str):
         """
         Get Last.fm listening pattern data
@@ -2110,44 +1964,40 @@ class RealAudienceAnalyzer:
         # Get similar artists data
         similar_artists1 = await self.get_lastfm_similar_artists(artist1)
         similar_artists2 = await self.get_lastfm_similar_artists(artist2)
-
+        
         # Calculate overlap in similar artists
-        similar_overlap = self.calculate_similar_artists_overlap(
-            similar_artists1, similar_artists2)
-
+        similar_overlap = self.calculate_similar_artists_overlap(similar_artists1, similar_artists2)
+        
         # Estimate listener overlap
         listener_overlap = await self.estimate_lastfm_listener_overlap(artist1, artist2)
-
+        
         return {
             "similar_listeners_count": listener_overlap,
             "scrobble_overlap_percentage": similar_overlap,
             "confidence": "medium"
         }
-
+    
     async def generate_ai_insights(self, artist1: str, artist2: str, spotify_data: dict, youtube_data: dict):
         """
         Generate AI-powered insights using Gemini API with REAL search data
         """
-        print(f"🔍 Generating real AI insights with Gemini search for {
-              artist1} vs {artist2}")
-
+        print(f"🔍 Generating real AI insights with Gemini search for {artist1} vs {artist2}")
+        
         # Use our new real search function instead of the old inaccurate method
         return await generate_real_ai_insights_with_search(artist1, artist2, spotify_data, youtube_data)
-
+    
     def generate_fallback_insights(self, artist1: str, artist2: str, spotify_data: dict, youtube_data: dict):
         """Generate data-driven insights when Gemini is not available - following the requested format"""
         insights = []
-
+        
         # Insight 1: Musical key (educated guess based on genre)
-        insights.append(f"{artist1} raps or sings in mostly the key of C major and so {
-                        artist2} can try to create art in this key")
-
+        insights.append(f"{artist1} raps or sings in mostly the key of C major and so {artist2} can try to create art in this key")
+        
         # Insight 2: Song duration (calculate from data)
         avg_duration1 = "3:20 minutes"  # Average pop song duration
         avg_duration2 = "3:15 minutes"  # Slightly different
-        insights.append(f"{artist1} makes music that is on average {avg_duration1} and {
-                        artist2} makes music that is on average {avg_duration2}")
-
+        insights.append(f"{artist1} makes music that is on average {avg_duration1} and {artist2} makes music that is on average {avg_duration2}")
+        
         # Insight 3: Tour revenue (estimate based on follower count)
         if spotify_data['artist1_monthly_listeners'] > 10000000:
             revenue1 = "$45M"
@@ -2155,30 +2005,26 @@ class RealAudienceAnalyzer:
             revenue1 = "$8M"
         else:
             revenue1 = "$2M"
-
+            
         if spotify_data['artist2_monthly_listeners'] > 10000000:
             revenue2 = "$42M"
         elif spotify_data['artist2_monthly_listeners'] > 1000000:
             revenue2 = "$6M"
         else:
             revenue2 = "$1.5M"
-
-        insights.append(f"{artist1} made {revenue1} with tours and shows this year and {
-                        artist2} made {revenue2}")
-
+            
+        insights.append(f"{artist1} made {revenue1} with tours and shows this year and {artist2} made {revenue2}")
+        
         # Insight 4: Streaming numbers
-        # Estimate top song streams
-        streams1 = f"{spotify_data['artist1_monthly_listeners'] * 15:,}"
+        streams1 = f"{spotify_data['artist1_monthly_listeners'] * 15:,}"  # Estimate top song streams
         streams2 = f"{spotify_data['artist2_monthly_listeners'] * 12:,}"
-        insights.append(f"{artist1} has {streams1} streams on their top song while {
-                        artist2} has {streams2} showing {artist2} can target similar streaming goals")
-
+        insights.append(f"{artist1} has {streams1} streams on their top song while {artist2} has {streams2} showing {artist2} can target similar streaming goals")
+        
         # Insight 5: Collaboration patterns
-        insights.append(f"{artist1} collaborates with mainstream pop artists and {
-                        artist2} should consider similar collaborations to expand their reach")
-
+        insights.append(f"{artist1} collaborates with mainstream pop artists and {artist2} should consider similar collaborations to expand their reach")
+        
         return insights[:5]
-
+    
     def calculate_total_overlap(self, spotify_data: dict, youtube_data: dict, lastfm_data: dict):
         """
         Calculate weighted total audience overlap score
@@ -2186,19 +2032,18 @@ class RealAudienceAnalyzer:
         spotify_weight = 0.5  # Spotify is most reliable for music
         youtube_weight = 0.3  # YouTube is good for video engagement
         lastfm_weight = 0.2   # Last.fm provides listening patterns
-
+        
         spotify_score = spotify_data['genre_overlap_percentage']
         youtube_score = youtube_data['estimated_audience_overlap']
         lastfm_score = lastfm_data['scrobble_overlap_percentage']
-
+        
         total_score = (
             spotify_score * spotify_weight +
             youtube_score * youtube_weight +
             lastfm_score * lastfm_weight
         )
-
+        
         return round(total_score, 1)
-
 
 @app.get("/analyze-artist/{artist_name}")
 async def analyze_artist(artist_name: str, comparable_artist: str = None):
@@ -2206,33 +2051,27 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
     Analyze an artist and provide comprehensive insights
     """
     try:
-        print(f"🎯 ANALYZE ARTIST REQUEST: {
-              artist_name} vs {comparable_artist}")
-        print(f"🔍 Environment Check - Spotify: {
-              spotify_client_id is not None}, Gemini: {gemini_api_key != 'dummy_key'}")
-
+        print(f"🎯 ANALYZE ARTIST REQUEST: {artist_name} vs {comparable_artist}")
+        print(f"🔍 Environment Check - Spotify: {spotify_client_id is not None}, Gemini: {gemini_api_key != 'dummy_key'}")
+        
         # Search for the main artist
         searched_artist = await get_artist_info(artist_name)
         if not searched_artist:
             print(f"❌ Artist not found: {artist_name}")
-            raise HTTPException(status_code=404, detail=f"Artist '{
-                                artist_name}' not found")
-
-        print(f"✅ Found artist: {searched_artist.name} ({
-              searched_artist.followers:,} followers)")
-
+            raise HTTPException(status_code=404, detail=f"Artist '{artist_name}' not found")
+        
+        print(f"✅ Found artist: {searched_artist.name} ({searched_artist.followers:,} followers)")
+        
         # Handle comparable artist
         comp_artist_name = comparable_artist if comparable_artist else "Taylor Swift"
         comparable_artist_obj = await get_artist_info(comp_artist_name)
         if not comparable_artist_obj:
-            print(f"⚠️ Comparable artist not found: {
-                  comp_artist_name}, using fallback")
+            print(f"⚠️ Comparable artist not found: {comp_artist_name}, using fallback")
             comp_artist_name = "Taylor Swift"
-        comparable_artist_obj = await get_artist_info(comp_artist_name)
-
-        print(f"✅ Comparable artist: {comparable_artist_obj.name} ({
-              comparable_artist_obj.followers:,} followers)")
-
+            comparable_artist_obj = await get_artist_info(comp_artist_name)
+        
+        print(f"✅ Comparable artist: {comparable_artist_obj.name} ({comparable_artist_obj.followers:,} followers)")
+        
         # Initialize response structure with defaults
         response = {
             "artist": await map_spotify_artist_to_frontend(searched_artist),
@@ -2256,31 +2095,28 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
                 "risk_factors": []
             }
         }
-
+        
         # Try to get enhanced analysis with real data
-        use_real_data = (gemini_api_key and gemini_api_key != "dummy_key" and
+        use_real_data = (gemini_api_key and gemini_api_key != "dummy_key" and 
                         spotify_client_id and spotify_client_secret)
-
-        print(f"🔍 Analysis method: {
-              'Real data + AI' if use_real_data else 'Fallback only'}")
-
+        
+        print(f"🔍 Analysis method: {'Real data + AI' if use_real_data else 'Fallback only'}")
+        
         if use_real_data:
             try:
                 # Get real AI insights
                 ai_similarity_analysis = await get_real_music_industry_data_with_gemini(
                     artist_name, comp_artist_name
                 )
-
+                
                 if ai_similarity_analysis and "audience_analysis" in ai_similarity_analysis:
                     print("✅ Gemini AI analysis successful")
                     response["analysis"] = ai_similarity_analysis
-
+                    
                     # Calculate resonance score with real data
-                    genre_similarity = ai_similarity_analysis.get(
-                        "genre_similarity", 0.5)
-                    theme_similarity = ai_similarity_analysis.get(
-                        "theme_similarity", 0.5)
-
+                    genre_similarity = ai_similarity_analysis.get("genre_similarity", 0.5)
+                    theme_similarity = ai_similarity_analysis.get("theme_similarity", 0.5)
+                    
                     resonance_result = await calculate_musistash_resonance_score(
                         {"spotify": searched_artist.dict()},
                         {"spotify": comparable_artist_obj.dict()},
@@ -2289,21 +2125,19 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
                         genre_similarity,
                         theme_similarity
                     )
-
+                    
                     if resonance_result and "musistash_resonance_score" in resonance_result:
                         response["musistash_resonance_score"] = resonance_result["musistash_resonance_score"]
-                        response["resonance_details"] = resonance_result.get(
-                            "resonance_details", response["resonance_details"])
-                        print(f"✅ Resonance score calculated: {
-                              response['musistash_resonance_score']}%")
+                        response["resonance_details"] = resonance_result.get("resonance_details", response["resonance_details"])
+                        print(f"✅ Resonance score calculated: {response['musistash_resonance_score']}%")
                     else:
                         print("⚠️ Resonance score calculation failed, using fallback")
                         raise Exception("Resonance calculation failed")
-
-        else:
+                        
+                else:
                     print("⚠️ Gemini analysis failed, using fallback")
                     raise Exception("Gemini analysis failed")
-
+                    
             except Exception as e:
                 print(f"❌ Real data analysis failed: {str(e)}")
                 use_real_data = False
@@ -2313,13 +2147,13 @@ async def analyze_artist(artist_name: str, comparable_artist: str = None):
             print("🔄 Using fallback analysis method")
             try:
                 # Use enhanced Spotify similarity as fallback
-            ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
-                {"spotify": searched_artist.dict()}, 
-                {"spotify": comparable_artist_obj.dict()}, 
-                artist_name, 
-                comp_artist_name
-            )
-            
+                ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
+                    {"spotify": searched_artist.dict()}, 
+                    {"spotify": comparable_artist_obj.dict()}, 
+                    artist_name, 
+                    comp_artist_name
+                )
+                
                 if ai_similarity_analysis:
                     response["analysis"] = ai_similarity_analysis
                     
@@ -4015,7 +3849,7 @@ async def analyze_musical_ecosystem_compatibility(target_artist: str, mentor_art
         
         # Parse JSON response
         try:
-            ecosystem_data = json.loads(response.strip() if response else "{}")
+            ecosystem_data = json.loads(response.strip())
             
             # Validate and sanitize the response
             ecosystem_analysis = {

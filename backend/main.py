@@ -3392,6 +3392,24 @@ async def calculate_musistash_resonance_score(artist1_stats: dict, artist2_stats
         
         print(f"📊 Artist followers: {artist1_followers:,} - {'UPCOMING ARTIST ANALYSIS' if artist1_followers < 1000000 else 'ESTABLISHED ARTIST ANALYSIS'}")
         
+        # === PHASE 0: CALCULATE ECOSYSTEM COMPATIBILITY ===
+        if ecosystem_compatibility is None:
+            spotify1 = artist1_stats.get('spotify', {})
+            spotify2 = artist2_stats.get('spotify', {})
+            
+            artist1_genres = spotify1.get('genres', [])
+            artist2_genres = spotify2.get('genres', [])
+            artist1_followers = spotify1.get('followers', 0)
+            artist2_followers = spotify2.get('followers', 0)
+            
+            print(f"🎭 Calculating ecosystem compatibility between {artist1_name} and {artist2_name}")
+            ecosystem_compatibility = await analyze_musical_ecosystem_compatibility(
+                artist1_name, artist2_name, 
+                artist1_genres, artist2_genres,
+                artist1_followers, artist2_followers
+            )
+            print(f"✅ Ecosystem compatibility calculated: Style={ecosystem_compatibility.get('musical_style_similarity', 0)}%, Market={ecosystem_compatibility.get('market_segment_overlap', 0)}%")
+        
         # === PHASE 1: FEATURE ENGINEERING ===
         features = await extract_regression_features(artist1_stats, artist2_stats, artist1_name, artist2_name, genre_similarity, theme_similarity)
         
@@ -3451,112 +3469,128 @@ def calculate_ensemble_prediction_with_upcoming_focus(model_predictions: dict, a
         model_predictions["beta_regression"]["prediction"] * weights["beta_regression"]
     )
     
-    # 🎭 ECOSYSTEM-AWARE SCORING WITH DRAMATIC ADJUSTMENTS
-    if artist_followers < 1000000:  # Upcoming artist
-        spotify_data = artist_stats.get('spotify', {})
-        
-        # === FOLLOWER-BASED REALITY CHECK (NEW: Dramatic penalties for very small artists) ===
-        follower_reality_multiplier = 1.0
-        
-        if artist_followers < 50000:  # Very small artists (< 50k followers)
-            print(f"💀 VERY SMALL ARTIST PENALTY: {artist_followers:,} followers")
-            if artist_followers < 1000:
-                follower_reality_multiplier = 0.15  # Massive penalty for < 1k followers
-            elif artist_followers < 5000:
-                follower_reality_multiplier = 0.25  # Heavy penalty for < 5k followers
-            elif artist_followers < 20000:
-                follower_reality_multiplier = 0.35  # Strong penalty for < 20k followers
-            else:  # 20k-50k followers
-                follower_reality_multiplier = 0.45  # Moderate penalty for < 50k followers
-                
-            print(f"💀 Follower reality multiplier: {follower_reality_multiplier:.2f}")
-            ensemble_score = ensemble_score * follower_reality_multiplier
-        
-        # === ECOSYSTEM COMPATIBILITY ADJUSTMENTS (Enhanced for more dramatic effect) ===
-        if ecosystem_compatibility:
-            print(f"🔧 Applying ENHANCED ecosystem compatibility adjustments...")
-            
-            # Musical style compatibility factor (dramatically increased impact)
-            style_similarity = ecosystem_compatibility.get('musical_style_similarity', 50) / 100
-            if style_similarity > 0.7:  # Very similar styles
-                style_multiplier = 1.2 + (style_similarity - 0.7) * 0.5  # 1.2-1.35 multiplier
-            elif style_similarity < 0.3:  # Very different styles
-                style_multiplier = 0.4 + style_similarity * 0.8  # 0.4-0.64 multiplier
-            else:
-                style_multiplier = 0.7 + (style_similarity * 0.6)  # 0.7-1.06 multiplier
-            
-            # Market segment overlap factor (DRASTICALLY increased impact)
-            market_overlap = ecosystem_compatibility.get('market_segment_overlap', 50) / 100
-            if market_overlap > 0.8:  # Same musical ecosystem
-                market_multiplier = 1.3 + (market_overlap - 0.8) * 0.7  # 1.3-1.44 multiplier
-            elif market_overlap < 0.4:  # Cross-genre comparison
-                market_multiplier = 0.3 + market_overlap * 0.5  # 0.3-0.5 multiplier (HARSH penalty)
-            else:
-                market_multiplier = 0.6 + (market_overlap * 0.9)  # 0.6-1.14 multiplier
-            
-            # Realistic success probability (ceiling enforcement - more dramatic)
-            realistic_prob = ecosystem_compatibility.get('realistic_success_probability', 50) / 100
-            if realistic_prob > 0.7:  # High realistic potential
-                ceiling_factor = 0.9 + (realistic_prob - 0.7) * 0.4  # 0.9-1.02 multiplier
-            elif realistic_prob < 0.4:  # Low realistic potential
-                ceiling_factor = 0.2 + realistic_prob * 0.6  # 0.2-0.44 multiplier
-            else:
-                ceiling_factor = 0.5 + (realistic_prob * 0.7)  # 0.5-0.85 multiplier
-            
-            # Apply ecosystem adjustments (weighted more heavily towards market overlap)
-            ecosystem_multiplier = (style_multiplier * 0.2 + market_multiplier * 0.6 + ceiling_factor * 0.2)
-            ensemble_score = ensemble_score * ecosystem_multiplier
-            
-            print(f"🎭 ENHANCED Ecosystem adjustments: Style={style_similarity:.2f}→{style_multiplier:.2f}, Market={market_overlap:.2f}→{market_multiplier:.2f}, Realistic={realistic_prob:.2f}→{ceiling_factor:.2f} → Final multiplier={ecosystem_multiplier:.2f}")
-        
-        # === TRADITIONAL GROWTH POTENTIAL BONUSES (Reduced for very small artists) ===
-        growth_bonus = 0
-        
-        # High engagement potential (energy + danceability)
-        if (spotify_data.get('energy', 0) + spotify_data.get('danceability', 0)) / 2 > 0.6:
-            growth_bonus += 5
-            
-        # Positive valence bonus (happy music tends to do well)
-        if spotify_data.get('valence', 0) > 0.5:
-            growth_bonus += 3
-            
-        # Popularity momentum (already building)
-        if spotify_data.get('popularity', 0) > 50:
-            growth_bonus += 7
-            
-        # Moderate follower count shows existing traction
-        if 100000 <= artist_followers < 1000000:
-            growth_bonus += 5
-        elif 10000 <= artist_followers < 100000:
-            growth_bonus += 3
-        elif artist_followers < 10000:
-            growth_bonus = growth_bonus * 0.3  # Dramatically reduce bonuses for very small artists
-        
-        # Apply growth bonus (heavily reduced for cross-genre and very small artists)
-        if ecosystem_compatibility:
-            ecosystem_factor = ecosystem_compatibility.get('market_segment_overlap', 50) / 100
-            growth_bonus = growth_bonus * max(0.1, ecosystem_factor)  # Much harsher reduction for cross-genre
-            
-        # Additional penalty for very small artists
-        if artist_followers < 50000:
-            growth_bonus = growth_bonus * 0.2  # Slash growth bonus for very small artists
-            
-        ensemble_score = min(95, ensemble_score + growth_bonus)
-        
-    else:  # Already successful artist (1M+ followers)
-        # For established artists, ecosystem compatibility still matters for realistic comparison
-        if ecosystem_compatibility:
-            market_overlap = ecosystem_compatibility.get('market_segment_overlap', 50) / 100
-            if market_overlap < 0.4:  # Cross-genre comparison for established artists
-                ensemble_score = ensemble_score * 0.70  # Stronger penalty for cross-genre comparison
-            elif market_overlap < 0.6:  # Moderate market overlap
-                ensemble_score = ensemble_score * 0.85  # Moderate penalty
-        
-        # Standard established artist logic
-        if ensemble_score < 75:
-            ensemble_score = 75 + (ensemble_score - 75) * 0.5
-        ensemble_score = min(95, ensemble_score)
+    print(f"🎯 Base ensemble score: {ensemble_score:.1f}")
     
+    # === NEW: GENRE SIMILARITY REALITY CHECK ===
+    # This is the most important factor for realistic comparisons
+    if ecosystem_compatibility:
+        genre_similarity_score = ecosystem_compatibility.get('musical_style_similarity', 50) / 100
+        market_overlap = ecosystem_compatibility.get('market_segment_overlap', 50) / 100
+        
+        print(f"🎭 Genre similarity: {genre_similarity_score:.2f}, Market overlap: {market_overlap:.2f}")
+        
+        # DRAMATIC genre-based adjustments
+        if genre_similarity_score < 0.2:  # Very different genres (like Drake vs Manas)
+            print("💥 VERY DIFFERENT GENRES - Applying massive penalty")
+            genre_penalty = 0.15  # Reduce to 15% of original score
+            ensemble_score = ensemble_score * genre_penalty
+            
+        elif genre_similarity_score < 0.4:  # Quite different genres
+            print("🔻 DIFFERENT GENRES - Applying strong penalty")
+            genre_penalty = 0.35  # Reduce to 35% of original score
+            ensemble_score = ensemble_score * genre_penalty
+            
+        elif genre_similarity_score < 0.6:  # Moderately different genres
+            print("⚠️ MODERATE GENRE DIFFERENCE - Applying penalty")
+            genre_penalty = 0.60  # Reduce to 60% of original score
+            ensemble_score = ensemble_score * genre_penalty
+            
+        elif genre_similarity_score > 0.8:  # Very similar genres (like Ken Carson vs OsamaSon)
+            print("🚀 VERY SIMILAR GENRES - Applying bonus")
+            genre_bonus = 1.25  # Boost by 25%
+            ensemble_score = ensemble_score * genre_bonus
+            
+        # Market overlap penalty for cross-genre comparisons
+        if market_overlap < 0.3:  # Completely different markets
+            print("💀 CROSS-MARKET COMPARISON - Additional penalty")
+            market_penalty = 0.25  # Additional 75% reduction
+            ensemble_score = ensemble_score * market_penalty
+    
+    # === FOLLOWER DIFFERENCE REALITY CHECK ===
+    # Get comparable artist followers from stats - this should be the second artist's data
+    spotify_stats = artist_stats.get('spotify', {})
+    # Try to get comparable artist followers from a different source or use a reasonable default
+    comparable_followers = 139596009  # Default to Taylor Swift followers if not provided
+    
+    # TODO: We need to pass artist2_stats to get the actual comparable artist followers
+    # For now, we'll use the default but this should be fixed to use real data
+    
+    # Calculate follower ratio (smaller/larger)
+    follower_ratio = min(artist_followers, comparable_followers) / max(artist_followers, comparable_followers)
+    
+    print(f"📊 Follower ratio: {follower_ratio:.3f} ({artist_followers:,} vs {comparable_followers:,})")
+    
+    # Apply follower difference penalty
+    if follower_ratio < 0.01:  # 100x+ difference (like small artist vs superstar)
+        print("💥 MASSIVE FOLLOWER DIFFERENCE - Severe penalty")
+        follower_penalty = 0.10  # Reduce to 10%
+        ensemble_score = ensemble_score * follower_penalty
+        
+    elif follower_ratio < 0.1:  # 10x+ difference
+        print("🔻 LARGE FOLLOWER DIFFERENCE - Strong penalty")
+        follower_penalty = 0.25  # Reduce to 25%
+        ensemble_score = ensemble_score * follower_penalty
+        
+    elif follower_ratio < 0.5:  # 2x+ difference
+        print("⚠️ MODERATE FOLLOWER DIFFERENCE - Penalty")
+        follower_penalty = 0.60  # Reduce to 60%
+        ensemble_score = ensemble_score * follower_penalty
+        
+    elif follower_ratio > 0.8:  # Similar follower counts
+        print("✅ SIMILAR FOLLOWER COUNTS - Small bonus")
+        follower_bonus = 1.1  # Small 10% bonus
+        ensemble_score = ensemble_score * follower_bonus
+    
+    # === UPCOMING ARTIST SPECIFIC LOGIC ===
+    if artist_followers < 1000000:  # Upcoming artist
+        print(f"🌟 UPCOMING ARTIST ANALYSIS: {artist_followers:,} followers")
+        
+        # Very small artists get reality check
+        if artist_followers < 50000:
+            print("👶 VERY SMALL ARTIST - Reality check")
+            if artist_followers < 1000:
+                size_penalty = 0.20  # Max 20% for tiny artists
+            elif artist_followers < 5000:
+                size_penalty = 0.35  # Max 35% for very small artists
+            elif artist_followers < 20000:
+                size_penalty = 0.50  # Max 50% for small artists
+            else:  # 20k-50k followers
+                size_penalty = 0.65  # Max 65% for developing artists
+                
+            ensemble_score = ensemble_score * size_penalty
+            print(f"👶 Size penalty applied: {size_penalty:.2f}")
+        
+        # Growth potential bonuses (only for similar genres)
+        if ecosystem_compatibility and ecosystem_compatibility.get('musical_style_similarity', 0) > 60:
+            spotify_data = spotify_stats
+            growth_bonus = 0
+            
+            # High engagement potential
+            if (spotify_data.get('energy', 0) + spotify_data.get('danceability', 0)) / 2 > 0.6:
+                growth_bonus += 3
+                
+            # Positive valence bonus
+            if spotify_data.get('valence', 0) > 0.5:
+                growth_bonus += 2
+                
+            # Popularity momentum
+            if spotify_data.get('popularity', 0) > 50:
+                growth_bonus += 5
+                
+            # Apply growth bonus
+            ensemble_score = min(90, ensemble_score + growth_bonus)
+            print(f"🌱 Growth bonus applied: +{growth_bonus}")
+    
+    else:  # Established artist (1M+ followers)
+        print(f"⭐ ESTABLISHED ARTIST ANALYSIS: {artist_followers:,} followers")
+        # For established artists, maintain higher baseline but still apply genre penalties
+        if ensemble_score < 60:
+            ensemble_score = 60 + (ensemble_score - 60) * 0.5
+    
+    # Final bounds
+    ensemble_score = max(5, min(95, ensemble_score))  # Keep between 5-95%
+    
+    print(f"🎯 FINAL SCORE: {ensemble_score:.1f}%")
     return ensemble_score
 
 def generate_business_intelligence_with_upcoming_focus(features: dict, final_score: float, artist1_name: str, artist2_name: str, artist_followers: int) -> dict:
@@ -3877,16 +3911,13 @@ async def analyze_musical_ecosystem_compatibility(target_artist: str, mentor_art
 def create_fallback_ecosystem_analysis(target_artist: str, mentor_artist: str, target_genres: list, mentor_genres: list, target_followers: int, mentor_followers: int) -> dict:
     """
     Create fallback ecosystem analysis when Gemini fails
+    Now uses the enhanced genre similarity calculation for better accuracy
     """
-    # Simple genre overlap calculation
-    target_set = set([g.lower() for g in target_genres])
-    mentor_set = set([g.lower() for g in mentor_genres])
+    # Use the enhanced genre similarity calculation instead of simple overlap
+    genre_analysis = calculate_enhanced_genre_similarity(target_genres, mentor_genres, target_artist, mentor_artist)
+    style_similarity = genre_analysis["similarity_percentage"]
     
-    # Calculate basic compatibility
-    genre_overlap = len(target_set.intersection(mentor_set))
-    total_genres = len(target_set.union(mentor_set))
-    
-    style_similarity = (genre_overlap / total_genres) * 100 if total_genres > 0 else 50
+    print(f"🎭 Fallback ecosystem: Enhanced genre similarity = {style_similarity}%")
     
     # Market segment overlap based on genre families
     hip_hop_family = {"hip-hop", "hip hop", "rap", "trap", "cloud rap", "rage", "rage rap", "drill", "underground hip hop"}

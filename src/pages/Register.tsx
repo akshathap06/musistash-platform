@@ -1,61 +1,18 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Shield, Zap, Users, Music, Headphones, Briefcase } from 'lucide-react';
 import GoogleSignIn from '@/components/ui/GoogleSignIn';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
-  
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'listener' | 'artist' | 'developer'>('listener');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    // Basic validation
-    if (!name || !email || !password || !confirmPassword) {
-      setError('All fields are required');
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      await register(name, email, password, role);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const [accountType, setAccountType] = useState('listener');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -64,141 +21,112 @@ const Register = () => {
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-10 animate-scale-in">
           <div className="text-center">
-            <h1 className="text-2xl font-bold">Create your MusiStash account</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Join our community of music lovers, artists, and service providers
+            <h1 className="text-3xl font-bold">Join MusiStash</h1>
+            <p className="mt-3 text-lg text-muted-foreground">
+              Choose your role and start your music investment journey
             </p>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Sign Up</CardTitle>
-              <CardDescription>
-                Fill in your details to create a new account
+          <Card className="border-2 shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl">Create Account</CardTitle>
+              <CardDescription className="text-base">
+                Select your account type and sign up with Google
               </CardDescription>
             </CardHeader>
             
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                {error && (
-                  <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-start">
-                    <AlertCircle className="h-4 w-4 mr-2 mt-0.5" />
-                    <span>{error}</span>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                  />
+            <CardContent className="space-y-8 pt-6">
+              {error && (
+                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-start">
+                  <AlertCircle className="h-4 w-4 mr-2 mt-0.5" />
+                  <span>{error}</span>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Account Type</Label>
-                  <RadioGroup
-                    value={role}
-                    onValueChange={(value) => setRole(value as 'listener' | 'artist' | 'developer')}
-                    className="flex flex-col space-y-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="listener" id="listener" />
-                      <Label htmlFor="listener" className="cursor-pointer">
-                        Listener (I want to invest in artists)
-                      </Label>
+              )}
+
+              <RadioGroup
+                value={accountType}
+                onValueChange={setAccountType}
+                className="grid gap-4"
+              >
+                <div className="flex items-center space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="listener" id="listener" />
+                  <Label htmlFor="listener" className="flex items-center gap-3 cursor-pointer">
+                    <Headphones className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Listener</div>
+                      <div className="text-sm text-muted-foreground">I want to invest in artists</div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="artist" id="artist" />
-                      <Label htmlFor="artist" className="cursor-pointer">
-                        Artist (I want to raise funds for my projects)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="developer" id="developer" />
-                      <Label htmlFor="developer" className="cursor-pointer">
-                        Service Provider (I offer services to artists)
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="flex flex-col">
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
-                </Button>
-                
-                <div className="mt-4 text-center">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
+                  </Label>
                 </div>
 
-                <div className="mt-4 w-full">
-                  <GoogleSignIn 
-                    onSuccess={() => navigate('/dashboard')}
-                    onError={(error) => setError(error)}
-                    className="w-full"
-                  />
+                <div className="flex items-center space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="artist" id="artist" />
+                  <Label htmlFor="artist" className="flex items-center gap-3 cursor-pointer">
+                    <Music className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Artist</div>
+                      <div className="text-sm text-muted-foreground">I want to raise funds for my projects</div>
+                    </div>
+                  </Label>
                 </div>
-                
-                <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <Link to="/login" className="font-medium text-primary hover:underline">
-                    Log in
-                  </Link>
-                </p>
-              </CardFooter>
-            </form>
+
+                <div className="flex items-center space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="service-provider" id="service-provider" />
+                  <Label htmlFor="service-provider" className="flex items-center gap-3 cursor-pointer">
+                    <Briefcase className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Service Provider</div>
+                      <div className="text-sm text-muted-foreground">I offer services to artists</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              <div className="w-full pt-4">
+                <GoogleSignIn 
+                  onSuccess={() => navigate('/dashboard')}
+                  onError={(error) => setError(error)}
+                  className="w-full"
+                />
+              </div>
+            </CardContent>
+            
+            <CardFooter className="flex flex-col pt-2">
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link to="/login" className="font-medium text-primary hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </CardFooter>
           </Card>
+
+          {/* Benefits Section */}
+          <div className="space-y-4">
+            <h3 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Why Choose Google Sign-In?
+            </h3>
+            <div className="grid gap-3">
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                <Zap className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="text-sm">
+                  <strong>Lightning Fast:</strong> Get started in seconds
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                <Shield className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="text-sm">
+                  <strong>Secure:</strong> Protected by Google's security
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                <Users className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="text-sm">
+                  <strong>Join the Community:</strong> Artists, listeners, and service providers
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       

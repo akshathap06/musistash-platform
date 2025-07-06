@@ -562,24 +562,22 @@ const AIRecommendationTool: React.FC = () => {
                             <Card className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 border-0 shadow-xl">
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                                <Star className="h-5 w-5 text-yellow-300" />
+                                        <div className="text-center">
+                                            <div className="flex items-center justify-center gap-3 mb-4">
+                                                <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                                                    <Star className="h-6 w-6 text-yellow-300" />
+                                                </div>
+                                                <h2 className="text-2xl font-bold text-white">MusiStash Resonance Score</h2>
                                             </div>
-                                            <div>
-                                                <h2 className="text-xl font-bold text-white">MusiStash Resonance Score</h2>
-                                                <p className="text-purple-100 text-sm">Commercial Success Prediction</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-3xl font-black text-white">
+                                            <div className="text-6xl font-black text-white mb-3">
                                                 {analysis.ai_similarity_analysis.musistash_resonance_score.resonance_score}%
                                             </div>
-                                            <div className="text-purple-200 text-sm">
+                                            <div className="text-purple-200 text-xl font-medium mb-4">
                                                 {analysis.ai_similarity_analysis.musistash_resonance_score.resonance_score >= 80 ? 'Excellent' :
                                                  analysis.ai_similarity_analysis.musistash_resonance_score.resonance_score >= 60 ? 'Good' :
                                                  analysis.ai_similarity_analysis.musistash_resonance_score.resonance_score >= 40 ? 'Moderate' : 'Challenging'}
                                             </div>
+                                            <p className="text-purple-100 text-sm">Commercial Success Prediction</p>
                                         </div>
                                     </div>
 
@@ -623,21 +621,7 @@ const AIRecommendationTool: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* API Coverage */}
-                                    {analysis.ai_similarity_analysis.musistash_resonance_score.musistash_analysis?.api_coverage && (
-                                        <div className="mt-4 p-3 bg-purple-900/30 rounded-lg">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm text-purple-200">API Coverage:</span>
-                                                <div className="flex gap-2">
-                                                    {Object.entries(analysis.ai_similarity_analysis.musistash_resonance_score.musistash_analysis.api_coverage).map(([api, available]) => (
-                                                        <span key={api} className={`px-2 py-1 rounded text-xs ${available ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                                                            {api.toUpperCase()} {available ? '✓' : '✗'}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+
                                 </CardContent>
                             </Card>
                         )}
@@ -646,16 +630,16 @@ const AIRecommendationTool: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
                                 <CardContent className="p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-lg font-bold text-blue-800 flex items-center gap-2">
+                                    <div className="text-center mb-4">
+                                        <h3 className="text-lg font-bold text-blue-800 flex items-center justify-center gap-2 mb-3">
                                             <Music className="h-5 w-5" />
                                             Similarity Score
                                         </h3>
-                                        <Badge className="bg-blue-200 text-blue-800">
+                                        <div className="text-4xl font-black text-blue-800 mb-2">
                                             {analysis.ai_similarity_analysis.similarity_score.toFixed(1)}%
-                                        </Badge>
+                                        </div>
+                                        <div className="text-sm text-blue-700 mb-3">Overall Compatibility</div>
                                     </div>
-                                    <div className="text-sm text-blue-700 mb-3">Overall Compatibility</div>
                                     <div className="space-y-2">
                                         {Object.entries(analysis.ai_similarity_analysis.category_scores).slice(0, 3).map(([category, score]) => {
                                             const scoreValue = typeof score === 'number' ? score : 0;

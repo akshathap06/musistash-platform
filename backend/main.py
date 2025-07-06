@@ -2326,147 +2326,77 @@ def calculate_enhanced_genre_similarity(genres1: list, genres2: list, artist1_na
     artist1_unique = list(genres1_set - genres2_set)
     artist2_unique = list(genres2_set - genres1_set)
     
-    # Ultra-Enhanced Genre relationship mapping with deep R&B sub-genres
+    # STRICT Genre relationship mapping - Only very close genres
     genre_relationships = {
-        # Deep R&B/Soul Family with micro-genres
-        "r&b": ["soul", "neo soul", "contemporary r&b", "rnb", "rap", "hip-hop", "hip hop", "urban contemporary", "trap soul", "quiet storm", "funk", "gospel", "alternative r&b", "dark r&b", "moody r&b", "atmospheric r&b", "electronic r&b", "experimental r&b", "indie r&b", "lo-fi r&b", "bedroom r&b"],
-        "rnb": ["r&b", "soul", "neo soul", "contemporary r&b", "rap", "hip-hop", "urban contemporary", "trap soul", "alternative r&b", "dark r&b", "moody r&b", "atmospheric r&b"],
-        "contemporary r&b": ["r&b", "rnb", "neo soul", "soul", "rap", "hip-hop", "urban contemporary", "trap soul", "alternative r&b", "dark r&b", "moody r&b"],
-        "alternative r&b": ["r&b", "rnb", "contemporary r&b", "neo soul", "indie r&b", "experimental r&b", "dark r&b", "moody r&b", "atmospheric r&b", "electronic r&b", "art r&b", "underground r&b"],
-        "dark r&b": ["r&b", "rnb", "alternative r&b", "moody r&b", "atmospheric r&b", "trap soul", "experimental r&b", "gothic r&b", "melancholic r&b"],
-        "moody r&b": ["r&b", "rnb", "dark r&b", "alternative r&b", "atmospheric r&b", "melancholic r&b", "introspective r&b", "emotional r&b"],
-        "atmospheric r&b": ["r&b", "rnb", "alternative r&b", "dark r&b", "moody r&b", "ambient r&b", "cinematic r&b", "experimental r&b"],
-        "electronic r&b": ["r&b", "rnb", "alternative r&b", "electro r&b", "synth r&b", "futuristic r&b", "digital r&b"],
-        "indie r&b": ["r&b", "rnb", "alternative r&b", "bedroom r&b", "lo-fi r&b", "underground r&b", "experimental r&b"],
-        "trap soul": ["r&b", "rnb", "trap", "contemporary r&b", "hip-hop", "rap", "alternative r&b", "dark r&b"],
-        "neo soul": ["r&b", "rnb", "soul", "contemporary r&b", "jazz", "funk", "gospel", "hip-hop", "alternative r&b"],
-        "soul": ["r&b", "rnb", "neo soul", "funk", "gospel", "blues", "jazz", "motown", "classic soul", "southern soul"],
-        "urban contemporary": ["r&b", "rnb", "hip-hop", "rap", "contemporary r&b", "pop", "alternative r&b"],
+        # R&B/Soul Family - STRICT CORE ONLY
+        "r&b": ["rnb", "contemporary r&b", "neo soul", "soul", "alternative r&b"],
+        "rnb": ["r&b", "contemporary r&b", "neo soul", "soul"],
+        "contemporary r&b": ["r&b", "rnb", "neo soul", "alternative r&b"],
+        "alternative r&b": ["r&b", "rnb", "contemporary r&b", "dark r&b", "moody r&b"],
+        "dark r&b": ["alternative r&b", "moody r&b", "atmospheric r&b"],
+        "moody r&b": ["dark r&b", "alternative r&b", "atmospheric r&b"],
+        "atmospheric r&b": ["dark r&b", "moody r&b", "alternative r&b"],
+        "neo soul": ["r&b", "rnb", "soul", "contemporary r&b"],
+        "soul": ["r&b", "rnb", "neo soul", "funk", "gospel"],
 
-        # Pop with R&B crossovers
-        "pop": ["pop rock", "electropop", "dance pop", "indie pop", "synth pop", "teen pop", "adult contemporary", "urban contemporary", "alt-pop", "dark pop", "moody pop", "atmospheric pop"],
-        "alt-pop": ["pop", "alternative", "indie pop", "dark pop", "experimental pop", "art pop", "alternative r&b"],
-        "dark pop": ["pop", "alt-pop", "moody pop", "gothic pop", "alternative", "dark r&b", "alternative r&b"],
-        "moody pop": ["pop", "dark pop", "alt-pop", "atmospheric pop", "melancholic pop", "moody r&b"],
+        # Hip-Hop/Rap Family - STRICT CORE ONLY (NO POP OR R&B CROSSOVER)
+        "hip-hop": ["rap", "hip hop", "trap", "gangsta rap", "conscious rap"],
+        "rap": ["hip-hop", "hip hop", "trap", "conscious rap", "gangsta rap", "drill"],
+        "trap": ["rap", "hip-hop", "hip hop", "drill"],
+        "drill": ["rap", "hip-hop", "trap", "gangsta rap"],
+        "gangsta rap": ["rap", "hip-hop", "drill", "conscious rap"],
+        "conscious rap": ["rap", "hip-hop", "gangsta rap"],
 
-        # Hip-Hop/Rap Family with R&B connections
-        "hip-hop": ["rap", "hip hop", "trap", "gangsta rap", "conscious rap", "old school rap", "east coast rap", "west coast rap", "southern rap", "r&b", "rnb", "contemporary r&b", "urban contemporary", "alternative r&b", "trap soul"],
-        "rap": ["hip-hop", "hip hop", "trap", "conscious rap", "gangsta rap", "mumble rap", "drill", "r&b", "rnb", "contemporary r&b", "urban contemporary", "trap soul", "alternative r&b", "melodic rap"],
-        "trap": ["rap", "hip-hop", "hip hop", "southern rap", "drill", "r&b", "trap soul", "urban contemporary", "melodic trap", "atmospheric trap"],
-        "melodic rap": ["rap", "hip-hop", "r&b", "rnb", "trap soul", "contemporary r&b", "alternative r&b"],
-        "drill": ["rap", "hip-hop", "trap", "gangsta rap", "uk drill"],
-        
-        # Funk/Groove Family
-        "funk": ["soul", "r&b", "disco", "p-funk", "jazz funk", "neo soul", "hip-hop"],
-        "disco": ["funk", "dance", "house", "pop", "soul"],
-        
-        # Dance pop with electronic crossovers
-        "dance pop": ["pop", "dance", "edm", "electropop", "euro dance"],
-        "electropop": ["pop", "electronic", "synth pop", "dance pop", "edm"],
-        "indie pop": ["pop", "indie", "indie rock", "alternative", "bedroom pop"],
-        "synth pop": ["pop", "electronic", "new wave", "electropop", "synthwave"],
+        # Pop Family - STRICT CORE ONLY (NO HIP-HOP OR R&B CROSSOVER)
+        "pop": ["pop rock", "electropop", "dance pop", "indie pop", "synth pop", "teen pop"],
+        "pop rock": ["pop", "rock", "indie pop"],
+        "electropop": ["pop", "electronic", "synth pop", "dance pop"],
+        "dance pop": ["pop", "electropop", "dance"],
+        "indie pop": ["pop", "indie", "pop rock"],
+        "synth pop": ["pop", "electropop", "electronic"],
+        "teen pop": ["pop", "dance pop"],
         
         # Rock Family
-        "rock": ["pop rock", "indie rock", "alternative rock", "classic rock", "hard rock", "blues rock"],
-        "pop rock": ["rock", "pop", "indie rock", "alternative rock"],
-        "indie rock": ["rock", "indie", "alternative", "alternative rock", "indie pop"],
-        "alternative rock": ["rock", "alternative", "indie rock", "grunge", "post-rock"],
-        "alternative": ["alternative rock", "indie", "indie rock", "grunge", "post-rock", "alt-pop"],
-        "classic rock": ["rock", "hard rock", "blues rock", "southern rock"],
-        "hard rock": ["rock", "classic rock", "metal", "heavy metal"],
+        "rock": ["pop rock", "indie rock", "alternative rock", "classic rock", "hard rock"],
+        "indie rock": ["rock", "indie", "alternative", "alternative rock"],
+        "alternative rock": ["rock", "alternative", "indie rock"],
+        "alternative": ["alternative rock", "indie", "indie rock"],
+        "classic rock": ["rock", "hard rock"],
+        "hard rock": ["rock", "classic rock"],
         
         # Electronic Family
-        "electronic": ["edm", "techno", "house", "dubstep", "electro", "trance", "ambient", "synth pop", "electropop", "electronic r&b"],
-        "edm": ["electronic", "house", "techno", "dubstep", "trance", "dance", "dance pop"],
-        "house": ["electronic", "edm", "techno", "deep house", "progressive house", "disco"],
-        "techno": ["electronic", "edm", "house", "minimal techno", "detroit techno"],
-        "dubstep": ["electronic", "edm", "drum and bass", "future bass"],
-        "ambient": ["electronic", "new age", "chillout", "downtempo", "experimental", "atmospheric r&b"],
+        "electronic": ["edm", "techno", "house", "electropop", "synth pop"],
+        "edm": ["electronic", "house", "techno", "dance"],
+        "house": ["electronic", "edm", "techno"],
+        "techno": ["electronic", "edm", "house"],
         
-        # Country Family
-        "country": ["country pop", "country rock", "folk", "americana", "bluegrass", "southern rock"],
-        "country pop": ["country", "pop", "adult contemporary"],
-        "country rock": ["country", "rock", "southern rock", "folk rock"],
-        "americana": ["country", "folk", "blues", "rock", "alt-country"],
-        
-        # Folk Family
-        "folk": ["indie folk", "folk rock", "country", "americana", "acoustic", "singer-songwriter"],
-        "indie folk": ["folk", "indie", "acoustic", "singer-songwriter", "indie pop"],
-        "folk rock": ["folk", "rock", "country rock", "americana"],
-        "acoustic": ["folk", "indie folk", "singer-songwriter", "unplugged"],
-        "singer-songwriter": ["folk", "indie folk", "acoustic", "soft rock", "adult contemporary"],
-        
-        # Jazz Family with R&B connections
-        "jazz": ["smooth jazz", "fusion", "bebop", "contemporary jazz", "jazz funk", "neo soul", "blues", "r&b"],
-        "smooth jazz": ["jazz", "contemporary jazz", "r&b", "adult contemporary"],
-        "jazz fusion": ["jazz", "fusion", "funk", "rock", "progressive"],
-        
-        # Latin Family
-        "latin": ["reggaeton", "latin pop", "salsa", "bachata", "merengue", "latin rock"],
-        "reggaeton": ["latin", "hip-hop", "rap", "urban latino", "trap latino"],
-        "latin pop": ["latin", "pop", "latin rock"],
-        "latin rock": ["latin", "rock", "latin pop"],
-        
-        # Caribbean Family  
-        "reggae": ["dancehall", "ska", "dub", "roots reggae", "reggae fusion"],
-        "dancehall": ["reggae", "hip-hop", "rap", "afrobeats"],
-        "ska": ["reggae", "punk", "two tone"],
-        
-        # World Music
-        "afrobeats": ["dancehall", "hip-hop", "afro-pop", "world music"],
-        "world music": ["afrobeats", "latin", "folk", "traditional"],
-        
-        # Metal Family
-        "metal": ["heavy metal", "death metal", "black metal", "metalcore", "hard rock"],
-        "heavy metal": ["metal", "hard rock", "classic rock", "thrash metal"],
-        "metalcore": ["metal", "hardcore", "alternative metal"],
-        
-        # Punk Family
-        "punk": ["pop punk", "hardcore", "punk rock", "ska punk", "alternative"],
-        "pop punk": ["punk", "alternative", "rock", "emo"],
-        "hardcore": ["punk", "metal", "metalcore"],
-        
-        # Blues Family
-        "blues": ["blues rock", "r&b", "soul", "jazz", "country blues", "electric blues"],
-        "blues rock": ["blues", "rock", "classic rock", "southern rock"],
-        
-        # Gospel Family
-        "gospel": ["contemporary gospel", "soul", "r&b", "christian", "spiritual"],
-        "contemporary gospel": ["gospel", "r&b", "contemporary christian", "urban contemporary"],
-        
-        # Indie Family
-        "indie": ["indie rock", "indie pop", "indie folk", "alternative", "bedroom pop"],
-        "bedroom pop": ["indie", "indie pop", "lo-fi", "dream pop", "lo-fi r&b"],
-        
-        # Additional cross-genre connections
-        "motown": ["soul", "r&b", "pop", "funk"],
-        "new wave": ["synth pop", "pop", "alternative", "post-punk"],
-        "post-rock": ["alternative", "indie rock", "experimental", "ambient"],
-        "emo": ["pop punk", "alternative", "indie rock", "hardcore"],
-        "grunge": ["alternative rock", "rock", "punk", "metal"]
+        # Other core families
+        "funk": ["soul", "disco"],
+        "disco": ["funk", "dance"],
+        "jazz": ["smooth jazz", "fusion", "bebop"],
+        "blues": ["blues rock", "soul"],
+        "gospel": ["soul", "contemporary gospel"],
+        "indie": ["indie rock", "indie pop", "indie folk"],
+        "country": ["country pop", "country rock", "folk"],
+        "folk": ["indie folk", "folk rock", "country"],
+        "metal": ["heavy metal", "hard rock"],
+        "punk": ["pop punk", "hardcore"]
     }
     
-    # Find related genres with enhanced R&B micro-genre detection
+    # Find related genres - STRICT MATCHING ONLY
     related_genres = []
     for g1 in artist1_unique:
         for g2 in artist2_unique:
             # Check if genres are related
             for base_genre, related_list in genre_relationships.items():
                 if (g1 == base_genre and g2 in related_list) or (g2 == base_genre and g1 in related_list):
-                    relationship_strength = "closely related"
+                    relationship_strength = "related"
                     
-                    # Ultra-high compatibility for R&B micro-genres
-                    r_and_b_variants = ["r&b", "rnb", "contemporary r&b", "alternative r&b", "dark r&b", "moody r&b", "atmospheric r&b", "electronic r&b", "indie r&b", "trap soul"]
-                    if g1 in r_and_b_variants and g2 in r_and_b_variants:
-                        relationship_strength = "virtually identical genres"
-                    # Strong collaboration for rap-R&B
-                    elif (g2 in ["r&b", "rnb", "contemporary r&b", "alternative r&b", "dark r&b"] and g1 in ["rap", "hip-hop", "hip hop"]) or \
-                         (g1 in ["r&b", "rnb", "contemporary r&b", "alternative r&b", "dark r&b"] and g2 in ["rap", "hip-hop", "hip hop"]):
-                        relationship_strength = "strong collaboration potential"
-                    # Pop-R&B crossover potential
-                    elif (g1 in ["pop", "alt-pop", "dark pop"] and g2 in r_and_b_variants) or \
-                         (g2 in ["pop", "alt-pop", "dark pop"] and g1 in r_and_b_variants):
-                        relationship_strength = "strong crossover appeal"
+                    # Only very close R&B variants get high compatibility
+                    r_and_b_core = ["r&b", "rnb", "contemporary r&b"]
+                    if g1 in r_and_b_core and g2 in r_and_b_core:
+                        relationship_strength = "very similar"
+                    # No special crossover bonuses - remove all cross-genre boosts
                     
                     related_genres.append({
                         "artist1_genre": g1,
@@ -2478,26 +2408,22 @@ def calculate_enhanced_genre_similarity(genres1: list, genres2: list, artist1_na
                     related_genres.append({
                         "artist1_genre": g1,
                         "artist2_genre": g2,
-                        "relationship": "similar family"
+                        "relationship": "same family"
                     })
                     break
     
-    # Calculate enhanced similarity score with improved weighting
+    # Calculate similarity score with STRICT weighting
     exact_match_score = len(common_genres)
     
-    # Enhanced weighting system
+    # STRICT weighting system - much lower values
     related_match_score = 0
     for related in related_genres:
-        if "virtually identical genres" in related["relationship"]:
-            related_match_score += 0.95  # Nearly perfect match for R&B micro-genres
-        elif "strong collaboration potential" in related["relationship"]:
-            related_match_score += 0.85  # Very high weight for rap-R&B connections
-        elif "strong crossover appeal" in related["relationship"]:
-            related_match_score += 0.80  # High weight for pop-R&B crossover
-        elif "closely related" in related["relationship"]:
-            related_match_score += 0.75  # High weight for close relationships
+        if "very similar" in related["relationship"]:
+            related_match_score += 0.4  # R&B core variants
+        elif "related" in related["relationship"]:
+            related_match_score += 0.2  # Closely related genres
         else:
-            related_match_score += 0.6   # Medium weight for family relationships
+            related_match_score += 0.1  # Same family but different genres
     
     total_genres = len(genres1_set.union(genres2_set))
     
@@ -2506,42 +2432,31 @@ def calculate_enhanced_genre_similarity(genres1: list, genres2: list, artist1_na
     else:
         similarity_percentage = 0
     
-    # Enhanced boost system
-    if any("virtually identical genres" in rel["relationship"] for rel in related_genres):
-        similarity_percentage = min(100, similarity_percentage * 1.3)  # 30% boost for identical micro-genres
-    elif any("strong collaboration potential" in rel["relationship"] for rel in related_genres):
-        similarity_percentage = min(100, similarity_percentage * 1.2)  # 20% boost for strong potential
-    elif any("strong crossover appeal" in rel["relationship"] for rel in related_genres):
-        similarity_percentage = min(100, similarity_percentage * 1.15)  # 15% boost for crossover appeal
-    
+    # NO BOOST SYSTEM - Remove all multiplicative boosts
     # Cap at 100%
     similarity_percentage = min(100, similarity_percentage)
     
-    # Generate enhanced explanations
+    # Generate STRICT explanations
     explanation_parts = []
     if common_genres:
         explanation_parts.append(f"Share {len(common_genres)} exact genre(s): {', '.join(common_genres)}")
     
-    identical_connections = [rel for rel in related_genres if "virtually identical genres" in rel["relationship"]]
-    if identical_connections:
-        explanation_parts.append(f"Virtually identical musical styles ({len(identical_connections)} connection{'s' if len(identical_connections) > 1 else ''})")
+    very_similar = [rel for rel in related_genres if "very similar" in rel["relationship"]]
+    if very_similar:
+        explanation_parts.append(f"Very similar styles ({len(very_similar)} connection{'s' if len(very_similar) > 1 else ''})")
     
-    strong_connections = [rel for rel in related_genres if "strong collaboration potential" in rel["relationship"]]
-    if strong_connections:
-        explanation_parts.append(f"Strong collaboration potential ({len(strong_connections)} connection{'s' if len(strong_connections) > 1 else ''})")
+    related_connections = [rel for rel in related_genres if "related" in rel["relationship"] and "very similar" not in rel["relationship"]]
+    if related_connections:
+        explanation_parts.append(f"Related genres ({len(related_connections)} connection{'s' if len(related_connections) > 1 else ''})")
     
-    crossover_connections = [rel for rel in related_genres if "strong crossover appeal" in rel["relationship"]]
-    if crossover_connections:
-        explanation_parts.append(f"Strong crossover appeal ({len(crossover_connections)} connection{'s' if len(crossover_connections) > 1 else ''})")
-    
-    other_related = [rel for rel in related_genres if all(phrase not in rel["relationship"] for phrase in ["virtually identical genres", "strong collaboration potential", "strong crossover appeal"])]
-    if other_related:
-        explanation_parts.append(f"{len(other_related)} related genre connection{'s' if len(other_related) > 1 else ''}")
+    family_connections = [rel for rel in related_genres if "same family" in rel["relationship"]]
+    if family_connections:
+        explanation_parts.append(f"Same genre family ({len(family_connections)} connection{'s' if len(family_connections) > 1 else ''})")
     
     if not common_genres and not related_genres:
-        explanation_parts.append("Different musical styles")
+        explanation_parts.append("Completely different musical styles")
     
-    explanation = " • ".join(explanation_parts) if explanation_parts else "Different musical styles"
+    explanation = " • ".join(explanation_parts) if explanation_parts else "Completely different musical styles"
     
     return {
         "similarity_percentage": round(similarity_percentage, 1),
@@ -2557,7 +2472,7 @@ def calculate_enhanced_genre_similarity(genres1: list, genres2: list, artist1_na
             "artist2_only_count": len(artist2_unique)
         },
         "explanation": explanation,
-        "genre_compatibility": "High" if similarity_percentage >= 70 else "Medium" if similarity_percentage >= 40 else "Low"
+        "genre_compatibility": "High" if similarity_percentage >= 60 else "Medium" if similarity_percentage >= 25 else "Low"
     }
 
 # New function: Gemini-powered content theme analysis

@@ -32,20 +32,19 @@ const HowItWorks = () => {
             >
               <h2 className="text-3xl font-bold mb-6">What is Musi$tash AI?</h2>
               <p className="text-lg leading-relaxed mb-6">
-                Musi$tash's unique artificial intelligence creates a new way to compare and gauge 
-                upcoming musical talent by utilizing distinctive audio features embedded within 
-                each artist's discography.
+                Musi$tash's unique artificial intelligence revolutionizes how we evaluate emerging artists by analyzing their 
+                commercial potential through a comprehensive analysis of their musical DNA, audience engagement, and market positioning.
               </p>
               <p className="text-lg leading-relaxed mb-6">
-                These features are extracted and used in our algorithm, resulting in a 
-                <span className="font-bold text-primary"> Musi$tash Resonance Score</span> that 
-                reflects how similar any given artist is to their closest mainstream comparison.
+                Our advanced algorithm processes multiple data points to generate a
+                <span className="font-bold text-primary"> Musi$tash Resonance Score</span> - a predictive metric that indicates 
+                an artist's likelihood of commercial success by comparing their sonic characteristics, audience engagement, and market 
+                presence to those of proven, commercially successful artists.
               </p>
               <p className="text-lg leading-relaxed">
-                Our artificial intelligence aims to give newer artists an edge by providing 
-                insight into their music. It enables them to pinpoint the audio elements they can 
-                refine to increase their commercial appeal by comparing their unique sound with 
-                that of mainstream artists.
+                This powerful tool empowers both artists and investors with data-driven insights. For artists, it identifies which elements 
+                of their music align with commercial success while maintaining their unique identity. For investors, it serves as a 
+                quantitative indicator of an artist's market potential and growth trajectory.
               </p>
             </motion.div>
             

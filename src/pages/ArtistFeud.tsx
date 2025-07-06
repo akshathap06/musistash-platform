@@ -6,6 +6,7 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Disc3, BookCopy, Music2, CalendarClock, ArrowDown } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import styles from './ArtistFeud.module.css';
 
 interface TimelineEvent {
   year: string;
@@ -120,12 +121,12 @@ const TimelineComponent = ({ events }: { events: TimelineEvent[] }) => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate-in');
+          entry.target.classList.add(styles['animate-in']);
         }
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.timeline-item').forEach((item) => {
+    document.querySelectorAll(`.${styles['timeline-item']}`).forEach((item) => {
       observer.observe(item);
     });
 
@@ -137,7 +138,7 @@ const TimelineComponent = ({ events }: { events: TimelineEvent[] }) => {
       {events.map((event, index) => (
         <div 
           key={index} 
-          className="timeline-item relative flex items-start md:flex-row-reverse mb-8 opacity-0 translate-y-4 transition-all duration-500 ease-out"
+          className={`${styles['timeline-item']} relative flex items-start md:flex-row-reverse mb-8 transition-all duration-500 ease-out`}
           style={{ transitionDelay: `${index * 150}ms` }}
         >
           <div className="md:flex flex-1 bg-gray-900/70 backdrop-blur-sm rounded-lg shadow-lg md:ml-12 p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 group">
@@ -465,15 +466,22 @@ const ArtistFeud = () => {
           </Card>
         </div>
 
-        {/* Add a gradient transition div */}
-        <div className="relative h-32 mt-16">
-          <div 
-            className="absolute inset-0 bg-gradient-to-b from-[#0f1216]/0 via-[#0f1216] to-[#0f1216]"
-            style={{ 
-              maskImage: 'linear-gradient(to bottom, transparent, black)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black)' 
-            }}
-          ></div>
+        {/* Improved transition with content fade-in */}
+        <div className="relative mt-16">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="h-32 bg-gradient-to-b from-[#0f1216]/0 to-[#0f1216] opacity-90"></div>
+          </div>
+          
+          {/* Additional content that fades in */}
+          <div className="container max-w-7xl mx-auto px-4 py-8">
+            <div className={`text-center space-y-4 ${styles['animate-fade-in']}`}>
+              <h3 className="text-2xl font-bold text-white/90">Explore More Stories</h3>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Discover how artists throughout history have fought for creative freedom and fair compensation.
+                Their struggles have shaped the modern music industry.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -483,31 +491,3 @@ const ArtistFeud = () => {
 };
 
 export default ArtistFeud;
-
-// Add these styles to your global CSS or create a new CSS module
-const styles = `
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-in {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.timeline-item {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.timeline-item.animate-in {
-  opacity: 1;
-  transform: translateY(0);
-}
-`;

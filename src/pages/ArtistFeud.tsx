@@ -464,9 +464,20 @@ const ArtistFeud = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Add a gradient transition div */}
+        <div className="relative h-32 mt-16">
+          <div 
+            className="absolute inset-0 bg-gradient-to-b from-[#0f1216]/0 via-[#0f1216] to-[#0f1216]"
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, transparent, black)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black)' 
+            }}
+          ></div>
+        </div>
       </div>
       
-      <Footer />
+      <Footer className="bg-[#0f1216] relative z-10" />
     </div>
   );
 };

@@ -2,9 +2,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Footer = () => {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ className }) => {
   return (
-    <footer className="border-t mt-auto">
+    <footer className={`border-t border-gray-800 mt-auto ${className || ''}`}>
       <div className="container max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="space-y-4">

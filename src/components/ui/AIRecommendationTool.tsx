@@ -130,10 +130,24 @@ interface AnalysisData {
                 target_artist: string;
                 analysis_method: string;
                 data_completeness: number;
+                api_coverage?: {
+                    spotify: boolean;
+                    youtube: boolean;
+                    genius: boolean;
+                    gemini: boolean;
+                };
                 market_comparison: {
                     relative_market_position: any;
                     competitive_analysis: any;
                 };
+            };
+            detailed_breakdown?: {
+                spotify_contribution: number;
+                youtube_contribution: number;
+                genius_contribution: number;
+                cross_platform_bonus: number;
+                base_score: number;
+                ensemble_score: number;
             };
         };
         real_audience_analysis?: {
@@ -520,6 +534,39 @@ const AIRecommendationTool: React.FC = () => {
                                                          analysis.ai_similarity_analysis.musistash_resonance_score.resonance_score >= 40 ? 'Moderate' : 'Challenging'}
                                                     </div>
                                                 </div>
+
+                                                {/* API Coverage Indicators */}
+                                                {analysis.ai_similarity_analysis.musistash_resonance_score.musistash_analysis?.api_coverage && (
+                                                    <div className="mb-4 p-3 bg-purple-900/30 rounded-lg">
+                                                        <div className="text-sm text-purple-200 mb-2">Data Sources Used:</div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {Object.entries(analysis.ai_similarity_analysis.musistash_resonance_score.musistash_analysis.api_coverage).map(([api, available]) => (
+                                                                <span key={api} className={`px-2 py-1 rounded text-xs ${available ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                                                                    {api.toUpperCase()} {available ? '✓' : '✗'}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Detailed Breakdown */}
+                                                {analysis.ai_similarity_analysis.musistash_resonance_score.detailed_breakdown && (
+                                                    <div className="mb-4 p-3 bg-purple-900/30 rounded-lg">
+                                                        <div className="text-sm text-purple-200 mb-2">Score Breakdown:</div>
+                                                        <div className="space-y-2">
+                                                            {Object.entries(analysis.ai_similarity_analysis.musistash_resonance_score.detailed_breakdown).map(([key, value]) => (
+                                                                <div key={key} className="flex justify-between items-center">
+                                                                    <span className="text-xs text-purple-300 capitalize">
+                                                                        {key.replace(/_/g, ' ')}
+                                                                    </span>
+                                                                    <span className="text-xs text-white font-medium">
+                                                                        {typeof value === 'number' ? `${value.toFixed(1)}%` : value}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 
                                                 {/* Animated Progress Bar */}
                                                 <div className="relative mb-4">

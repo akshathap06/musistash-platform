@@ -16,4 +16,14 @@ google-auth-httplib2
 pyjwt
 python-jose[cryptography]
 pytrends
-yfinance 
+yfinance
+lyricsgenius
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+scipy
+textblob
+nltk
+pandas
+matplotlib
+seaborn 

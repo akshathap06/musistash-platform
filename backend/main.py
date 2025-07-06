@@ -5062,6 +5062,157 @@ async def calculate_genius_commercial_score(genius_data: dict) -> dict:
         "cultural_relevance": cultural_relevance
     }
 
+async def generate_artist_recommendations(target_artist: str, mentor_artist: str, target_stats: dict, mentor_stats: dict) -> dict:
+    """
+    Generate specific recommendations for artists with fewer followers to learn from more successful artists
+    """
+    try:
+        # Get detailed data for both artists
+        target_genius = await get_genius_lyrics_data(target_artist)
+        mentor_genius = await get_genius_lyrics_data(mentor_artist)
+        
+        # Analyze key differences
+        target_followers = target_stats.get('followers', 0)
+        mentor_followers = mentor_stats.get('followers', 0)
+        
+        # Generate recommendations using Genius API
+        prompt = f"""
+        Compare {target_artist} (followers: {target_followers:,}) with {mentor_artist} (followers: {mentor_followers:,}).
+        
+        Generate 3 specific recommendations for {target_artist} to learn from {mentor_artist}:
+        
+        1. MUSICAL KEY & AUDIENCE REACTION: How do their musical keys, vocal ranges, and audience engagement differ?
+        2. REVENUE STREAMS: How do their streaming numbers, concert revenue, and monetization strategies differ?
+        3. MARKETING & FAN BASE: How do their social media presence, marketing tactics, and fan engagement differ?
+        
+        For each recommendation, provide:
+        - A specific insight (1-2 sentences)
+        - An actionable tip (1 sentence)
+        - A relevant skill or area to improve
+        
+        Format as JSON with keys: key_differences, revenue_differences, marketing_differences
+        Each should have: insight, tip, skill_area
+        """
+        
+        recommendations_response = call_gemini_api(prompt, max_tokens=800)
+        
+        if recommendations_response:
+            recommendations = json.loads(recommendations_response)
+        else:
+            # Fallback recommendations
+            recommendations = {
+                "key_differences": {
+                    "insight": f"{mentor_artist} likely uses more commercially appealing keys and vocal techniques that resonate with broader audiences.",
+                    "tip": "Experiment with major keys and catchy vocal melodies that are easier for audiences to sing along to.",
+                    "skill_area": "music_theory"
+                },
+                "revenue_differences": {
+                    "insight": f"{mentor_artist} has diversified revenue streams including higher streaming numbers and premium concert pricing.",
+                    "tip": "Focus on increasing streaming consistency and developing premium live performance experiences.",
+                    "skill_area": "business_strategy"
+                },
+                "marketing_differences": {
+                    "insight": f"{mentor_artist} maintains stronger social media presence and fan engagement across multiple platforms.",
+                    "tip": "Develop consistent content strategy and authentic fan interactions across all social platforms.",
+                    "skill_area": "social_media"
+                }
+            }
+        
+        # Add helpful resource links
+        resource_links = {
+            "music_theory": "https://www.musictheory.net/lessons",
+            "business_strategy": "https://www.coursera.org/learn/music-business",
+            "social_media": "https://creatoreconomy.so/p/music-marketing-guide",
+            "vocal_technique": "https://www.berklee.edu/careers/roles/singer",
+            "streaming_optimization": "https://artists.spotify.com/guide/song-promotion",
+            "fan_engagement": "https://www.bandzoogle.com/blog/fan-engagement-strategies"
+        }
+        
+        # Enhance recommendations with links
+        for key, rec in recommendations.items():
+            skill = rec.get('skill_area', 'music_theory')
+            rec['resource_link'] = resource_links.get(skill, resource_links['music_theory'])
+            rec['resource_title'] = f"Learn {skill.replace('_', ' ').title()}"
+        
+        return {
+            "recommendations": recommendations,
+            "target_artist": target_artist,
+            "mentor_artist": mentor_artist,
+            "follower_gap": mentor_followers - target_followers,
+            "success": True
+        }
+        
+    except Exception as e:
+        print(f"Error generating recommendations: {e}")
+        return {
+            "recommendations": {
+                "key_differences": {
+                    "insight": "Musical approach and audience connection strategies differ significantly.",
+                    "tip": "Focus on developing more accessible musical elements and stronger audience connection.",
+                    "skill_area": "music_theory",
+                    "resource_link": "https://www.musictheory.net/lessons",
+                    "resource_title": "Learn Music Theory"
+                },
+                "revenue_differences": {
+                    "insight": "Revenue diversification and streaming optimization show clear differences.",
+                    "tip": "Develop multiple revenue streams and optimize streaming presence.",
+                    "skill_area": "business_strategy",
+                    "resource_link": "https://www.coursera.org/learn/music-business",
+                    "resource_title": "Learn Business Strategy"
+                },
+                "marketing_differences": {
+                    "insight": "Social media presence and fan engagement strategies need development.",
+                    "tip": "Build consistent social media strategy and authentic fan relationships.",
+                    "skill_area": "social_media",
+                    "resource_link": "https://creatoreconomy.so/p/music-marketing-guide",
+                    "resource_title": "Learn Social Media"
+                }
+            },
+            "target_artist": target_artist,
+            "mentor_artist": mentor_artist,
+            "follower_gap": 0,
+            "success": False
+        }
+
+@app.get("/artist-recommendations/{target_artist}")
+async def get_artist_recommendations(target_artist: str, mentor_artist: str):
+    """
+    Get specific recommendations for target artist to learn from mentor artist
+    """
+    try:
+        # Get artist stats
+        target_info = await get_artist_info(target_artist)
+        mentor_info = await get_artist_info(mentor_artist)
+        
+        if not target_info or not mentor_info:
+            return {
+                "error": "Could not find artist data",
+                "success": False
+            }
+        
+        # Ensure target has fewer followers than mentor
+        if target_info.followers >= mentor_info.followers:
+            return {
+                "error": "Target artist should have fewer followers than mentor artist",
+                "success": False
+            }
+        
+        # Generate recommendations
+        recommendations = await generate_artist_recommendations(
+            target_artist, 
+            mentor_artist,
+            {"followers": target_info.followers, "popularity": target_info.popularity},
+            {"followers": mentor_info.followers, "popularity": mentor_info.popularity}
+        )
+        
+        return recommendations
+        
+    except Exception as e:
+        return {
+            "error": f"Error generating recommendations: {str(e)}",
+            "success": False
+        }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

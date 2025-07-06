@@ -321,7 +321,70 @@ const ArtistFeud = () => {
               </CardTitle>
               <CardDescription className="text-lg text-gray-400">Fighting for Fair Pay and Creative Control</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Before Dr. Dre became one of the most influential producers in music history, he faced serious financial disputes that 
+                  shaped his outlook on ownership and artistry. The roots of this tension trace back to Ruthless Records, the label behind 
+                  N.W.A.'s groundbreaking 1988 album Straight Outta Compton.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Despite the album's massive commercial success—it became the first rap album to go platinum—members of N.W.A., including 
+                  Dr. Dre, saw little of the financial rewards. Most profits flowed to Ruthless Records, co-owned by Eazy-E and their manager 
+                  Jerry Heller. As sales soared, the group realized they were being underpaid, sparking frustration and tension.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Determined to break free, Dr. Dre and fellow N.W.A. member The D.O.C. partnered with Suge Knight, who allegedly used 
+                  intimidation tactics to secure Dre's release from his Ruthless contract. This move paved the way for the birth of Death 
+                  Row Records, a label co-founded by Dre and Knight.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  At Death Row, Dre finally found both financial recognition and creative freedom. His debut solo album The Chronic was a 
+                  massive success, redefining West Coast hip-hop and solidifying his legacy. But as the label rose, new tensions emerged—this 
+                  time between Dre and Suge Knight.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Knight, known for his aggressive management style, began exerting tight control over the label and its artists. The same 
+                  desire for autonomy that drove Dre away from Ruthless Records resurfaced at Death Row. Despite the label's success, 
+                  the environment became increasingly volatile.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  In 1996, Dre made the bold decision to leave Death Row—walking away from millions—to form Aftermath Entertainment. 
+                  This move finally gave him full control over his art and business, establishing a foundation for his future success 
+                  as both an artist and entrepreneur.
+                </p>
+              </div>
+
+              <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700/50 my-10">
+                <h4 className="font-semibold mb-4 text-xl text-white">The Impact</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-gray-700">
+                      <TableHead className="text-lg text-gray-300">Era</TableHead>
+                      <TableHead className="text-lg text-gray-300">Label</TableHead>
+                      <TableHead className="text-right text-lg text-gray-300">Outcome</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1986-1991</TableCell>
+                      <TableCell className="text-gray-300">Ruthless Records</TableCell>
+                      <TableCell className="text-right text-gray-300">Limited Financial Returns</TableCell>
+                    </TableRow>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1992-1996</TableCell>
+                      <TableCell className="text-gray-300">Death Row</TableCell>
+                      <TableCell className="text-right text-blue-400">The Chronic's Success</TableCell>
+                    </TableRow>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1996-Present</TableCell>
+                      <TableCell className="text-gray-300">Aftermath</TableCell>
+                      <TableCell className="text-right text-blue-400">Full Creative Control</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
               <TimelineComponent events={drDreTimeline} />
             </CardContent>
           </Card>
@@ -333,7 +396,70 @@ const ArtistFeud = () => {
               </CardTitle>
               <CardDescription className="text-lg text-gray-400">A Battle for Artistic Ownership</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-lg leading-relaxed text-gray-300">
+                  At just 18 years old, Prince signed his first major record deal with Warner Bros. Records—a dream come true for a young 
+                  artist who had already begun writing, producing, and performing his own music. His debut album For You dropped in 1978, 
+                  showcasing the brilliance of an artist destined to reshape pop and R&B music.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Throughout the '80s, Prince's career skyrocketed with albums like 1999 and Purple Rain, cementing him as a cultural icon. 
+                  But behind the scenes, a storm was brewing. As his creative output exploded, Warner Bros. sought to rein it in. The label 
+                  owned the master recordings of his work, giving them control over when and how his music was released.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Prince, known for his prolific output, wanted to release music at his own pace—free from commercial schedules. The clash 
+                  reached its peak in 1993, when Prince made a dramatic statement by changing his name to an unpronounceable symbol, 
+                  often referred to as "The Artist Formerly Known as Prince."
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Around the same time, he began appearing in public with the word "slave" written on his face—a powerful critique of the 
+                  music industry's control over artists and their work. This bold protest sparked widespread discussion about artists' rights 
+                  and the power dynamics within the music industry.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  To fulfill his Warner Bros. contract, Prince rapidly released albums from his vault of unreleased material. In 1996, 
+                  after delivering the required number of albums, he finally parted ways with the label that had both launched and 
+                  constrained his career.
+                </p>
+                <p className="text-lg leading-relaxed text-gray-300">
+                  Free from Warner Bros., Prince founded his own independent label, NPG Records. This move gave him complete control over 
+                  his artistic output and the rights to his new music. He could now release albums, singles, and even entire collections 
+                  whenever he wanted, without corporate oversight.
+                </p>
+              </div>
+
+              <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700/50 my-10">
+                <h4 className="font-semibold mb-4 text-xl text-white">The Revolution</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-gray-700">
+                      <TableHead className="text-lg text-gray-300">Period</TableHead>
+                      <TableHead className="text-lg text-gray-300">Status</TableHead>
+                      <TableHead className="text-right text-lg text-gray-300">Control Level</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1978-1993</TableCell>
+                      <TableCell className="text-gray-300">Warner Bros. Era</TableCell>
+                      <TableCell className="text-right text-gray-300">Limited</TableCell>
+                    </TableRow>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1993-1996</TableCell>
+                      <TableCell className="text-gray-300">Symbol Era</TableCell>
+                      <TableCell className="text-right text-gray-300">Contested</TableCell>
+                    </TableRow>
+                    <TableRow className="border-gray-700">
+                      <TableCell className="font-medium text-white">1996-2016</TableCell>
+                      <TableCell className="text-gray-300">Independent</TableCell>
+                      <TableCell className="text-right text-blue-400">Complete</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
               <TimelineComponent events={princeTimeline} />
             </CardContent>
           </Card>

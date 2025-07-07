@@ -65,11 +65,6 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
                 </Link>
               </li>
               <li>
-                <Link to="/press" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Press
-                </Link>
-              </li>
-              <li>
                 <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                   Contact
                 </Link>
@@ -90,16 +85,6 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Cookie Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/investors" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Investor Relations
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
@@ -109,17 +94,17 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
             &copy; {new Date().getFullYear()} MusiStash. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              Twitter
+            <a href="mailto:Akshathapliyal27@gmail.com" className="text-muted-foreground hover:text-foreground transition-colors">
+              Email
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://instagram.com/musistash" className="text-muted-foreground hover:text-foreground transition-colors">
               Instagram
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://linkedin.com/in/akshathapliyal" className="text-muted-foreground hover:text-foreground transition-colors">
               LinkedIn
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              YouTube
+            <a href="https://github.com/akshathap06" className="text-muted-foreground hover:text-foreground transition-colors">
+              GitHub
             </a>
           </div>
         </div>

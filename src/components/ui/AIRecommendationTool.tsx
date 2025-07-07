@@ -81,6 +81,15 @@ interface MusicalFeaturesComparison {
     comparable_artist_data: number[];
 }
 
+interface ComparisonArtist {
+    id: string;
+    name: string;
+    avatar: string;
+    followers: number;
+    genres: string[];
+    popularity: number;
+}
+
 interface RecommendationData {
     recommendations: {
         key_differences: {
@@ -115,8 +124,8 @@ interface AnalysisData {
     resonance_score: number;
     resonance_reasoning: string;
     artist_comparison: {
-        searched: Artist;
-        comparable: Artist;
+        searched: ComparisonArtist;
+        comparable: ComparisonArtist;
     };
     musical_features_comparison: MusicalFeaturesComparison;
     searched_artist_stats?: any;
@@ -313,8 +322,22 @@ const AIRecommendationTool: React.FC = () => {
             const mappedData = {
                 ...data,
                 artist_comparison: {
-                    searched: data.artist,
-                    comparable: data.comparable_artist,
+                    searched: {
+                        id: data.artist.id,
+                        name: data.artist.name,
+                        avatar: data.artist.images?.[0]?.url || data.artist.image_url || '',
+                        followers: data.artist.followers?.total || 0,
+                        genres: data.artist.genres || [],
+                        popularity: data.artist.popularity || 0
+                    },
+                    comparable: data.comparable_artist ? {
+                        id: data.comparable_artist.id,
+                        name: data.comparable_artist.name,
+                        avatar: data.comparable_artist.images?.[0]?.url || data.comparable_artist.image_url || '',
+                        followers: data.comparable_artist.followers?.total || 0,
+                        genres: data.comparable_artist.genres || [],
+                        popularity: data.comparable_artist.popularity || 0
+                    } : null,
                 },
                 resonance_score: data.analysis?.musistash_resonance_score?.resonance_score || data.musistash_resonance_score?.resonance_score,
                 ai_similarity_analysis: {
@@ -489,9 +512,9 @@ const AIRecommendationTool: React.FC = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="h-14 w-14 rounded-xl bg-gray-800 overflow-hidden">
-                    {analysisData.artist_comparison.searched.image_url && (
+                    {analysisData.artist_comparison.searched.avatar && (
                       <img
-                        src={analysisData.artist_comparison.searched.image_url}
+                        src={analysisData.artist_comparison.searched.avatar}
                         alt={analysisData.artist_comparison.searched.name}
                         className="h-full w-full object-cover"
                       />
@@ -511,14 +534,14 @@ const AIRecommendationTool: React.FC = () => {
             </Card>
 
             {/* Comparable Artist Card */}
-            {showComparison && analysisData.artist_comparison.comparable && (
+            {analysisData.artist_comparison.comparable && (
               <Card className="bg-gray-900/50 border-2 border-purple-500/30 rounded-xl overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     <div className="h-14 w-14 rounded-xl bg-gray-800 overflow-hidden">
-                      {analysisData.artist_comparison.comparable.image_url && (
+                      {analysisData.artist_comparison.comparable.avatar && (
                         <img
-                          src={analysisData.artist_comparison.comparable.image_url}
+                          src={analysisData.artist_comparison.comparable.avatar}
                           alt={analysisData.artist_comparison.comparable.name}
                           className="h-full w-full object-cover"
                         />
@@ -540,17 +563,17 @@ const AIRecommendationTool: React.FC = () => {
           </div>
 
           {/* Resonance Score Card */}
-          <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 rounded-xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="text-center mb-6">
+          <Card className="bg-[#0A192F] border-2 border-blue-500/30 rounded-xl overflow-hidden">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
                 <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
                   <Star className="h-6 w-6 text-yellow-400" />
                   MusiStash Resonance Score
                 </h3>
-                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 mt-4">
+                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 mt-6 animate-pulse-slow">
                   {Math.round(analysisData.resonance_score)}%
                 </div>
-                <div className="text-lg text-gray-300 mt-2">
+                <div className="text-lg text-blue-200 mt-3">
                   {analysisData.resonance_score >= 90
                     ? 'Excellent'
                     : analysisData.resonance_score >= 75
@@ -572,7 +595,7 @@ const AIRecommendationTool: React.FC = () => {
                   </div>
                   <ul className="space-y-2">
                     {analysisData.ai_similarity_analysis?.key_similarities.slice(0, 3).map((similarity, index) => (
-                      <li key={index} className="flex items-start gap-2 bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                      <li key={index} className="flex items-start gap-2 bg-green-500/5 rounded-lg p-3 border border-green-500/20">
                         <span className="text-green-400 mt-1">•</span>
                         <span className="text-gray-300 text-sm">{similarity}</span>
                       </li>
@@ -586,7 +609,7 @@ const AIRecommendationTool: React.FC = () => {
                   </div>
                   <ul className="space-y-2">
                     {analysisData.ai_similarity_analysis?.key_differences.slice(0, 3).map((difference, index) => (
-                      <li key={index} className="flex items-start gap-2 bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+                      <li key={index} className="flex items-start gap-2 bg-yellow-500/5 rounded-lg p-3 border border-yellow-500/20">
                         <span className="text-yellow-400 mt-1">•</span>
                         <span className="text-gray-300 text-sm">{difference}</span>
                       </li>
@@ -600,7 +623,7 @@ const AIRecommendationTool: React.FC = () => {
           {/* Similarity Analysis */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Similarity Score */}
-            <Card className="bg-gray-900/50 border-2 border-blue-500/30 rounded-xl overflow-hidden">
+            <Card className="bg-[#0A192F] border-2 border-blue-500/30 rounded-xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-bold text-white flex items-center justify-center gap-2">
@@ -618,7 +641,7 @@ const AIRecommendationTool: React.FC = () => {
                     const categoryName = category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     
                     return (
-                      <div key={category} className="flex justify-between items-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div key={category} className="flex justify-between items-center p-3 bg-blue-500/5 rounded-lg border border-blue-500/20">
                         <span className="text-sm text-gray-300">{categoryName}</span>
                         <span className="text-sm font-bold text-blue-400">{scoreValue.toFixed(0)}%</span>
                       </div>
@@ -629,7 +652,7 @@ const AIRecommendationTool: React.FC = () => {
             </Card>
 
             {/* Key Similarities */}
-            <Card className="bg-gray-900/50 border-2 border-purple-500/30 rounded-xl overflow-hidden">
+            <Card className="bg-[#0A192F] border-2 border-purple-500/30 rounded-xl overflow-hidden">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-purple-400" />
@@ -637,7 +660,7 @@ const AIRecommendationTool: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   {analysisData.ai_similarity_analysis.key_similarities.slice(0, 3).map((similarity, index) => (
-                    <div key={index} className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <div key={index} className="p-3 bg-purple-500/5 rounded-lg border border-purple-500/20">
                       <span className="text-sm text-gray-300">{similarity}</span>
                     </div>
                   ))}

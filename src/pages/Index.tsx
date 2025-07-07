@@ -128,10 +128,10 @@ const Index = () => {
 
             {/* Right Column - AI Search Tool */}
             <div className="lg:pl-8">
-              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-6 md:p-8 border border-blue-500/30 backdrop-blur-sm">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-white mb-2 font-mono">{">"} TEST_MUSI$TASH_AI.exe</h2>
-                  <p className="text-blue-300">Search any artist and discover their commercial potential instantly</p>
+              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-4 md:p-6 border border-blue-500/30 backdrop-blur-sm">
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold text-white mb-2 font-mono">{">"} TEST_MUSI$TASH_AI.exe</h2>
+                  <p className="text-blue-300 text-sm">Search any artist and discover their commercial potential instantly</p>
                 </div>
                 <AIRecommendationTool />
               </div>

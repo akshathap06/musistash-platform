@@ -119,17 +119,16 @@ const Index = () => {
               </p>
             </div>
             
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center opacity-0 animate-fade-in-scale" style={{animationDelay: '6.5s'}}>
-              <Link to="/register">
-                <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 text-lg transition-all duration-200 font-mono">
-                  {">"} INITIALIZE_ACCOUNT
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+            {/* CTA to Try AI */}
+            <div className="flex flex-col items-center gap-6 opacity-0 animate-fade-in-scale" style={{animationDelay: '6.5s'}}>
+              <div className="bg-gray-900/80 backdrop-blur-sm border border-blue-500/30 rounded-lg px-6 py-3 font-mono text-lg">
+                <span className="text-gray-400">[SYSTEM]:</span>
+                <span className="text-blue-400 ml-2">Ready to test our AI?</span>
+              </div>
+              
               <Link to="/how-it-works">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-gray-500 text-gray-300 hover:bg-gray-700 hover:text-white font-semibold px-8 py-4 text-lg transition-all duration-200 font-mono">
-                  {">"} LEARN_PROTOCOL
+                <Button size="lg" variant="outline" className="border-2 border-gray-500 text-gray-300 hover:bg-gray-700 hover:text-white font-semibold px-8 py-4 text-lg transition-all duration-200 font-mono">
+                  {">"} LEARN_MORE
                 </Button>
               </Link>
             </div>
@@ -138,243 +137,130 @@ const Index = () => {
           {/* Scroll Indicator - Moved to bottom corner */}
           <div className="absolute bottom-6 right-6 animate-bounce">
             <div className="flex flex-col items-center text-gray-400/60 hover:text-gray-300 transition-colors cursor-pointer">
-              <span className="font-mono text-xs mb-1">SCROLL_TO_TRY_AI</span>
+              <span className="font-mono text-xs mb-1">SCROLL_TO_TEST</span>
               <ArrowDown className="h-4 w-4" />
             </div>
           </div>
         </div>
       </section>
-      
-      {/* AI Recommendation Section */}
-      <section id="ai-section" className="bg-[#0f1216] py-24 text-white relative overflow-hidden">
+
+      {/* Immediate AI Test Section */}
+      <section className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 py-20 text-white relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+          <div className="absolute top-10 right-10 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-10 left-10 w-64 h-64 bg-purple-500/5 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
         </div>
 
-        <div className="container max-w-7xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
-              Musi$tash AI Technology
+        <div className="container max-w-6xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-mono">
+              {">"} TEST_MUSI$TASH_AI.exe
             </h2>
-            <p className="text-xl md:text-2xl text-blue-400 max-w-3xl mx-auto">
-              Discover how our AI helps artists and investors make data-driven decisions
+            <p className="text-xl text-blue-300 max-w-2xl mx-auto">
+              Search any artist and discover their commercial potential instantly
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col justify-center space-y-6"
-            >
-              <h3 className="text-3xl font-bold mb-6 text-white">What is Musi$tash AI?</h3>
-              <p className="text-lg leading-relaxed text-gray-300">
-                Musi$tash's unique artificial intelligence revolutionizes how we evaluate emerging artists by analyzing their 
-                commercial potential through a comprehensive analysis of their musical DNA, audience engagement, and market positioning.
-              </p>
-              <p className="text-lg leading-relaxed text-gray-300">
-                Our advanced algorithm processes multiple data points to generate a
-                <span className="font-bold text-blue-400"> Musi$tash Resonance Score</span> - a predictive metric that indicates 
-                an artist's likelihood of commercial success by comparing their sonic characteristics, audience engagement, and market 
-                presence to those of proven, commercially successful artists.
-              </p>
-              <p className="text-lg leading-relaxed text-gray-300">
-                This powerful tool empowers both artists and investors with data-driven insights. For artists, it identifies which elements 
-                of their music align with commercial success while maintaining their unique identity. For investors, it serves as a 
-                quantitative indicator of an artist's market potential and growth trajectory.
-              </p>
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm border border-gray-700/50"
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80" 
-                alt="Music studio equipment" 
-                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
-              />
-            </motion.div>
+          {/* AI Search Tool */}
+          <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-8 md:p-12 border border-blue-500/30 backdrop-blur-sm mb-12">
+            <AIRecommendationTool />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <BarChart2 className="h-10 w-10 text-blue-400 mb-2" />
-                <CardTitle className="text-white">Audio Analysis</CardTitle>
-                <CardDescription className="text-gray-400">Extracts key audio metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300">
-                  Our AI analyzes key metrics like danceability, energy, acousticness,
-                  and speechiness to create a comprehensive profile of an artist's unique sound.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <Sparkles className="h-10 w-10 text-blue-400 mb-2" />
-                <CardTitle className="text-white">Comparative Analysis</CardTitle>
-                <CardDescription className="text-gray-400">Matches with similar artists</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300">
-                  The AI compares emerging artists with established mainstream artists,
-                  identifying similarities and differences in their musical profiles.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <Star className="h-10 w-10 text-blue-400 mb-2" />
-                <CardTitle className="text-white">Resonance Score</CardTitle>
-                <CardDescription className="text-gray-400">Similarity and market potential</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300">
-                  The resulting Resonance Score indicates how similar an artist's sound is 
-                  to successful mainstream artists, helping gauge commercial potential.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="mb-20">
-            <div className="text-center mb-10">
-              <h3 className="text-3xl font-bold mb-4 text-white">Understanding the Resonance Score</h3>
-              <p className="text-lg max-w-3xl mx-auto text-gray-400">
-                See how our algorithm calculates similarity between artists
+          {/* Prominent Sign Up */}
+          <div className="text-center">
+            <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-2xl p-8 border border-blue-500/40 backdrop-blur-sm max-w-2xl mx-auto">
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 font-mono">
+                READY_TO_INVEST?
+              </h3>
+              <p className="text-lg text-gray-300 mb-6">
+                Join thousands of investors using AI to make smarter music investment decisions
               </p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 rounded-xl p-6 md:p-10 border border-gray-700/50 backdrop-blur-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div>
-                  <h4 className="text-2xl font-semibold mb-6 text-white">How the Score Works</h4>
-                  <ul className="space-y-4">
-                    <li className="flex items-start space-x-3">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">1</div>
-                      <div>
-                        <p className="font-medium text-white">Audio Feature Extraction</p>
-                        <p className="text-gray-400">The AI analyzes tracks to extract key audio elements</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">2</div>
-                      <div>
-                        <p className="font-medium text-white">Genre Weighting</p>
-                        <p className="text-gray-400">Different elements are weighted based on genre importance</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">3</div>
-                      <div>
-                        <p className="font-medium text-white">Mainstream Comparison</p>
-                        <p className="text-gray-400">Artists are compared to a database of successful acts</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start space-x-3">
-                      <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm flex-shrink-0">4</div>
-                      <div>
-                        <p className="font-medium text-white">Score Calculation</p>
-                        <p className="text-gray-400">A percentage score indicates similarity to mainstream success</p>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <div className="bg-gray-900/70 rounded-lg p-6 shadow-lg border border-gray-700/50">
-                    <h5 className="text-xl font-semibold mb-4 text-white">Resonance Score Interpretation</h5>
-                    <div className="space-y-6">
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-gray-300">90% - 100%</span>
-                          <span className="font-medium text-green-400">Exceptional Match</span>
-                        </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: '95%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-gray-300">70% - 89%</span>
-                          <span className="font-medium text-blue-400">Strong Match</span>
-                        </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style={{ width: '80%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-gray-300">50% - 69%</span>
-                          <span className="font-medium text-amber-400">Moderate Match</span>
-                        </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" style={{ width: '60%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="text-gray-300">0% - 49%</span>
-                          <span className="font-medium text-red-400">Unique Sound</span>
-                        </div>
-                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" style={{ width: '30%' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/register">
+                  <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-4 text-xl transition-all duration-200 shadow-lg hover:shadow-xl font-mono">
+                    {">"} INITIALIZE_ACCOUNT
+                    <ArrowRight className="ml-2 h-6 w-6" />
+                  </Button>
+                </Link>
+                <Link to="/artists">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-12 py-4 text-xl transition-all duration-200 font-mono">
+                    {">"} BROWSE_ARTISTS
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
-          
-          {/* Try It Now Section - Prominent Artist Search */}
-          <div className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-2xl p-8 md:p-12 border border-blue-500/30 backdrop-blur-sm mb-12">
-            <div className="text-center mb-12">
-              <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                🎵 Try Musi$tash AI Right Now
-              </h3>
-              <p className="text-xl text-blue-300 max-w-2xl mx-auto">
-                Search for any artist and discover their commercial potential with our AI analysis
-              </p>
-            </div>
-            
-            <div className="max-w-4xl mx-auto">
-              <AIRecommendationTool />
-            </div>
+        </div>
+      </section>
+      
+      {/* Why Musi$tash AI Works */}
+      <section id="ai-section" className="bg-[#0f1216] py-20 text-white">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
+              Why Our AI Predictions Matter
+            </h2>
+            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
+              Data-driven insights that help you invest smarter in the next generation of artists
+            </p>
           </div>
           
-          {/* Call to Action - Sign Up */}
-          <div className="text-center">
-            <div className="mb-8">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Ready to discover the next big thing?
-              </h3>
-              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-                Join thousands of investors using AI to make smarter music investment decisions
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <BarChart2 className="h-10 w-10 text-blue-400 mb-2" />
+                <CardTitle className="text-white">Smart Analysis</CardTitle>
+                <CardDescription className="text-gray-400">AI-powered insights</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Our AI analyzes audio features, market trends, and commercial patterns to predict an artist's potential for mainstream success.
+                </p>
+              </CardContent>
+            </Card>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-4 text-lg transition-all duration-200 shadow-lg hover:shadow-xl">
-                  🚀 Start Investing Now
+            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <Sparkles className="h-10 w-10 text-purple-400 mb-2" />
+                <CardTitle className="text-white">Resonance Score</CardTitle>
+                <CardDescription className="text-gray-400">Predictive metric</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Get a clear percentage score showing how similar an artist's sound is to proven commercially successful artists.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border-gray-700/50 hover:border-green-500/50 transition-all duration-300 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <Star className="h-10 w-10 text-green-400 mb-2" />
+                <CardTitle className="text-white">Investment Edge</CardTitle>
+                <CardDescription className="text-gray-400">Smart decisions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">
+                  Make informed investment decisions based on data, not just gut feeling. Reduce risk and maximize potential returns.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Learn More CTA */}
+          <div className="text-center">
+            <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-xl p-8 border border-gray-700/30 backdrop-blur-sm max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-white mb-4">
+                Want to understand how our AI works?
+              </h3>
+              <p className="text-gray-300 mb-6">
+                Dive deep into our technology, see detailed score breakdowns, and learn about our algorithm.
+              </p>
+              <Link to="/how-it-works">
+                <Button size="lg" variant="outline" className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-8 py-3 text-lg transition-all duration-200">
+                  Learn About Our AI Technology
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/artists">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-12 py-4 text-lg transition-all duration-200">
-                  🎭 Browse Artists
                 </Button>
               </Link>
             </div>

@@ -40,109 +40,97 @@ const Index = () => {
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
         </div>
 
-        <div className="container max-w-7xl mx-auto px-4 relative z-10 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column - Text Content */}
-            <div className="flex flex-col items-start text-left">
-              {/* Terminal-style Badge */}
-              <div className="inline-flex items-center bg-gray-900/80 backdrop-blur-sm border border-green-500/30 rounded-lg px-4 py-2 mb-8 font-mono text-sm opacity-0 animate-fade-in-scale">
-                <span className="text-green-400 mr-2">$</span>
-                <span className="text-green-400 typewriter-text" data-text="revolutionizing_music_investment.exe">
-                  revolutionizing_music_investment.exe
-                </span>
-                <span className="text-green-400 animate-pulse ml-1">_</span>
-              </div>
-              
-              {/* Main Title with Typewriter Effect */}
-              <div className="space-y-4 mb-8">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight font-mono">
-                  <div className="overflow-hidden">
-                    <span className="text-white typewriter-line block" data-text="LET ARTISTS">
-                      LET ARTISTS
-                    </span>
-                  </div>
-                  <div className="overflow-hidden">
-                    <span className="text-white typewriter-line block" data-text="OWN THEIR FUTURE" style={{animationDelay: '1.5s'}}>
-                      OWN THEIR FUTURE
-                    </span>
-                  </div>
-                  <div className="text-xl sm:text-2xl md:text-3xl mt-3 overflow-hidden">
-                    <span className="text-blue-400 typewriter-line block" data-text="LET FANS PROFIT FROM IT" style={{animationDelay: '3s'}}>
-                      LET FANS PROFIT FROM IT
-                    </span>
-                  </div>
-                </h1>
-              </div>
-              
-              {/* Tech-style Description Blocks */}
-              <div className="grid grid-cols-1 gap-4 w-full mb-8 opacity-0 animate-fade-in-scale" style={{animationDelay: '4.5s'}}>
-                <div className="bg-gray-800/80 rounded-lg p-4 flex items-center">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                  <span className="font-mono text-base text-white flex items-center gap-2">
-                    <span className="mr-1">&#9888;</span>
-                    Breaking System - No more industry middlemen
+        <div className="container max-w-8xl mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column - Content */}
+            <div className="lg:col-span-4">
+              <div className="space-y-8">
+                {/* Terminal-style Badge */}
+                <div className="inline-flex items-center bg-gray-900/80 backdrop-blur-sm border border-green-500/30 rounded-lg px-4 py-2 font-mono text-sm opacity-0 animate-fade-in-scale">
+                  <span className="text-green-400 mr-2">$</span>
+                  <span className="text-green-400 typewriter-text" data-text="revolutionizing_music_investment.exe">
+                    revolutionizing_music_investment.exe
                   </span>
+                  <span className="text-green-400 animate-pulse ml-1">_</span>
                 </div>
-                <div className="bg-gray-800/80 rounded-lg p-4 flex items-center">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                  <span className="font-mono text-base text-white flex items-center gap-2">
-                    <span className="mr-1">&#128279;</span>
-                    Direct Connection - Artists funded by fans
-                  </span>
+                
+                {/* Main Title with Typewriter Effect */}
+                <div className="space-y-4">
+                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight font-mono">
+                    <div className="overflow-hidden">
+                      <span className="text-white typewriter-line block" data-text="LET ARTISTS">
+                        LET ARTISTS
+                      </span>
+                    </div>
+                    <div className="overflow-hidden">
+                      <span className="text-white typewriter-line block" data-text="OWN THEIR FUTURE" style={{animationDelay: '1.5s'}}>
+                        OWN THEIR FUTURE
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl mt-3 overflow-hidden">
+                      <span className="text-blue-400 typewriter-line block" data-text="LET FANS PROFIT FROM IT" style={{animationDelay: '3s'}}>
+                        LET FANS PROFIT FROM IT
+                      </span>
+                    </div>
+                  </h1>
                 </div>
-                <div className="bg-gray-800/80 rounded-lg p-4 flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  <span className="font-mono text-base text-white flex items-center gap-2">
-                    <span className="mr-1">&#128200;</span>
-                    Shared Profits - Fans share in the upside
-                  </span>
+                
+                {/* Tech-style Description Blocks */}
+                <div className="grid grid-cols-1 gap-3 opacity-0 animate-fade-in-scale" style={{animationDelay: '4.5s'}}>
+                  {/* Block 1 */}
+                  <div className="bg-gray-800/80 rounded-lg p-4 flex items-center text-left">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+                    <div>
+                      <span className="font-mono text-base font-bold text-white flex items-center gap-2">
+                        Breaking System
+                      </span>
+                      <div className="text-sm text-gray-300 mt-1">No more industry middlemen.</div>
+                    </div>
+                  </div>
+                  {/* Block 2 */}
+                  <div className="bg-gray-800/80 rounded-lg p-4 flex items-center text-left">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                    <div>
+                      <span className="font-mono text-base font-bold text-white flex items-center gap-2">
+                        Direct Connection
+                      </span>
+                      <div className="text-sm text-gray-300 mt-1">Artists funded by fans, not corporations.</div>
+                    </div>
+                  </div>
+                  {/* Block 3 */}
+                  <div className="bg-gray-800/80 rounded-lg p-4 flex items-center text-left">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                    <div>
+                      <span className="font-mono text-base font-bold text-white flex items-center gap-2">
+                        Shared Profits
+                      </span>
+                      <div className="text-sm text-gray-300 mt-1">Fans share in the upside.</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Tech Declaration */}
-              <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-600 rounded-lg p-4 mb-8 opacity-0 animate-fade-in-scale" style={{animationDelay: '5.5s'}}>
-                <p className="text-lg font-mono font-bold text-white">
-                  <span className="text-gray-400">[STATUS]:</span> This isn't crowdfunding.
-                  <br />
-                  <span className="text-blue-400">[SYSTEM]:</span> This is <span className="text-blue-400">equity for the culture</span>.
-                </p>
-              </div>
-
-              {/* Concise Sign-Up Section */}
-              <div className="flex items-center gap-4 opacity-0 animate-fade-in-scale" style={{animationDelay: '6s'}}>
-                <span className="text-gray-400 font-mono text-sm">Ready to invest?</span>
-                <div className="flex gap-3">
-                  <Link to="/register">
-                    <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-2 text-sm transition-all duration-200 font-mono">
-                      {">"} Sign Up
-                    </Button>
-                  </Link>
-                  <Link to="/artists">
-                    <Button size="sm" variant="outline" className="border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-6 py-2 text-sm transition-all duration-200 font-mono">
-                      {">"} Browse Artists
-                    </Button>
-                  </Link>
+                {/* Tech Declaration */}
+                <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-600 rounded-lg p-4 opacity-0 animate-fade-in-scale" style={{animationDelay: '5.5s'}}>
+                  <p className="text-lg md:text-xl font-mono font-bold text-white">
+                    <span className="text-gray-400">[STATUS]:</span> This isn't crowdfunding.
+                    <br />
+                    <span className="text-blue-400">[SYSTEM]:</span> This is <span className="text-blue-400">equity for the culture</span>.
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Right Column - AI Search Tool */}
-            <div className="lg:pl-8">
-              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-4 md:p-6 border border-blue-500/30 backdrop-blur-sm">
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold text-white mb-2 font-mono">{">"} TEST_MUSI$TASH_AI.exe</h2>
-                  <p className="text-blue-300 text-sm">Search any artist and discover their commercial potential instantly</p>
+            <div className="lg:col-span-8">
+              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-6 border border-blue-500/30 backdrop-blur-sm">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-2 font-mono flex items-center gap-2">
+                    <span className="text-blue-400">{">"}</span> TEST_MUSI$TASH_AI.exe
+                  </h2>
+                  <p className="text-blue-300">Search any artist and discover their commercial potential instantly</p>
                 </div>
                 <AIRecommendationTool />
               </div>
-            </div>
-          </div>
-          
-          {/* Scroll Indicator - Moved to bottom corner */}
-          <div className="absolute bottom-6 right-6 animate-bounce">
-            <div className="flex flex-col items-center text-gray-400/60 hover:text-gray-300 transition-colors cursor-pointer">
-              <span className="font-mono text-xs mb-1">SCROLL_TO_TEST</span>
-              <ArrowDown className="h-4 w-4" />
             </div>
           </div>
         </div>

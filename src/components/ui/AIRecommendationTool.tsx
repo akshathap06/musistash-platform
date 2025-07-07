@@ -281,15 +281,15 @@ interface AnalysisData {
 }
 
 const AIRecommendationTool: React.FC = () => {
-    const [searchedArtist, setSearchedArtist] = useState('');
-    const [comparableArtist, setComparableArtist] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-    const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
-    const [showComparison, setShowComparison] = useState(false);
+  const [searchedArtist, setSearchedArtist] = useState('');
+  const [comparableArtist, setComparableArtist] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
 
-    const handleAnalyze = async (specificComparableArtist: string = '') => {
+  const handleAnalyze = async (specificComparableArtist: string = '') => {
         if (!searchedArtist.trim()) return;
         
         setLoading(true);
@@ -405,372 +405,250 @@ const AIRecommendationTool: React.FC = () => {
     const canShowRecommendations = analysisData && 
         analysisData.artist_comparison.searched.followers < analysisData.artist_comparison.comparable.followers;
 
-    return (
-        <div className="flex flex-col space-y-4">
-            {/* Search Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* First Artist Search */}
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Target className="h-5 w-5 text-blue-400" />
-                        <span className="text-gray-200">Artist to Analyze</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Enter artist name (e.g., Drake)"
-                            value={searchedArtist}
-                            onChange={(e) => setSearchedArtist(e.target.value)}
-                            className="flex-1 bg-gray-800/50 border-gray-700 text-white placeholder-gray-400"
-                        />
-                        <Button
-                            onClick={handleFirstArtistSearch}
-                            disabled={loading || !searchedArtist}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                            <Sparkles className="h-4 w-4 mr-1" />
-                            Analyze
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Second Artist Search */}
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-purple-400" />
-                        <span className="text-gray-200">Compare with Another Artist</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Enter artist name to compare"
-                            value={comparableArtist}
-                            onChange={(e) => setComparableArtist(e.target.value)}
-                            className="flex-1 bg-gray-800/50 border-gray-700 text-white placeholder-gray-400"
-                            disabled={!analysisData}
-                        />
-                        <Button
-                            onClick={(e) => handleSecondArtistSearch(e)}
-                            disabled={loading || !comparableArtist || !analysisData}
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                        >
-                            <Target className="h-4 w-4 mr-1" />
-                            Compare
-                        </Button>
-                    </div>
-                </div>
+  return (
+    <div className="flex flex-col space-y-6">
+      {/* Search Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* First Artist Search */}
+        <div className="relative">
+          <div className="absolute -top-2 left-2 px-2 bg-[#0f1216] z-10">
+            <div className="flex items-center gap-2 text-sm">
+              <Target className="h-4 w-4 text-blue-400" />
+              <span className="text-gray-400">Artist to Analyze</span>
             </div>
-
-            {/* Error Display */}
-            {error && (
-                <Alert variant="destructive" className="mt-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            )}
-
-            {/* Analysis Results */}
-            {analysisData && (
-                <div className="space-y-6 mt-4">
-                    {/* Artist Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Searched Artist Card */}
-                        <Card className="bg-gray-800/50 border-gray-700">
-                            <CardContent className="pt-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-full bg-gray-700 overflow-hidden">
-                                        {analysisData.artist_comparison.searched.image_url && (
-                                            <img
-                                                src={analysisData.artist_comparison.searched.image_url}
-                                                alt={analysisData.artist_comparison.searched.name}
-                                                className="h-full w-full object-cover"
-                                            />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-white">
-                                            {analysisData.artist_comparison.searched.name}
-                                        </h3>
-                                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                                            <Users className="h-4 w-4" />
-                                            {analysisData.artist_comparison.searched.followers.toLocaleString()}
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Comparable Artist Card */}
-                        {showComparison && analysisData.artist_comparison.comparable && (
-                            <Card className="bg-gray-800/50 border-gray-700">
-                                <CardContent className="pt-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-full bg-gray-700 overflow-hidden">
-                                            {analysisData.artist_comparison.comparable.image_url && (
-                                                <img
-                                                    src={analysisData.artist_comparison.comparable.image_url}
-                                                    alt={analysisData.artist_comparison.comparable.name}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-white">
-                                                {analysisData.artist_comparison.comparable.name}
-                                            </h3>
-                                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                                <Users className="h-4 w-4" />
-                                                {analysisData.artist_comparison.comparable.followers.toLocaleString()}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-
-                    {/* Resonance Score Card */}
-                    <Card className="bg-gradient-to-br from-purple-600/20 to-blue-600/20 border-purple-500/30">
-                        <CardContent className="pt-6">
-                            <div className="text-center mb-4">
-                                <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
-                                    <Star className="h-5 w-5 text-yellow-400" />
-                                    MusiStash Resonance Score
-                                </h3>
-                                <div className="text-6xl font-bold text-white mt-2">
-                                    {Math.round(analysisData.resonance_score)}%
-                                </div>
-                                <div className="text-lg text-gray-300 mt-1">
-                                    {analysisData.resonance_score >= 90
-                                        ? 'Excellent'
-                                        : analysisData.resonance_score >= 75
-                                        ? 'Very Good'
-                                        : analysisData.resonance_score >= 60
-                                        ? 'Good'
-                                        : analysisData.resonance_score >= 40
-                                        ? 'Fair'
-                                        : 'Needs Improvement'}
-                                </div>
-                            </div>
-
-                            {/* Success Factors and Risks */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-green-400">
-                                        <CheckCircle className="h-4 w-4" />
-                                        <span className="font-semibold">Success Drivers</span>
-                                    </div>
-                                    <ul className="text-sm text-gray-300 space-y-1">
-                                        {analysisData.ai_similarity_analysis?.key_similarities.slice(0, 3).map((similarity, index) => (
-                                            <li key={index} className="flex items-start gap-2">
-                                                <span className="text-green-400 mt-1">•</span>
-                                                {similarity}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-yellow-400">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <span className="font-semibold">Risk Factors</span>
-                                    </div>
-                                    <ul className="text-sm text-gray-300 space-y-1">
-                                        {analysisData.ai_similarity_analysis?.key_differences.slice(0, 3).map((difference, index) => (
-                                            <li key={index} className="flex items-start gap-2">
-                                                <span className="text-yellow-400 mt-1">•</span>
-                                                {difference}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Compact Similarity Analysis */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
-                            <CardContent className="p-4">
-                                <div className="text-center mb-4">
-                                    <h3 className="text-lg font-bold text-blue-800 flex items-center justify-center gap-2 mb-3">
-                                        <Music className="h-5 w-5" />
-                                        Similarity Score
-                                    </h3>
-                                    <div className="text-4xl font-black text-blue-800 mb-2">
-                                        {analysisData.ai_similarity_analysis.similarity_score.toFixed(1)}%
-                                    </div>
-                                    <div className="text-sm text-blue-700 mb-3">Overall Compatibility</div>
-                                </div>
-                                <div className="space-y-2">
-                                    {Object.entries(analysisData.ai_similarity_analysis.category_scores).slice(0, 3).map(([category, score]) => {
-                                        const scoreValue = typeof score === 'number' ? score : 0;
-                                        const categoryName = category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                        
-                                        return (
-                                            <div key={category} className="flex justify-between items-center">
-                                                <span className="text-xs text-blue-600">{categoryName}</span>
-                                                <span className="text-xs font-bold text-blue-800">{scoreValue.toFixed(0)}%</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <div className="space-y-4">
-                            {/* Key Similarities */}
-                            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg">
-                                <CardContent className="p-4">
-                                    <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
-                                        <CheckCircle className="h-5 w-5" />
-                                        Key Similarities
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {analysisData.ai_similarity_analysis.key_similarities.slice(0, 3).map((similarity, index) => (
-                                            <div key={index} className="flex items-start gap-2">
-                                                <div className="w-1 h-1 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
-                                                <span className="text-xs text-green-700">{similarity}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Key Differences */}
-                            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 shadow-lg">
-                                <CardContent className="p-4">
-                                    <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center gap-2">
-                                        <AlertCircle className="h-5 w-5" />
-                                        Key Differences
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {analysisData.ai_similarity_analysis.key_differences.slice(0, 3).map((difference, index) => (
-                                            <div key={index} className="flex items-start gap-2">
-                                                <div className="w-1 h-1 bg-orange-600 rounded-full mt-2 flex-shrink-0"></div>
-                                                <span className="text-xs text-orange-700">{difference}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Artist Recommendations Section */}
-                    {canShowRecommendations && (
-                        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-xl">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-xl font-bold text-indigo-800 flex items-center gap-2">
-                                    <Lightbulb className="h-6 w-6" />
-                                    Artist Development Recommendations
-                                    <Badge className="bg-indigo-200 text-indigo-800 ml-2">
-                                        {analysisData.artist_comparison.searched.name} → {analysisData.artist_comparison.comparable.name}
-                                    </Badge>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {/* isRecommendationsLoading ? ( // This state was removed
-                                    <div className="flex items-center justify-center p-8">
-                                        <Brain className="h-6 w-6 animate-spin text-indigo-600 mr-2" />
-                                        <span className="text-indigo-700">Generating personalized recommendations...</span>
-                                    </div>
-                                ) : */}
-                                {recommendations?.success ? (
-                                    <div className="space-y-4">
-                                        {/* Key Differences */}
-                                        <div className="bg-white/70 rounded-lg p-4 border border-indigo-200">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-indigo-100 rounded-lg">
-                                                    <Music className="h-5 w-5 text-indigo-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-indigo-800 mb-2">Musical Key & Audience Reaction</h4>
-                                                    <p className="text-indigo-700 text-sm mb-2">{recommendations.recommendations.key_differences.insight}</p>
-                                                    <p className="text-indigo-600 text-sm mb-3 font-medium">💡 {recommendations.recommendations.key_differences.tip}</p>
-                                                    <a 
-                                                        href={recommendations.recommendations.key_differences.resource_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-xs bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                                                    >
-                                                        <BookOpen className="h-3 w-3" />
-                                                        {recommendations.recommendations.key_differences.resource_title}
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Revenue Differences */}
-                                        <div className="bg-white/70 rounded-lg p-4 border border-indigo-200">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-green-100 rounded-lg">
-                                                    <DollarSign className="h-5 w-5 text-green-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-indigo-800 mb-2">Revenue Streams & Monetization</h4>
-                                                    <p className="text-indigo-700 text-sm mb-2">{recommendations.recommendations.revenue_differences.insight}</p>
-                                                    <p className="text-indigo-600 text-sm mb-3 font-medium">💡 {recommendations.recommendations.revenue_differences.tip}</p>
-                                                    <a 
-                                                        href={recommendations.recommendations.revenue_differences.resource_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-xs bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
-                                                    >
-                                                        <GraduationCap className="h-3 w-3" />
-                                                        {recommendations.recommendations.revenue_differences.resource_title}
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Marketing Differences */}
-                                        <div className="bg-white/70 rounded-lg p-4 border border-indigo-200">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 bg-pink-100 rounded-lg">
-                                                    <Share2 className="h-5 w-5 text-pink-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-indigo-800 mb-2">Marketing & Fan Engagement</h4>
-                                                    <p className="text-indigo-700 text-sm mb-2">{recommendations.recommendations.marketing_differences.insight}</p>
-                                                    <p className="text-indigo-600 text-sm mb-3 font-medium">💡 {recommendations.recommendations.marketing_differences.tip}</p>
-                                                    <a 
-                                                        href={recommendations.recommendations.marketing_differences.resource_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-xs bg-pink-600 text-white px-3 py-2 rounded-md hover:bg-pink-700 transition-colors"
-                                                    >
-                                                        <Link className="h-3 w-3" />
-                                                        {recommendations.recommendations.marketing_differences.resource_title}
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Gap Info */}
-                                        <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
-                                            <div className="flex items-center gap-2 text-sm text-indigo-700">
-                                                <Info className="h-4 w-4" />
-                                                <span className="font-medium">Follower Gap:</span>
-                                                <span>{recommendations.follower_gap.toLocaleString()} followers</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-center p-6 text-indigo-600">
-                                        <AlertCircle className="h-12 w-12 mx-auto mb-3 text-indigo-400" />
-                                        <p className="text-sm">No recommendations available for artists with similar or higher follower counts.</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Enter artist name (e.g., Drake)"
+              value={searchedArtist}
+              onChange={(e) => setSearchedArtist(e.target.value)}
+              className="flex-1 h-12 bg-gray-900/50 border-2 border-blue-500/30 focus:border-blue-500/50 text-white placeholder-gray-500 rounded-xl"
+            />
+            <Button
+              onClick={handleFirstArtistSearch}
+              disabled={loading || !searchedArtist}
+              className="h-12 px-6 bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/20"
+            >
+              {loading ? (
+                <Brain className="h-5 w-5 animate-spin" />
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
-    );
+
+        {/* Second Artist Search */}
+        <div className="relative">
+          <div className="absolute -top-2 left-2 px-2 bg-[#0f1216] z-10">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-purple-400" />
+              <span className="text-gray-400">Compare with Another Artist</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Enter artist name to compare"
+              value={comparableArtist}
+              onChange={(e) => setComparableArtist(e.target.value)}
+              className="flex-1 h-12 bg-gray-900/50 border-2 border-purple-500/30 focus:border-purple-500/50 text-white placeholder-gray-500 rounded-xl"
+              disabled={!analysisData}
+            />
+            <Button
+              onClick={(e) => handleSecondArtistSearch(e)}
+              disabled={loading || !comparableArtist || !analysisData}
+              className="h-12 px-6 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
+            >
+              {loading ? (
+                <Brain className="h-5 w-5 animate-spin" />
+              ) : (
+                <Target className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive" className="rounded-xl border-2 border-red-500/30">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Analysis Results */}
+      {analysisData && (
+        <div className="space-y-6">
+          {/* Artist Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Searched Artist Card */}
+            <Card className="bg-gray-900/50 border-2 border-blue-500/30 rounded-xl overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-xl bg-gray-800 overflow-hidden">
+                    {analysisData.artist_comparison.searched.image_url && (
+                      <img
+                        src={analysisData.artist_comparison.searched.image_url}
+                        alt={analysisData.artist_comparison.searched.name}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      {analysisData.artist_comparison.searched.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <Users className="h-4 w-4" />
+                      {analysisData.artist_comparison.searched.followers.toLocaleString()} followers
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Comparable Artist Card */}
+            {showComparison && analysisData.artist_comparison.comparable && (
+              <Card className="bg-gray-900/50 border-2 border-purple-500/30 rounded-xl overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl bg-gray-800 overflow-hidden">
+                      {analysisData.artist_comparison.comparable.image_url && (
+                        <img
+                          src={analysisData.artist_comparison.comparable.image_url}
+                          alt={analysisData.artist_comparison.comparable.name}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">
+                        {analysisData.artist_comparison.comparable.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Users className="h-4 w-4" />
+                        {analysisData.artist_comparison.comparable.followers.toLocaleString()} followers
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Resonance Score Card */}
+          <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-2 border-purple-500/30 rounded-xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
+                  <Star className="h-6 w-6 text-yellow-400" />
+                  MusiStash Resonance Score
+                </h3>
+                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 mt-4">
+                  {Math.round(analysisData.resonance_score)}%
+                </div>
+                <div className="text-lg text-gray-300 mt-2">
+                  {analysisData.resonance_score >= 90
+                    ? 'Excellent'
+                    : analysisData.resonance_score >= 75
+                    ? 'Very Good'
+                    : analysisData.resonance_score >= 60
+                    ? 'Good'
+                    : analysisData.resonance_score >= 40
+                    ? 'Fair'
+                    : 'Needs Improvement'}
+                </div>
+              </div>
+
+              {/* Success Factors and Risks */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-bold">Success Drivers</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysisData.ai_similarity_analysis?.key_similarities.slice(0, 3).map((similarity, index) => (
+                      <li key={index} className="flex items-start gap-2 bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                        <span className="text-green-400 mt-1">•</span>
+                        <span className="text-gray-300 text-sm">{similarity}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-yellow-400">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="font-bold">Risk Factors</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {analysisData.ai_similarity_analysis?.key_differences.slice(0, 3).map((difference, index) => (
+                      <li key={index} className="flex items-start gap-2 bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+                        <span className="text-yellow-400 mt-1">•</span>
+                        <span className="text-gray-300 text-sm">{difference}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Similarity Analysis */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Similarity Score */}
+            <Card className="bg-gray-900/50 border-2 border-blue-500/30 rounded-xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center justify-center gap-2">
+                    <Music className="h-5 w-5 text-blue-400" />
+                    Similarity Score
+                  </h3>
+                  <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-4">
+                    {analysisData.ai_similarity_analysis.similarity_score.toFixed(1)}%
+                  </div>
+                  <div className="text-sm text-gray-400 mt-2">Overall Compatibility</div>
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(analysisData.ai_similarity_analysis.category_scores).slice(0, 3).map(([category, score]) => {
+                    const scoreValue = typeof score === 'number' ? score : 0;
+                    const categoryName = category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    
+                    return (
+                      <div key={category} className="flex justify-between items-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <span className="text-sm text-gray-300">{categoryName}</span>
+                        <span className="text-sm font-bold text-blue-400">{scoreValue.toFixed(0)}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Key Similarities */}
+            <Card className="bg-gray-900/50 border-2 border-purple-500/30 rounded-xl overflow-hidden">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-purple-400" />
+                  Key Similarities
+                </h3>
+                <div className="space-y-3">
+                  {analysisData.ai_similarity_analysis.key_similarities.slice(0, 3).map((similarity, index) => (
+                    <div key={index} className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                      <span className="text-sm text-gray-300">{similarity}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default AIRecommendationTool;

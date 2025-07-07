@@ -73,8 +73,34 @@ const Index = () => {
               </h1>
             </div>
             
+            {/* Immediate Sign Up Section - Right after tagline */}
+            <div className="text-center opacity-0 animate-fade-in-scale" style={{animationDelay: '4.5s'}}>
+              <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-2xl p-8 border border-blue-500/40 backdrop-blur-sm max-w-2xl mx-auto">
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 font-mono">
+                  READY_TO_INVEST?
+                </h3>
+                <p className="text-lg text-gray-300 mb-6">
+                  Join thousands of investors using AI to make smarter music investment decisions
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/register">
+                    <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-4 text-xl transition-all duration-200 shadow-lg hover:shadow-xl font-mono">
+                      {">"} INITIALIZE_ACCOUNT
+                      <ArrowRight className="ml-2 h-6 w-6" />
+                    </Button>
+                  </Link>
+                  <Link to="/artists">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-12 py-4 text-xl transition-all duration-200 font-mono">
+                      {">"} BROWSE_ARTISTS
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            
             {/* Tech-style Description Blocks */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto opacity-0 animate-fade-in-scale" style={{animationDelay: '5.5s'}}>
               {/* Block 1 */}
               <div className="bg-gray-800/80 rounded-lg p-6 flex flex-col items-center text-center">
                 <div className="flex items-center mb-2">
@@ -163,34 +189,8 @@ const Index = () => {
           </div>
           
           {/* AI Search Tool */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-8 md:p-12 border border-blue-500/30 backdrop-blur-sm mb-12">
+          <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 rounded-2xl p-8 md:p-12 border border-blue-500/30 backdrop-blur-sm">
             <AIRecommendationTool />
-          </div>
-          
-          {/* Prominent Sign Up */}
-          <div className="text-center">
-            <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-2xl p-8 border border-blue-500/40 backdrop-blur-sm max-w-2xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 font-mono">
-                READY_TO_INVEST?
-              </h3>
-              <p className="text-lg text-gray-300 mb-6">
-                Join thousands of investors using AI to make smarter music investment decisions
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/register">
-                  <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-4 text-xl transition-all duration-200 shadow-lg hover:shadow-xl font-mono">
-                    {">"} INITIALIZE_ACCOUNT
-                    <ArrowRight className="ml-2 h-6 w-6" />
-                  </Button>
-                </Link>
-                <Link to="/artists">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 font-semibold px-12 py-4 text-xl transition-all duration-200 font-mono">
-                    {">"} BROWSE_ARTISTS
-                  </Button>
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </section>

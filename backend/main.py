@@ -128,7 +128,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173", 
-        "http://127.0.0.1:5173", 
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174", 
         "http://localhost:8080",
         "http://localhost:8081",
         "http://localhost:8082",
@@ -3307,6 +3309,56 @@ def create_fallback_resonance_score(artist1_name: str, artist2_name: str, artist
             }
         }
 
+def calculate_genre_family_bonus(genres1: List[str], genres2: List[str]) -> float:
+    """Calculate genre family bonus or penalty"""
+    # Convert genres to sets for comparison
+    genres1_set = set(genres1)
+    genres2_set = set(genres2)
+    
+    # Calculate overlap
+    overlap = genres1_set.intersection(genres2_set)
+    total = genres1_set.union(genres2_set)
+    
+    if not total:
+        return -25.0  # Maximum penalty if no genre data
+        
+    overlap_ratio = len(overlap) / len(total)
+    
+    # Much stricter penalties for genre mismatch
+    if overlap_ratio == 0:
+        return -35.0  # Complete genre mismatch
+    elif overlap_ratio < 0.2:
+        return -25.0  # Very different genres
+    elif overlap_ratio < 0.4:
+        return -15.0  # Somewhat different genres
+    elif overlap_ratio < 0.6:
+        return -5.0   # Some genre overlap
+    elif overlap_ratio < 0.8:
+        return 5.0    # Good genre overlap
+    else:
+        return 10.0   # Excellent genre match
+
+def calculate_scale_penalty(followers1: int, followers2: int) -> float:
+    """Calculate penalty for massive scale differences"""
+    # Use log scale for more reasonable comparison
+    log_followers1 = math.log10(max(followers1, 1))
+    log_followers2 = math.log10(max(followers2, 1))
+    
+    # Calculate difference in orders of magnitude
+    magnitude_diff = abs(log_followers1 - log_followers2)
+    
+    # Much more aggressive penalties
+    if magnitude_diff > 4:  # e.g., 100M vs 10K
+        return 50.0
+    elif magnitude_diff > 3:  # e.g., 10M vs 10K
+        return 40.0
+    elif magnitude_diff > 2:  # e.g., 1M vs 10K
+        return 30.0
+    elif magnitude_diff > 1:  # e.g., 100K vs 10K
+        return 20.0
+    else:
+        return 10.0 * magnitude_diff  # Linear penalty for smaller differences
+
 async def calculate_musistash_resonance_score(artist1_stats: dict, artist2_stats: dict, artist1_name: str, artist2_name: str, genre_similarity: float, theme_similarity: float, ecosystem_compatibility: dict = None) -> dict:
     """
     ENHANCED MusiStash Resonance Score using ALL APIs (Spotify, YouTube, Genius, Gemini)
@@ -3401,16 +3453,16 @@ async def calculate_musistash_resonance_score(artist1_stats: dict, artist2_stats
         
         # Determine artist relationship type for weighting
         if artist1_followers >= 10_000_000:  # Already famous
-            # For famous artists, high baseline score with fine-tuning
-            base_score = 85
+            # For famous artists, moderate baseline with heavy penalties for mismatches
+            base_score = 65
             weights = {"linear": 0.3, "similarity": 0.3, "market": 0.2, "genre": 0.2}
         elif artist1_followers >= 1_000_000:  # Established
-            # For established artists, moderate baseline with growth potential
-            base_score = 70
+            # For established artists, lower baseline with focus on growth potential
+            base_score = 50
             weights = {"linear": 0.35, "similarity": 0.25, "market": 0.25, "genre": 0.15}
         else:  # Upcoming artist
-            # For upcoming artists, focus on potential and similarity
-            base_score = 45
+            # For upcoming artists, low baseline with high emphasis on potential
+            base_score = 35
             weights = {"linear": 0.25, "similarity": 0.35, "market": 0.25, "genre": 0.15}
         
         # Calculate ensemble score
@@ -3421,27 +3473,38 @@ async def calculate_musistash_resonance_score(artist1_stats: dict, artist2_stats
             genre_cluster_score * weights["genre"]
         )
         
-        # Apply genre family bonus/penalty
+        # Apply genre family bonus/penalty (much stricter now)
         genre_bonus = calculate_genre_family_bonus(spotify1.get('genres', []), spotify2.get('genres', []))
         
-        # Apply scale penalty for massive differences
+        # Apply scale penalty for massive differences (much more aggressive)
         scale_penalty = calculate_scale_penalty(artist1_followers, artist2_followers)
         
+        # Content theme penalty (new)
+        theme_penalty = 0.0
+        if theme_similarity < 30:
+            theme_penalty = 25.0  # Major theme mismatch
+        elif theme_similarity < 50:
+            theme_penalty = 15.0  # Significant theme difference
+        elif theme_similarity < 70:
+            theme_penalty = 5.0   # Some theme difference
+        
         # Final score calculation with proper scaling
-        final_score = base_score + (ensemble_score * 0.4) + genre_bonus - scale_penalty
+        final_score = base_score + (ensemble_score * 0.3) + genre_bonus - scale_penalty - theme_penalty
         
         # Apply scale-appropriate boundaries with stricter limits
         if artist1_followers < 100_000:  # New artists
-            final_score = max(15, min(75, final_score))
+            final_score = max(10, min(60, final_score))  # Much lower ceiling
         elif artist1_followers < 1_000_000:  # Growing artists
-            final_score = max(25, min(85, final_score))
+            final_score = max(15, min(70, final_score))  # Lower ceiling
         else:  # Established artists
-            # Even established artists shouldn't always get 95% unless they're very similar
+            # Even established artists get heavy penalties for mismatches
             follower_ratio = min(artist1_followers, artist2_followers) / max(artist1_followers, artist2_followers)
-            if follower_ratio < 0.1:  # Massive scale difference
-                final_score = max(25, min(75, final_score))
+            if follower_ratio < 0.01:  # Extreme scale difference
+                final_score = max(15, min(35, final_score))  # Very low ceiling
+            elif follower_ratio < 0.1:  # Major scale difference
+                final_score = max(20, min(50, final_score))  # Low ceiling
             else:
-                final_score = max(40, min(95, final_score))
+                final_score = max(25, min(85, final_score))  # Moderate ceiling
         
         # === PHASE 5: COMPREHENSIVE ANALYSIS GENERATION ===
         print("📋 Phase 5: Comprehensive analysis generation...")
@@ -3719,43 +3782,6 @@ def calculate_genre_cluster_score(features: dict, genres1: list, genres2: list) 
     
     return base_score * 100
 
-def calculate_genre_family_bonus(genres1: list, genres2: list) -> float:
-    """Calculate bonus/penalty based on genre family compatibility"""
-    compatibility = calculate_genre_family_compatibility(genres1, genres2)
-    
-    if compatibility >= 0.8:
-        return 15  # High compatibility bonus
-    elif compatibility >= 0.6:
-        return 10  # Moderate compatibility bonus
-    elif compatibility >= 0.4:
-        return 5   # Small compatibility bonus
-    elif compatibility >= 0.2:
-        return 0   # Neutral
-    else:
-        return -5  # Different genres penalty
-
-def calculate_scale_penalty(followers1: int, followers2: int) -> float:
-    """Calculate penalty for massive scale differences"""
-    if followers1 == 0 or followers2 == 0:
-        return 10  # Penalty for missing data
-    
-    # Calculate the ratio (smaller/larger) 
-    ratio = min(followers1, followers2) / max(followers1, followers2)
-    
-    # Apply increasing penalties for larger scale differences
-    if ratio >= 0.5:  # Within 2x scale
-        return 0
-    elif ratio >= 0.2:  # 2-5x difference
-        return 5
-    elif ratio >= 0.1:  # 5-10x difference  
-        return 10
-    elif ratio >= 0.05:  # 10-20x difference
-        return 15
-    elif ratio >= 0.01:  # 20-100x difference
-        return 25
-    else:  # 100x+ difference
-        return 35
-
 def generate_comprehensive_insights(features: dict, final_score: float, artist1_name: str, artist2_name: str, 
                                   followers1: int, followers2: int, youtube_data: dict, genius_data: dict) -> dict:
     """Generate comprehensive insights based on all analysis"""
@@ -3886,29 +3912,36 @@ def calculate_ensemble_prediction_with_upcoming_focus(model_predictions: dict, a
         # DRAMATIC genre-based adjustments
         if genre_similarity_score < 0.2:  # Very different genres (like Drake vs Manas)
             print("💥 VERY DIFFERENT GENRES - Applying massive penalty")
-            genre_penalty = 0.15  # Reduce to 15% of original score
+            genre_penalty = 0.05  # Reduce to 5% of original score for drastically different genres
             ensemble_score = ensemble_score * genre_penalty
             
         elif genre_similarity_score < 0.4:  # Quite different genres
             print("🔻 DIFFERENT GENRES - Applying strong penalty")
-            genre_penalty = 0.35  # Reduce to 35% of original score
+            genre_penalty = 0.25  # Reduce to 25% of original score
             ensemble_score = ensemble_score * genre_penalty
             
         elif genre_similarity_score < 0.6:  # Moderately different genres
             print("⚠️ MODERATE GENRE DIFFERENCE - Applying penalty")
-            genre_penalty = 0.60  # Reduce to 60% of original score
+            genre_penalty = 0.50  # Reduce to 50% of original score
             ensemble_score = ensemble_score * genre_penalty
             
-        elif genre_similarity_score > 0.8:  # Very similar genres (like Ken Carson vs OsamaSon)
+        elif genre_similarity_score > 0.8:  # Very similar genres
             print("🚀 VERY SIMILAR GENRES - Applying bonus")
-            genre_bonus = 1.25  # Boost by 25%
+            genre_bonus = 1.15  # Boost by 15%
             ensemble_score = ensemble_score * genre_bonus
             
         # Market overlap penalty for cross-genre comparisons
         if market_overlap < 0.3:  # Completely different markets
             print("💀 CROSS-MARKET COMPARISON - Additional penalty")
-            market_penalty = 0.25  # Additional 75% reduction
+            market_penalty = 0.15  # Additional 85% reduction for different markets
             ensemble_score = ensemble_score * market_penalty
+            
+        # Content theme penalty
+        theme_similarity = ecosystem_compatibility.get('content_theme_similarity', 50) / 100
+        if theme_similarity < 0.2:  # Very different content themes
+            print("📝 DIFFERENT CONTENT THEMES - Additional penalty")
+            theme_penalty = 0.25  # Additional 75% reduction
+            ensemble_score = ensemble_score * theme_penalty
     
     # === FOLLOWER DIFFERENCE REALITY CHECK ===
     # Get comparable artist followers from stats - this should be the second artist's data

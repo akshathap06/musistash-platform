@@ -62,13 +62,10 @@ const Navbar = () => {
       <div className="container max-w-7xl mx-auto px-4">
         <nav className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
-              alt="MusiStash Logo" 
-              className="h-8 w-auto"
-            />
-            <span className="text-xl font-bold tracking-tight">Musi$tash</span>
+          <Link to="/" className="group">
+            <span className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text transition-all duration-300 group-hover:opacity-80">
+              Musi$tash
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

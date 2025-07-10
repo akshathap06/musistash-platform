@@ -83,7 +83,7 @@ const Navbar = () => {
                       <ListItem href="/discover-projects" title="Discover Projects">
                         Browse and invest in upcoming music projects
                       </ListItem>
-                      <ListItem href="/artists" title="Browse Artists">
+                      <ListItem href="/browse-artists" title="Browse Artists">
                         Explore our diverse roster of talented artists
                       </ListItem>
                       <ListItem href="/artist-feuds" title="Artist Feuds">

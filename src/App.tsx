@@ -27,6 +27,8 @@ import DiscoverProjects from "./pages/DiscoverProjects";
 import BrowseArtists from "./pages/BrowseArtists";
 import ArtistServices from "./pages/ArtistServices";
 import InvestorServices from "./pages/InvestorServices";
+import AITools from "./pages/AITools";
+import InvestmentTools from "./pages/InvestmentTools";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 
@@ -52,12 +54,15 @@ const App = () => (
               <Route path="/artist-feuds" element={<ArtistFeud />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/ai-tools" element={<AITools />} />
+              <Route path="/investment-tools" element={<InvestmentTools />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/cookies" element={<Cookies />} />
+              <Route path="/cookie-policy" element={<Cookies />} />
               <Route path="/security" element={<Security />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/discover-projects" element={<DiscoverProjects />} />

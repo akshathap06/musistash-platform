@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,183 +9,138 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/navigation-menu';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const ListItem = React.forwardRef<
-    React.ElementRef<"a">,
-    React.ComponentPropsWithoutRef<"a">
-  >(({ className, title, children, ...props }, ref) => {
-    return (
-      <li>
-        <NavigationMenuLink asChild>
-          <a
-            ref={ref}
-            className={cn(
-              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-800 hover:text-gray-200 focus:bg-gray-800 focus:text-gray-200",
-              className
-            )}
-            {...props}
-          >
-            <div className="text-sm font-medium leading-none text-gray-200">{title}</div>
-            <p className="line-clamp-2 text-sm leading-snug text-gray-400">
-              {children}
-            </p>
-          </a>
-        </NavigationMenuLink>
-      </li>
-    );
-  });
-  ListItem.displayName = "ListItem";
-
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-[#0f1216]/90 backdrop-blur-md shadow-lg border-b border-gray-800'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="container max-w-7xl mx-auto px-4">
-        <nav className="flex h-16 items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f1216]/80 backdrop-blur-xl border-b border-white/10">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
-              alt="MusiStash Logo" 
-              className="h-8 w-auto"
-            />
-            <span className="text-xl font-bold tracking-tight">Musi$tash</span>
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">Musi</span>
+              <span className="text-2xl font-bold text-blue-500">$tash</span>
+            </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-1">
             <NavigationMenu>
               <NavigationMenuList>
-                {/* Platform Menu */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:text-white">Platform</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <Link to="/how-it-works" className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-blue-500/50 to-purple-500/50 p-6 no-underline outline-none focus:shadow-md">
+                            <div className="mb-2 mt-4 text-lg font-medium text-white">How It Works</div>
+                            <p className="text-sm leading-tight text-white/90">
+                              Learn how our AI-powered platform connects artists with investors.
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <ListItem to="/discover-projects" title="Discover Projects">
+                        Browse active investment opportunities in music.
+                      </ListItem>
+                      <ListItem to="/browse-artists" title="Browse Artists">
+                        Find and connect with talented musicians.
+                      </ListItem>
+                      <ListItem to="/services" title="Services">
+                        Explore our platform's features and tools.
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:text-white">Services</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      <ListItem href="/how-it-works" title="How It Works">
-                        Learn about our revolutionary music investment platform
+                      <ListItem to="/artist-services" title="For Artists">
+                        Get funding and grow your career.
                       </ListItem>
-                      <ListItem href="/discover-projects" title="Discover Projects">
-                        Browse and invest in upcoming music projects
-                      </ListItem>
-                      <ListItem href="/artists" title="Browse Artists">
-                        Explore our diverse roster of talented artists
-                      </ListItem>
-                      <ListItem href="/artist-feuds" title="Artist Feuds">
-                        Compare artists and analyze investment potential
+                      <ListItem to="/investor-services" title="For Investors">
+                        Discover and invest in promising artists.
                       </ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* Services Menu */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger>Services</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:text-white">Company</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      <ListItem href="/services" title="Our Services">
-                        Comprehensive services for artists and investors
+                      <ListItem to="/about" title="About Us">
+                        Learn about our mission and team.
                       </ListItem>
-                      <ListItem href="/ai-tools" title="AI Tools">
-                        Advanced AI-powered analytics and insights
+                      <ListItem to="/careers" title="Careers">
+                        Join our growing team.
                       </ListItem>
-                      <ListItem href="/investment-tools" title="Investment Tools">
-                        Tools to help you make informed investment decisions
+                      <ListItem to="/contact" title="Contact">
+                        Get in touch with us.
                       </ListItem>
-                      <ListItem href="/artist-services" title="Artist Services">
-                        Resources and support for artists
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                {/* Company Menu */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Company</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4">
-                      <ListItem href="/about" title="About Us">
-                        Our mission to revolutionize music investment
-                      </ListItem>
-                      <ListItem href="/careers" title="Careers">
-                        Join our team and shape the future of music
-                      </ListItem>
-                      <ListItem href="/contact" title="Contact">
-                        Get in touch with our team
-                      </ListItem>
-                      <ListItem href="/blog" title="Blog">
-                        Latest news and insights
+                      <ListItem to="/blog" title="Blog">
+                        Latest news and updates.
                       </ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* Legal Menu */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger>Legal</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4">
-                      <ListItem href="/terms" title="Terms of Service">
-                        Platform terms and conditions
-                      </ListItem>
-                      <ListItem href="/privacy" title="Privacy Policy">
-                        How we handle your data
-                      </ListItem>
-                      <ListItem href="/cookie-policy" title="Cookie Policy">
-                        Our cookie usage policy
-                      </ListItem>
-                      <ListItem href="/security" title="Security">
-                        Our commitment to your security
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
+                  <Link to="/legal">
+                    <NavigationMenuLink className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-gray-300 hover:text-white">
+                      Legal
+                    </NavigationMenuLink>
+                  </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
-
-            {/* Auth Buttons */}
-            <div className="flex items-center space-x-2">
-              <Link to="/login">
-                <Button variant="ghost" className="text-sm font-medium">
-                  Log In
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="default" className="text-sm font-medium">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button variant="ghost" className="md:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </Button>
-        </nav>
+          {/* Auth Buttons */}
+          <div className="flex items-center space-x-4">
+            <Link to="/login">
+              <Button variant="ghost" className="text-gray-300 hover:text-white">Log In</Button>
+            </Link>
+            <Link to="/register">
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">Sign Up</Button>
+            </Link>
+          </div>
+        </div>
       </div>
-    </header>
+    </nav>
   );
 };
+
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a"> & { to: string; title: string }
+>(({ className, title, children, to, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <Link
+          to={to}
+          ref={ref as any}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-blue-500/10 hover:text-white focus:bg-blue-500/10 focus:text-white",
+            className
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none text-white">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-gray-400">
+            {children}
+          </p>
+        </Link>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem";
 
 export default Navbar;

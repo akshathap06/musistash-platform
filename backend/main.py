@@ -59,16 +59,16 @@ gemini_api_key = os.getenv("GEMINI_API_KEY", "dummy_key")
 gemini_base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 # News API
-news_api_key = os.getenv("NEWS_API_KEY")
+news_api_key = os.getenv("NEWS_API_KEY", "dummy_key")
 
 # Spotify
-spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID")
-spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID", "dummy_key")
+spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET", "dummy_key")
 
 print(f"🔍 Debug: Spotify Client ID exists: {bool(spotify_client_id)}")
 print(f"🔍 Debug: Spotify Client Secret exists: {bool(spotify_client_secret)}")
 
-if not spotify_client_id or not spotify_client_secret:
+if not spotify_client_id or spotify_client_id == "dummy_key":
     print("❌ Warning: Spotify credentials not found. Using mock data.")
     print(f"   Client ID: {'Present' if spotify_client_id else 'Missing'}")
     print(f"   Client Secret: {'Present' if spotify_client_secret else 'Missing'}")
@@ -86,25 +86,53 @@ else:
         sp = None
 
 # Last.fm
-lastfm_api_key = os.getenv("LASTFM_API_KEY")
+lastfm_api_key = os.getenv("LASTFM_API_KEY", "dummy_key")
 
 # YouTube Data API
-youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+youtube_api_key = os.getenv("YOUTUBE_API_KEY", "dummy_key")
+
+# Initialize YouTube client
+try:
+    if youtube_api_key and youtube_api_key != "dummy_key":
+        youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=youtube_api_key)
+        print("✅ YouTube client initialized successfully!")
+    else:
+        youtube = None
+        print("❌ Warning: YouTube credentials not found. Using mock data.")
+except Exception as e:
+    print(f"❌ Error initializing YouTube client: {e}")
+    youtube = None
 
 # Shazam API (via RapidAPI)
-shazam_api_key = os.getenv("SHAZAM_API_KEY")
+shazam_api_key = os.getenv("SHAZAM_API_KEY", "dummy_key")
 shazam_api_host = "shazam.p.rapidapi.com"
 
 # Genius API  
-genius_client_id = os.getenv("GENIUS_CLIENT_ID")
-genius_client_secret = os.getenv("GENIUS_CLIENT_SECRET")
-genius_access_token = os.getenv("GENIUS_ACCESS_TOKEN")
+genius_client_id = os.getenv("GENIUS_CLIENT_ID", "dummy_key")
+genius_client_secret = os.getenv("GENIUS_CLIENT_SECRET", "dummy_key")
+genius_access_token = os.getenv("GENIUS_ACCESS_TOKEN", "dummy_key")
+
+# Initialize Genius client
+try:
+    if genius_access_token and genius_access_token != "dummy_key":
+        genius = lyricsgenius.Genius(genius_access_token)
+        print("✅ Genius client initialized successfully!")
+    else:
+        genius = None
+        print("❌ Warning: Genius credentials not found. Using mock data.")
+except Exception as e:
+    print(f"❌ Error initializing Genius client: {e}")
+    genius = None
 
 # SoundCharts - Using sandbox credentials
-soundcharts_client = soundcharts.SoundchartsClient(
-    app_id="soundcharts",
-    api_key="soundcharts"
-)
+try:
+    soundcharts_client = soundcharts.SoundchartsClient(
+        app_id="soundcharts",
+        api_key="soundcharts"
+    )
+except Exception as e:
+    print(f"Failed to initialize SoundCharts client: {e}")
+    soundcharts_client = None
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AIRecommendationTool from '@/components/ui/AIRecommendationTool';
+import FeaturedSection from '@/components/ui/FeaturedSection';
 
 const Index = () => {
   return (
@@ -86,6 +87,9 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Featured Section */}
+        <FeaturedSection />
       </main>
 
       <Footer />

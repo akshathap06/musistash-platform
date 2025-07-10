@@ -21,7 +21,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col animate-scale-in">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col animate-scale-in bg-[#1a1b26]/50 backdrop-blur-sm border-gray-800">
       <div className="relative h-48 overflow-hidden">
         <img 
           src={project.image} 
@@ -29,7 +29,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
         <div className="absolute top-3 right-3">
-          <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
+          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="bg-blue-500/80 text-white">
             {project.status === 'active' ? 'Active' : project.status === 'funded' ? 'Funded' : 'Completed'}
           </Badge>
         </div>
@@ -37,29 +37,36 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <h3 className="text-lg font-semibold">{project.title}</h3>
-          <span className="text-primary font-medium">{project.roi}% ROI</span>
+          <h3 className="text-lg font-semibold text-white">{project.title}</h3>
+          <span className="text-blue-400 font-medium">{project.roi}% ROI</span>
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+        <p className="text-sm text-gray-400 line-clamp-2">{project.description}</p>
       </CardHeader>
       
       <CardContent className="flex-grow">
         <div className="space-y-4">
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span>${project.currentFunding.toLocaleString()}</span>
-              <span className="text-muted-foreground">${project.fundingGoal.toLocaleString()}</span>
+              <span className="text-white">${project.currentFunding.toLocaleString()}</span>
+              <span className="text-gray-400">${project.fundingGoal.toLocaleString()}</span>
             </div>
-            <Progress value={fundingPercentage} className="h-2" />
+            <Progress 
+              value={fundingPercentage} 
+              className="h-2 [&>div]:bg-blue-500 bg-gray-700" 
+            />
             <div className="flex justify-between text-xs">
-              <span>{fundingPercentage}% Funded</span>
-              <span className="text-muted-foreground">{timeLeft()} days left</span>
+              <span className="text-blue-400">{fundingPercentage}% Funded</span>
+              <span className="text-gray-400">{timeLeft()} days left</span>
             </div>
           </div>
           
           <div className="grid grid-cols-3 gap-2">
             {project.packages.slice(0, 3).map((pkg) => (
-              <Badge key={pkg.id} variant="outline" className="justify-center truncate">
+              <Badge 
+                key={pkg.id} 
+                variant="outline" 
+                className="justify-center truncate border-gray-700 text-gray-300 hover:bg-gray-800"
+              >
                 {pkg.type}
               </Badge>
             ))}
@@ -67,9 +74,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </div>
       </CardContent>
       
-      <CardFooter className="border-t bg-muted/10 pt-3">
+      <CardFooter className="border-t border-gray-800 bg-gray-900/30 pt-3">
         <Link to={`/project/${project.id}`} className="w-full">
-          <div className="w-full text-center text-sm font-medium text-primary hover:underline">
+          <div className="w-full text-center text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors">
             View Project
           </div>
         </Link>

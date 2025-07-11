@@ -6,9 +6,14 @@ import { API_ENDPOINTS } from '@/config/api';
 interface GoogleSignInProps {
   onSuccess?: (response: any) => void;
   onError?: (error: any) => void;
+  className?: string;
 }
 
-export const GoogleSignIn: React.FC<GoogleSignInProps> = ({ onSuccess, onError }) => {
+export const GoogleSignIn: React.FC<GoogleSignInProps> = ({ 
+  onSuccess, 
+  onError, 
+  className 
+}) => {
   const handleGoogleSignIn = () => {
     try {
       // Redirect to Google OAuth endpoint
@@ -23,7 +28,7 @@ export const GoogleSignIn: React.FC<GoogleSignInProps> = ({ onSuccess, onError }
     <Button 
       onClick={handleGoogleSignIn}
       variant="outline"
-      className="w-full"
+      className={className}
     >
       <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
         <path

@@ -91,10 +91,10 @@ const InvestmentTools = () => {
   ];
 
   const stats = [
-    { label: "Total Investments Tracked", value: "$50M+", change: "+15%" },
-    { label: "Average ROI", value: "23.5%", change: "+8.2%" },
-    { label: "Active Investors", value: "2,500+", change: "+12%" },
-    { label: "Success Rate", value: "87%", change: "+5%" }
+    { label: "AI Models Trained", value: "12+", change: "Active" },
+    { label: "Data Sources Integrated", value: "50+", change: "Real-time" },
+    { label: "Analysis Parameters", value: "200+", change: "Advanced" },
+    { label: "Prediction Accuracy", value: "94%", change: "Validated" }
   ];
 
   return (
@@ -221,7 +221,7 @@ const InvestmentTools = () => {
                         </Badge>
                       </div>
                     </div>
-                    <CardTitle className="text-xl mb-2">{tool.title}</CardTitle>
+                    <CardTitle className="text-xl mb-2 text-white">{tool.title}</CardTitle>
                     <CardDescription className="text-gray-300 leading-relaxed">
                       {tool.description}
                     </CardDescription>
@@ -229,7 +229,7 @@ const InvestmentTools = () => {
                   <CardContent>
                     <ul className="space-y-2">
                       {tool.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-400">
+                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-300">
                           <Zap className="h-3 w-3 text-green-400 flex-shrink-0" />
                           {feature}
                         </li>
@@ -272,7 +272,7 @@ const InvestmentTools = () => {
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
@@ -303,11 +303,11 @@ const InvestmentTools = () => {
           >
             <Card className="bg-gray-900/50 border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Calculator className="h-5 w-5 text-green-400" />
                   Investment ROI Calculator
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-300">
                   Sample calculation for a $10,000 investment in emerging artist
                 </CardDescription>
               </CardHeader>
@@ -331,14 +331,14 @@ const InvestmentTools = () => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-400">Success Probability</span>
-                        <span className="font-semibold">78%</span>
+                        <span className="font-semibold text-white">78%</span>
                       </div>
                       <Progress value={78} className="h-2" />
                     </div>
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-400">Market Confidence</span>
-                        <span className="font-semibold">85%</span>
+                        <span className="font-semibold text-white">85%</span>
                       </div>
                       <Progress value={85} className="h-2" />
                     </div>

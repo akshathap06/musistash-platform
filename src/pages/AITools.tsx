@@ -190,7 +190,7 @@ const AITools = () => {
                         {tool.status}
                       </Badge>
                     </div>
-                    <CardTitle className="text-xl mb-2">{tool.title}</CardTitle>
+                    <CardTitle className="text-xl mb-2 text-white">{tool.title}</CardTitle>
                     <CardDescription className="text-gray-300 leading-relaxed">
                       {tool.description}
                     </CardDescription>
@@ -198,7 +198,7 @@ const AITools = () => {
                   <CardContent>
                     <ul className="space-y-2">
                       {tool.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-400">
+                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-300">
                           <Zap className="h-3 w-3 text-blue-400 flex-shrink-0" />
                           {feature}
                         </li>
@@ -255,7 +255,7 @@ const AITools = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-bold text-xl mb-6">
                   {step.step}
                 </div>
-                <h3 className="text-xl font-semibold mb-4">{step.title}</h3>
+                <h3 className="text-xl font-semibold mb-4 text-white">{step.title}</h3>
                 <p className="text-gray-300 leading-relaxed">{step.description}</p>
               </motion.div>
             ))}

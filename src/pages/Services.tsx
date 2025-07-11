@@ -1,446 +1,312 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { serviceProviders, Service, ServiceProvider } from '@/lib/mockData';
-import { Star, Search, Filter, Clock, DollarSign, CheckCircle2, FileText, Package, Calendar } from 'lucide-react';
+import { TrendingUp, BarChart3, Users, Music, DollarSign, ArrowRight, Sparkles, Brain, Target, Shield } from 'lucide-react';
 
 const Services = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  
-  // Filter service providers based on search and category
-  const filteredProviders = serviceProviders.filter(provider => {
-    const matchesSearch = provider.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         provider.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         provider.services.some(service => 
-                           service.title.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (selectedCategory === 'all') return matchesSearch;
-    
-    return matchesSearch && provider.services.some(service => service.category === selectedCategory);
-  });
+  const services = [
+    {
+      icon: <Brain className="h-8 w-8" />,
+      title: "AI-Powered Investment Analysis",
+      description: "Advanced machine learning algorithms analyze artist potential, market trends, and investment opportunities in real-time.",
+      features: ["Artist potential scoring", "Market trend analysis", "Risk assessment", "ROI predictions"],
+      status: "Live",
+      color: "from-blue-500 to-purple-600",
+      link: "/ai-tools"
+    },
+    {
+      icon: <BarChart3 className="h-8 w-8" />,
+      title: "Professional Investment Tools",
+      description: "Comprehensive suite of tools designed specifically for music industry investments and portfolio management.",
+      features: ["Portfolio optimization", "Risk management", "Performance tracking", "Investment calculator"],
+      status: "Live",
+      color: "from-green-500 to-blue-600",
+      link: "/investment-tools"
+    },
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: "Artist Services",
+      description: "Complete platform for artists to connect with investors, manage projects, and build sustainable music careers.",
+      features: ["Project funding", "Investor matching", "Career management", "Analytics dashboard"],
+      status: "Coming Soon",
+      color: "from-purple-500 to-pink-600",
+      link: "/artist-services"
+    },
+    {
+      icon: <TrendingUp className="h-8 w-8" />,
+      title: "Market Intelligence",
+      description: "Deep market insights and trend analysis to help you make informed investment decisions in the music industry.",
+      features: ["Genre trend analysis", "Emerging artist identification", "Market timing insights", "Industry reports"],
+      status: "Live",
+      color: "from-orange-500 to-red-600",
+      link: "/ai-tools"
+    },
+    {
+      icon: <Shield className="h-8 w-8" />,
+      title: "Risk Management",
+      description: "Comprehensive risk assessment and management tools to protect your music investment portfolio.",
+      features: ["Risk scoring", "Portfolio diversification", "Stress testing", "Market correlation analysis"],
+      status: "Live",
+      color: "from-red-500 to-pink-600",
+      link: "/investment-tools"
+    },
+    {
+      icon: <Target className="h-8 w-8" />,
+      title: "Investment Advisory",
+      description: "Personalized investment recommendations and strategic guidance from music industry experts.",
+      features: ["Portfolio review", "Strategy consultation", "Market opportunities", "Expert insights"],
+      status: "Beta",
+      color: "from-teal-500 to-cyan-600",
+      link: "/contact"
+    }
+  ];
 
-  // Get all unique categories
-  const categories: string[] = ['all', ...new Set(serviceProviders.flatMap(
-    provider => provider.services.map(service => service.category)
-  ))];
-  
+  const stats = [
+    { label: "AI Models Active", value: "12+", icon: <Brain className="h-5 w-5" /> },
+    { label: "Data Sources", value: "50+", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "Analysis Parameters", value: "200+", icon: <Target className="h-5 w-5" /> },
+    { label: "Prediction Accuracy", value: "94%", icon: <TrendingUp className="h-5 w-5" /> }
+  ];
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-[rgb(15,18,22)] text-white">
       <Navbar />
       
-      <div className="flex-1 pt-20">
-        <div className="container max-w-7xl mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <div className="flex flex-col space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">Music Services Marketplace</h1>
-              <p className="text-muted-foreground max-w-3xl">
-                Connect with top industry professionals offering services to help bring your music projects to life. From production to marketing, find the perfect partner for your next release.
-              </p>
-            </div>
+      {/* Hero Section */}
+      <section className="relative pt-24 pb-16 px-4">
+        <div className="container max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-full px-4 py-2 mb-6"
+            >
+              <Sparkles className="h-4 w-4 text-purple-400" />
+              <span className="text-sm font-medium text-purple-300">Complete Music Investment Platform</span>
+            </motion.div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search for services or providers..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <select 
-                  className="bg-background border rounded-md px-3 py-2 text-sm"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  {categories.map(category => (
-                    <option key={category} value={category}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 text-transparent bg-clip-text"
+            >
+              Our Services
+            </motion.h1>
             
-            <Tabs defaultValue="services" className="w-full">
-              <TabsList className="mb-6">
-                <TabsTrigger value="services">Services</TabsTrigger>
-                <TabsTrigger value="providers">Service Providers</TabsTrigger>
-                <TabsTrigger value="featured">Featured Deals</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="services" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProviders.flatMap(provider => 
-                    provider.services.map(service => (
-                      <ServiceCard 
-                        key={service.id} 
-                        service={service} 
-                        provider={provider} 
-                      />
-                    ))
-                  )}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-xl text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed"
+            >
+              Comprehensive suite of AI-powered tools and services designed specifically for music investment. 
+              From intelligent analysis to professional portfolio management.
+            </motion.p>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <Link to="/register">
+                <Button size="lg" className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white px-8 py-3">
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 px-8 py-3">
+                  Schedule Demo
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Platform Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
+          >
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg mb-3">
+                  <div className="text-purple-400">
+                    {stat.icon}
+                  </div>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="providers" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProviders.map(provider => (
-                    <ProviderCard key={provider.id} provider={provider} />
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="featured" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {filteredProviders.slice(0, 2).flatMap(provider => 
-                    provider.services.slice(0, 1).map(service => (
-                      <FeaturedServiceCard 
-                        key={service.id} 
-                        service={service} 
-                        provider={provider} 
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+                <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-sm text-gray-400">{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Services Grid */}
+      <section className="py-16 px-4">
+        <div className="container max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Complete Service Suite</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Everything you need to succeed in music investment, powered by cutting-edge AI
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+              >
+                <Card className="bg-gray-900/50 border-gray-700 hover:border-gray-600 transition-all duration-300 h-full">
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-3 rounded-lg bg-gradient-to-r ${service.color}`}>
+                        <div className="text-white">
+                          {service.icon}
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={service.status === 'Live' ? 'default' : service.status === 'Beta' ? 'secondary' : 'outline'}
+                        className={
+                          service.status === 'Live' 
+                            ? 'bg-green-500/20 text-green-400 border-green-500/50' 
+                            : service.status === 'Beta'
+                            ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+                            : 'bg-gray-500/20 text-gray-400 border-gray-500/50'
+                        }
+                      >
+                        {service.status}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl mb-2 text-white">{service.title}</CardTitle>
+                    <CardDescription className="text-gray-300 leading-relaxed">
+                      {service.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <ul className="space-y-2 mb-6">
+                      {service.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-center gap-2 text-sm text-gray-300">
+                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to={service.link} className="w-full">
+                      <Button variant="outline" className="w-full border-gray-600 text-gray-300 hover:bg-gray-800">
+                        Learn More
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </div>
-      
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 px-4 bg-gray-900/30">
+        <div className="container max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">How It Works</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Get started with our platform in just a few simple steps
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "01",
+                title: "Sign Up",
+                description: "Create your account and complete your investor profile to get personalized recommendations."
+              },
+              {
+                step: "02", 
+                title: "Explore & Analyze",
+                description: "Use our AI-powered tools to analyze artists, market trends, and investment opportunities."
+              },
+              {
+                step: "03",
+                title: "Invest & Track",
+                description: "Make informed investment decisions and track your portfolio performance in real-time."
+              }
+            ].map((step, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+                className="text-center"
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full text-white font-bold text-xl mb-6">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold mb-4 text-white">{step.title}</h3>
+                <p className="text-gray-300 leading-relaxed">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 px-4">
+        <div className="container max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl p-8 md:p-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Start Your Music Investment Journey?</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Join the future of music investment with our comprehensive AI-powered platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/register">
+                <Button size="lg" className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white px-8 py-3">
+                  Get Started Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 px-8 py-3">
+                  Talk to an Expert
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <Footer />
     </div>
-  );
-};
-
-const ServiceCard = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
-  return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">{service.title}</CardTitle>
-            <CardDescription className="line-clamp-2 mt-1">
-              {service.description}
-            </CardDescription>
-          </div>
-          <Badge variant={
-            service.category === 'production' ? 'default' :
-            service.category === 'mixing' ? 'secondary' :
-            service.category === 'mastering' ? 'destructive' :
-            service.category === 'marketing' ? 'outline' : 'default'
-          }>
-            {service.category}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-2 flex-1">
-        <div className="flex items-center text-sm mb-3">
-          <img 
-            src={provider.avatar} 
-            alt={provider.name} 
-            className="w-6 h-6 rounded-full mr-2" 
-          />
-          <span>{provider.name}</span>
-          <div className="flex items-center ml-auto">
-            <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 mr-1" />
-            <span>{provider.rating}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <div className="flex items-center">
-              <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-              <span>Price</span>
-            </div>
-            <span className="font-medium">${service.price.toLocaleString()}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-              <span>Duration</span>
-            </div>
-            <span>{service.duration}</span>
-          </div>
-          
-          <Separator className="my-2" />
-          
-          <div className="space-y-1">
-            {service.features.slice(0, 3).map((feature, i) => (
-              <div key={i} className="flex items-start">
-                <CheckCircle2 className="h-4 w-4 mr-2 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm">{feature}</span>
-              </div>
-            ))}
-            {service.features.length > 3 && (
-              <div className="text-sm text-muted-foreground pl-6">
-                +{service.features.length - 3} more features
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="pt-2 flex flex-col sm:flex-row gap-2 mt-auto">
-        <ContractDialog service={service} provider={provider} />
-        <Button className="w-full">Contact Provider</Button>
-      </CardFooter>
-    </Card>
-  );
-};
-
-const ProviderCard = ({ provider }: { provider: ServiceProvider }) => {
-  return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
-        <div className="flex gap-4 items-center">
-          <img 
-            src={provider.avatar} 
-            alt={provider.name} 
-            className="w-16 h-16 rounded-full object-cover" 
-          />
-          <div>
-            <CardTitle className="text-lg">{provider.name}</CardTitle>
-            <CardDescription className="mt-1">
-              {provider.title}
-            </CardDescription>
-            <div className="flex items-center mt-1 text-sm">
-              <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 mr-1" />
-              <span>{provider.rating}</span>
-              <span className="mx-2">•</span>
-              <span>{provider.completedProjects} projects</span>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-4 flex-1">
-        <p className="text-sm text-muted-foreground mb-4">{provider.bio}</p>
-        
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Services offered:</div>
-          <div className="flex flex-wrap gap-2">
-            {Array.from(new Set(provider.services.map(s => s.category))).map(category => (
-              <Badge variant="outline" key={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="pt-2">
-        <Button className="w-full">View Profile</Button>
-      </CardFooter>
-    </Card>
-  );
-};
-
-const FeaturedServiceCard = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
-  return (
-    <Card className="overflow-hidden">
-      <div className="bg-primary/10 p-2 text-center text-sm font-medium text-primary">
-        Featured Service
-      </div>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{service.title}</CardTitle>
-            <CardDescription className="mt-2">
-              By {provider.name} - {provider.title}
-            </CardDescription>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">${service.price.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground">{service.duration}</div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-0">
-        <p className="mb-4">{service.description}</p>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <div className="space-y-3">
-            <div className="font-medium flex items-center">
-              <Package className="h-4 w-4 mr-2" />
-              Key Features
-            </div>
-            <div className="space-y-1">
-              {service.features.slice(0, 5).map((feature, i) => (
-                <div key={i} className="flex items-start">
-                  <CheckCircle2 className="h-4 w-4 mr-2 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="font-medium flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Provider Details
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center">
-                <img 
-                  src={provider.avatar} 
-                  alt={provider.name} 
-                  className="w-8 h-8 rounded-full mr-2" 
-                />
-                <div>
-                  <div>{provider.name}</div>
-                  <div className="text-muted-foreground">{provider.location}</div>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 mr-1" />
-                <span>{provider.rating} rating</span>
-                <span className="mx-2">•</span>
-                <span>{provider.completedProjects} completed projects</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row gap-3">
-        <ContractDialog service={service} provider={provider} />
-        <Button className="w-full sm:flex-1">Book This Service</Button>
-      </CardFooter>
-    </Card>
-  );
-};
-
-const ContractDialog = ({ service, provider }: { service: Service, provider: ServiceProvider }) => {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full sm:flex-1 text-foreground">
-          <FileText className="mr-2 h-4 w-4" />
-          View Contract
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Service Contract - {service.title}</DialogTitle>
-          <DialogDescription>
-            Provided by {provider.name}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Service Agreement</h3>
-              <p className="text-sm text-muted-foreground">
-                This agreement is made between {provider.name} ("Provider") and the undersigned client ("Client")
-                for the provision of {service.title} as detailed below.
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">1. Services to be Provided</h4>
-              <p className="text-sm">{service.description}</p>
-              <div className="ml-4 mt-2 space-y-1">
-                {service.features.map((feature, i) => (
-                  <div key={i} className="text-sm flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">2. Duration and Timeline</h4>
-              <p className="text-sm">
-                The services will be provided over a period of {service.duration} from the commencement date
-                as agreed upon by both parties. Provider will adhere to the following timeline:
-              </p>
-              <div className="ml-4 mt-2 space-y-1 text-sm">
-                <div>• Project kickoff and initial consultation: Within 3 business days of payment</div>
-                <div>• First deliverable: 1 week after kickoff</div>
-                <div>• Revision period: 1-2 weeks</div>
-                <div>• Final deliverable: By end of contract period</div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">3. Compensation</h4>
-              <p className="text-sm">
-                The total fee for the services described herein is ${service.price.toLocaleString()} USD, 
-                payable as follows:
-              </p>
-              <div className="ml-4 mt-2 space-y-1 text-sm">
-                <div>• 50% non-refundable deposit due upon signing of this agreement</div>
-                <div>• 25% due upon delivery of first draft</div>
-                <div>• 25% due upon completion of the project</div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">4. Intellectual Property Rights</h4>
-              <p className="text-sm">
-                Upon receipt of full payment, Client will own the rights to the final deliverables, subject to 
-                the following limitations: Provider retains the right to showcase the work in their portfolio. 
-                Any third-party licenses (e.g., sample clearances, stock media) must be separately obtained by the Client.
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">5. Revisions and Additional Services</h4>
-              <p className="text-sm">
-                This agreement includes {service.category === 'production' ? 'three (3)' : 'two (2)'} rounds of revisions. 
-                Additional revisions or services will be billed at Provider's standard hourly rate of $200/hour, 
-                subject to Client's prior approval.
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">6. Cancellation Policy</h4>
-              <p className="text-sm">
-                If Client cancels the project after work has commenced, the following fees apply:
-              </p>
-              <div className="ml-4 mt-2 space-y-1 text-sm">
-                <div>• Within 48 hours of signing: 25% of total fee</div>
-                <div>• After first deliverable: 50% of total fee</div>
-                <div>• After revision phase begins: 75% of total fee</div>
-                <div>• Within final week of project: 100% of total fee</div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">7. Confidentiality</h4>
-              <p className="text-sm">
-                Provider agrees to keep confidential all proprietary information shared by Client during the course of this project.
-              </p>
-            </div>
-            
-            <div className="pt-4 pb-2">
-              <p className="text-sm text-muted-foreground italic">
-                This is a sample contract for demonstration purposes only. Actual contracts would be customized 
-                for each service and client. Legal consultation is recommended before signing any service agreement.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <Button variant="outline" className="text-foreground">Download PDF</Button>
-          <Button>Request Customization</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 };
 

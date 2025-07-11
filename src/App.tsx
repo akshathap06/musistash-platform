@@ -34,7 +34,14 @@ import InvestmentTools from "./pages/InvestmentTools";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <div className="min-h-screen bg-[rgb(15,18,22)] text-white">
@@ -72,7 +79,6 @@ const App = () => (
               <Route path="/artist-services" element={<ArtistServices />} />
               <Route path="/investor-services" element={<InvestorServices />} />
               <Route path="/legal" element={<Legal />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

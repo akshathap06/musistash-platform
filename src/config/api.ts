@@ -1,3 +1,4 @@
+
 // API Configuration
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
@@ -5,7 +6,9 @@ export const API_ENDPOINTS = {
   analyzeArtist: (name: string, compareArtist?: string) => {
     const baseUrl = `${BACKEND_URL}/analyze-artist/${encodeURIComponent(name)}`;
     return compareArtist ? `${baseUrl}?comparable_artist=${encodeURIComponent(compareArtist)}` : baseUrl;
-  }
+  },
+  googleAuth: () => `${BACKEND_URL}/auth/google`,
+  artistStats: (artistId: string) => `${BACKEND_URL}/artist/${encodeURIComponent(artistId)}/stats`
 } as const;
 
 // Google OAuth configuration

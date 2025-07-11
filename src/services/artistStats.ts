@@ -9,6 +9,24 @@ export interface ArtistStats {
   followers: number;
   genres: string[];
   topTracks: string[];
+  playcount?: number;
+  albums?: Array<any>;
+  trackStats?: Array<any>;
+  stats?: Array<{
+    category: string;
+    value: string;
+    change?: number;
+  }>;
+  image?: {
+    url: string;
+    alt: string;
+  };
+  popularityAnalysis?: {
+    trend: string;
+    score: number;
+    growth: number;
+    risk: number;
+  };
 }
 
 export const fetchArtistStats = async (artistId: string): Promise<ArtistStats> => {
@@ -23,6 +41,22 @@ export const fetchArtistStats = async (artistId: string): Promise<ArtistStats> =
     return data;
   } catch (error) {
     console.error('Error fetching artist stats:', error);
+    throw error;
+  }
+};
+
+export const getArtistStats = async (artistName: string): Promise<ArtistStats> => {
+  try {
+    const response = await fetch(API_ENDPOINTS.analyzeArtist(artistName));
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get artist stats: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting artist stats:', error);
     throw error;
   }
 };

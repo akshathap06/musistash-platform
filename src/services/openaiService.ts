@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { ArtistStats } from './artistStats';
 
@@ -30,7 +29,7 @@ export const getArtistInsights = async (
       Artist: ${artistStats.name}
       Monthly Listeners: ${artistStats.monthlyListeners?.toLocaleString() || 'Unknown'}
       Total Plays: ${artistStats.playcount?.toLocaleString() || 'Unknown'}
-      Followers: ${artistStats.followers?.total.toLocaleString() || 'Unknown'}
+      Followers: ${artistStats.followers?.toLocaleString() || 'Unknown'}
       
       Albums: ${artistStats.albums?.length || 0}
       Top Tracks: ${artistStats.trackStats?.length || 0}
@@ -111,7 +110,7 @@ const extractInsight = (text: string, category: string): string => {
 
 // Simulated insights for when API key is not available
 export const getSimulatedInsights = (artistStats: ArtistStats): ArtistInsights => {
-  const popularity = artistStats.followers?.total || 0;
+  const popularity = artistStats.followers || 0;
   const isPopular = popularity > 1000000;
   
   return {

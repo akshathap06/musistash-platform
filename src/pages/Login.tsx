@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { AlertCircle } from 'lucide-react';
-import GoogleSignIn from '@/components/ui/GoogleSignIn';
+import { GoogleSignIn } from '@/components/ui/GoogleSignIn';
 
 const Login = () => {
   const navigate = useNavigate();

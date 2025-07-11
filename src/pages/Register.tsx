@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { AlertCircle, Shield, Zap, Users, Music, Headphones, Briefcase } from 'lucide-react';
-import GoogleSignIn from '@/components/ui/GoogleSignIn';
+import { GoogleSignIn } from '@/components/ui/GoogleSignIn';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 

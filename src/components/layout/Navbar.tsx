@@ -61,116 +61,124 @@ const Navbar = () => {
     >
       <div className="container max-w-7xl mx-auto px-4">
         <nav className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="group">
-            <span className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text transition-all duration-300 group-hover:opacity-80">
-              Musi$tash
-            </span>
-          </Link>
+          {/* Logo and Navigation Menu - Left Side */}
+          <div className="flex items-center space-x-8">
+            {/* Logo */}
+            <Link to="/" className="group flex items-center space-x-3">
+              <img 
+                src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
+                alt="MusiStash Logo" 
+                className="h-8 w-auto transition-all duration-300 group-hover:opacity-80"
+              />
+              <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text transition-all duration-300 group-hover:opacity-80">
+                Musi$tash
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            <NavigationMenu>
-              <NavigationMenuList>
-                {/* Platform Menu */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      <ListItem href="/how-it-works" title="How It Works">
-                        Learn about our revolutionary music investment platform
-                      </ListItem>
-                      <ListItem href="/discover-projects" title="Discover Projects">
-                        Browse and invest in upcoming music projects
-                      </ListItem>
-                      <ListItem href="/browse-artists" title="Browse Artists">
-                        Explore our diverse roster of talented artists
-                      </ListItem>
-                      <ListItem href="/artist-feuds" title="Artist Feuds">
-                        Compare artists and analyze investment potential
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <NavigationMenu>
+                <NavigationMenuList>
+                  {/* Platform Menu */}
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                        <ListItem href="/how-it-works" title="How It Works">
+                          Learn about our revolutionary music investment platform
+                        </ListItem>
+                        <ListItem href="/discover-projects" title="Discover Projects">
+                          Browse and invest in upcoming music projects
+                        </ListItem>
+                        <ListItem href="/browse-artists" title="Browse Artists">
+                          Explore our diverse roster of talented artists
+                        </ListItem>
+                        <ListItem href="/artist-feuds" title="Artist Feuds">
+                          Compare artists and analyze investment potential
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-                {/* Services Menu */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Services</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      <ListItem href="/services" title="Our Services">
-                        Comprehensive services for artists and investors
-                      </ListItem>
-                      <ListItem href="/ai-tools" title="AI Tools">
-                        Advanced AI-powered analytics and insights
-                      </ListItem>
-                      <ListItem href="/investment-tools" title="Investment Tools">
-                        Tools to help you make informed investment decisions
-                      </ListItem>
-                      <ListItem href="/artist-services" title="Artist Services">
-                        Resources and support for artists
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+                  {/* Services Menu */}
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>Services</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                        <ListItem href="/services" title="Our Services">
+                          Comprehensive services for artists and investors
+                        </ListItem>
+                        <ListItem href="/ai-tools" title="AI Tools">
+                          Advanced AI-powered analytics and insights
+                        </ListItem>
+                        <ListItem href="/investment-tools" title="Investment Tools">
+                          Tools to help you make informed investment decisions
+                        </ListItem>
+                        <ListItem href="/artist-services" title="Artist Services">
+                          Resources and support for artists
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-                {/* Company Menu */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Company</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4">
-                      <ListItem href="/about" title="About Us">
-                        Our mission to revolutionize music investment
-                      </ListItem>
-                      <ListItem href="/careers" title="Careers">
-                        Join our team and shape the future of music
-                      </ListItem>
-                      <ListItem href="/contact" title="Contact">
-                        Get in touch with our team
-                      </ListItem>
-                      <ListItem href="/blog" title="Blog">
-                        Latest news and insights
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+                  {/* Company Menu */}
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>Company</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4">
+                        <ListItem href="/about" title="About Us">
+                          Our mission to revolutionize music investment
+                        </ListItem>
+                        <ListItem href="/careers" title="Careers">
+                          Join our team and shape the future of music
+                        </ListItem>
+                        <ListItem href="/contact" title="Contact">
+                          Get in touch with our team
+                        </ListItem>
+                        <ListItem href="/blog" title="Blog">
+                          Latest news and insights
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-                {/* Legal Menu */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger>Legal</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4">
-                      <ListItem href="/terms" title="Terms of Service">
-                        Platform terms and conditions
-                      </ListItem>
-                      <ListItem href="/privacy" title="Privacy Policy">
-                        How we handle your data
-                      </ListItem>
-                      <ListItem href="/cookie-policy" title="Cookie Policy">
-                        Our cookie usage policy
-                      </ListItem>
-                      <ListItem href="/security" title="Security">
-                        Our commitment to your security
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* Auth Buttons */}
-            <div className="flex items-center space-x-2">
-              <Link to="/login">
-                <Button variant="ghost" className="text-sm font-medium">
-                  Log In
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="default" className="text-sm font-medium">
-                  Sign Up
-                </Button>
-              </Link>
+                  {/* Legal Menu */}
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger>Legal</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4">
+                        <ListItem href="/terms" title="Terms of Service">
+                          Platform terms and conditions
+                        </ListItem>
+                        <ListItem href="/privacy" title="Privacy Policy">
+                          How we handle your data
+                        </ListItem>
+                        <ListItem href="/cookie-policy" title="Cookie Policy">
+                          Our cookie usage policy
+                        </ListItem>
+                        <ListItem href="/security" title="Security">
+                          Our commitment to your security
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
             </div>
+          </div>
+
+          {/* Auth Buttons - Right Side */}
+          <div className="flex items-center space-x-2">
+            <Link to="/login">
+              <Button variant="ghost" className="text-sm font-medium">
+                Log In
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button variant="default" className="text-sm font-medium">
+                Sign Up
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

@@ -83,16 +83,51 @@ const Index = () => {
             </div>
 
             {/* Right Column - AI Tool */}
-            <div className="lg:col-span-7">
-              <div className="sticky top-24" ref={aiToolRef}>
-                <div className="bg-[#1a1b26] rounded-xl p-8 border border-gray-800 shadow-2xl">
-                  <div className="mb-8">
-                    <h3 className="text-xl font-mono text-white mb-2 flex items-center gap-2">
-                      <span className="text-blue-400">{">"}</span> AI Recommendation Tool
-                    </h3>
-                    <p className="text-gray-400">Discover any artist's commercial potential instantly</p>
+            <div className="lg:col-span-7 flex items-center">
+              <div className="w-full mt-12 lg:mt-24" ref={aiToolRef}>
+                {/* Vibrant container with glow effects */}
+                <div className="relative">
+                  {/* Animated background glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur-xl animate-pulse"></div>
+                  <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-75 animate-pulse"></div>
+                  
+                  {/* Main container */}
+                  <div className="relative bg-gradient-to-br from-[#1a1b26] via-[#1e2030] to-[#1a1b26] rounded-2xl p-8 border border-blue-500/30 shadow-2xl backdrop-blur-sm">
+                    {/* Header with enhanced styling */}
+                    <div className="mb-8 text-center">
+                      <div className="inline-flex items-center gap-3 mb-4 px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
+                        <Sparkles className="h-5 w-5 text-blue-400 animate-pulse" />
+                        <span className="text-blue-400 font-medium">AI-Powered Analysis</span>
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                        AI Recommendation Tool
+                      </h3>
+                      <p className="text-gray-300 text-lg">Discover any artist's commercial potential instantly</p>
+                    </div>
+                    
+                    {/* Enhanced AI Tool component */}
+                    <div className="relative">
+                      <AIRecommendationTool />
+                    </div>
+                    
+                    {/* Bottom accent */}
+                    <div className="mt-6 pt-6 border-t border-gray-700/50">
+                      <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                          Live Data
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                          AI Analysis
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+                          Real-time Results
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <AIRecommendationTool />
                 </div>
               </div>
             </div>

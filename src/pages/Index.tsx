@@ -553,14 +553,14 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               {/* Artist Card 1 */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-full overflow-hidden">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
                         <img 
                           src="https://images.unsplash.com/photo-1494790108377-be9c29b29330"
                           alt="Aria Luna"
@@ -568,35 +568,35 @@ const Index = () => {
                         />
                       </div>
                       <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                         </svg>
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Aria Luna</h3>
-                      <p className="text-gray-400">Electro-Pop, Alternative</p>
+                      <h3 className="text-lg md:text-xl font-semibold text-white">Aria Luna</h3>
+                      <p className="text-gray-400 text-sm md:text-base">Electro-Pop, Alternative</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-2 md:space-y-4">
                     <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-yellow-500" />
-                      <span className="text-gray-300">Resonance Score: 92%</span>
+                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 92%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-500" />
-                      <span className="text-gray-300">15.2K Monthly Listeners</span>
+                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+                      <span className="text-gray-300 text-sm md:text-base">15.2K Monthly Listeners</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-purple-500" />
-                      <span className="text-gray-300">Trending: +127% this month</span>
+                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Trending: +127% this month</span>
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div className="mt-4 md:mt-6">
                     <Link to="/artist/aria-luna">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity">
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
                         View Profile
                       </Button>
                     </Link>
@@ -607,10 +607,10 @@ const Index = () => {
               {/* Artist Card 2 */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-full overflow-hidden">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
                         <img 
                           src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
                           alt="Nexus Rhythm"
@@ -618,35 +618,35 @@ const Index = () => {
                         />
                       </div>
                       <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                         </svg>
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Nexus Rhythm</h3>
-                      <p className="text-gray-400">Hip-Hop, R&B</p>
+                      <h3 className="text-lg md:text-xl font-semibold text-white">Nexus Rhythm</h3>
+                      <p className="text-gray-400 text-sm md:text-base">Hip-Hop, R&B</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-2 md:space-y-4">
                     <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-yellow-500" />
-                      <span className="text-gray-300">Resonance Score: 88%</span>
+                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 88%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-500" />
-                      <span className="text-gray-300">22.8K Monthly Listeners</span>
+                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+                      <span className="text-gray-300 text-sm md:text-base">22.8K Monthly Listeners</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-purple-500" />
-                      <span className="text-gray-300">Trending: +95% this month</span>
+                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Trending: +95% this month</span>
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div className="mt-4 md:mt-6">
                     <Link to="/artist/nexus-rhythm">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity">
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
                         View Profile
                       </Button>
                     </Link>
@@ -657,10 +657,10 @@ const Index = () => {
               {/* Artist Card 3 */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-full overflow-hidden">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
                         <img 
                           src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6"
                           alt="Echo Horizon"
@@ -668,35 +668,35 @@ const Index = () => {
                         />
                       </div>
                       <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                         </svg>
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Echo Horizon</h3>
-                      <p className="text-gray-400">Indie Rock, Shoegaze</p>
+                      <h3 className="text-lg md:text-xl font-semibold text-white">Echo Horizon</h3>
+                      <p className="text-gray-400 text-sm md:text-base">Indie Rock, Shoegaze</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-2 md:space-y-4">
                     <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-yellow-500" />
-                      <span className="text-gray-300">Resonance Score: 85%</span>
+                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 85%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-500" />
-                      <span className="text-gray-300">18.5K Monthly Listeners</span>
+                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+                      <span className="text-gray-300 text-sm md:text-base">18.5K Monthly Listeners</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-purple-500" />
-                      <span className="text-gray-300">Trending: +82% this month</span>
+                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+                      <span className="text-gray-300 text-sm md:text-base">Trending: +82% this month</span>
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div className="mt-4 md:mt-6">
                     <Link to="/artist/echo-horizon">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity">
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
                         View Profile
                       </Button>
                     </Link>

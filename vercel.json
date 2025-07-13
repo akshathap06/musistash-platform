@@ -1,0 +1,42 @@
+
+{
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://musistash-production.up.railway.app",
+      "VITE_GOOGLE_CLIENT_ID": "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
+    }
+  },
+  "env": {
+    "VITE_API_URL": "https://musistash-production.up.railway.app",
+    "VITE_GOOGLE_CLIENT_ID": "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "test@example.com": {
+    "id": "user_1_4e85e66d",
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "b55c8792d1ce458e279308835f8a97b580263503e76e1998e279703e35ad0c2e",
+    "role": "listener",
+    "created_at": "2025-06-30T14:58:21.949117"
+  }
+}

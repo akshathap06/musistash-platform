@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { X, Menu } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -167,8 +169,8 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Auth Buttons - Right Side */}
-          <div className="flex items-center space-x-2">
+          {/* Desktop Auth Buttons - Right Side */}
+          <div className="hidden md:flex items-center space-x-2">
             <Link to="/login">
               <Button variant="ghost" className="text-sm font-medium">
                 Log In
@@ -182,12 +184,114 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <Button variant="ghost" className="md:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <Button 
+            variant="ghost" 
+            className="md:hidden p-2" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </Button>
         </nav>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-800 bg-[#0f1216]/95 backdrop-blur-md">
+            <div className="px-4 py-6 space-y-6">
+              {/* Mobile Auth Buttons */}
+              <div className="flex flex-col space-y-3">
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full text-left justify-start">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="default" className="w-full">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Mobile Navigation Links */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Platform</h3>
+                  <div className="space-y-2">
+                    <Link to="/how-it-works" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      How It Works
+                    </Link>
+                    <Link to="/discover-projects" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Discover Projects
+                    </Link>
+                    <Link to="/browse-artists" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Browse Artists
+                    </Link>
+                    <Link to="/artist-feuds" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Artist Feuds
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Services</h3>
+                  <div className="space-y-2">
+                    <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Our Services
+                    </Link>
+                    <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      AI Tools
+                    </Link>
+                    <Link to="/investment-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Investment Tools
+                    </Link>
+                    <Link to="/artist-services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Artist Services
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Company</h3>
+                  <div className="space-y-2">
+                    <Link to="/about" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      About Us
+                    </Link>
+                    <Link to="/careers" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Careers
+                    </Link>
+                    <Link to="/contact" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Contact
+                    </Link>
+                    <Link to="/blog" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Blog
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Legal</h3>
+                  <div className="space-y-2">
+                    <Link to="/terms" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Terms of Service
+                    </Link>
+                    <Link to="/privacy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Privacy Policy
+                    </Link>
+                    <Link to="/cookie-policy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Cookie Policy
+                    </Link>
+                    <Link to="/security" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
+                      Security
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

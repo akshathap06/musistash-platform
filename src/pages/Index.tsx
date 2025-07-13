@@ -535,6 +535,105 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Meet Our Founder */}
+        <section className="py-24 px-4 md:px-6 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+          </div>
+
+          <div className="max-w-7xl mx-auto relative">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+                Meet Our Founder
+              </h2>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              {/* Founder Bio */}
+              <div className="relative mb-16">
+                <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-75"></div>
+                <div className="relative bg-[#151823] rounded-xl p-8 md:p-12 border border-gray-800/50">
+                  <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-6">
+                    Akshat Thapliyal is an AI engineer and music-tech builder focused on creating a fairer financial system for artists and fans. After developing LLM-powered platforms for Fortune 500s and generating $2M+ in impact at Sorba.AI, he turned his focus to the music industry—where artists are underpaid and fans have no stake.
+                  </p>
+                  <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
+                    He founded MusiStash to flip that model. With a deep background in data and a passion for equity-driven design, Akshat is building a platform where fans invest in music they believe in—and artists keep creative control.
+                  </p>
+                </div>
+              </div>
+
+              {/* Platform Goals */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                {/* Goal 1 */}
+                <div className="group relative">
+                  <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative bg-[#151823] rounded-xl p-6 md:p-8 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white">Empower Artists</h3>
+                    </div>
+                    <p className="text-gray-300 leading-relaxed">
+                      Give artists direct access to funding while maintaining full creative control and ownership of their work.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Goal 2 */}
+                <div className="group relative">
+                  <div className="absolute inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative bg-[#151823] rounded-xl p-6 md:p-8 h-full border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white">Connect Fans</h3>
+                    </div>
+                    <p className="text-gray-300 leading-relaxed">
+                      Enable fans to invest in artists they believe in and share in their success through equity participation.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Goal 3 */}
+                <div className="group relative">
+                  <div className="absolute inset-0.5 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative bg-[#151823] rounded-xl p-6 md:p-8 h-full border border-gray-800/50 hover:border-green-500/50 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <Search className="w-6 h-6 text-green-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white">AI-Driven Insights</h3>
+                    </div>
+                    <p className="text-gray-300 leading-relaxed">
+                      Provide data-driven investment recommendations using advanced AI to predict commercial success.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Goal 4 */}
+                <div className="group relative">
+                  <div className="absolute inset-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative bg-[#151823] rounded-xl p-6 md:p-8 h-full border border-gray-800/50 hover:border-yellow-500/50 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <Star className="w-6 h-6 text-yellow-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white">Transform the Industry</h3>
+                    </div>
+                    <p className="text-gray-300 leading-relaxed">
+                      Revolutionize music investment by creating a fair, transparent, and equitable ecosystem for all.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Featured Artists */}
         <section className="py-24 px-4 md:px-6 relative overflow-hidden">
           {/* Background Elements */}

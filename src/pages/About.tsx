@@ -124,25 +124,22 @@ const About = () => {
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-25"></div>
                 <div className="relative bg-[#151823] rounded-xl p-8 border border-gray-800/50">
                   <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                    Akshat is a quant & AI engineering enthusiast who builds intelligent systems at the intersection of AI, finance, and creative technology. Currently serving as an AI Data Science Intern at Sorba.AI, he has co-developed and fine-tuned custom transformer-based LLMs for major clients including Coca-Cola and Johnson & Johnson.
-                  </p>
-                  <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                    His work has delivered tangible results: improving predictive maintenance accuracy by 35%, reducing unplanned equipment failures by 22%, and integrating LLMs into IoT platforms that generated $2.1M in estimated annual savings.
+                    Akshat Thapliyal is an AI engineer and music-tech builder focused on creating a fairer financial system for artists and fans. After developing LLM-powered platforms for Fortune 500s and generating $2M+ in impact at Sorba.AI, he turned his focus to the music industry—where artists are underpaid and fans have no stake.
                   </p>
                   <p className="text-gray-300 text-lg leading-relaxed">
-                    Through his experience in fintech research at MicroSave Consulting, where he conducted extensive AgriTech market research and facilitated over 25 key partnership meetings, Akshat recognized the need for a more equitable music industry ecosystem—leading to the creation of Musi$tash.
+                    He founded MusiStash to flip that model. With a deep background in data and a passion for equity-driven design, Akshat is building a platform where fans invest in music they believe in—and artists keep creative control.
                   </p>
                 </div>
               </div>
 
-              {/* Achievements */}
+              {/* Platform Goals */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
                   <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
                     <div className="flex items-center space-x-4">
-                      <span className="text-3xl">🤖</span>
-                      <p className="text-gray-300">Co-developed custom LLMs for Fortune 500 companies</p>
+                      <span className="text-3xl">🎨</span>
+                      <p className="text-gray-300">Empower Artists with Direct Funding</p>
                     </div>
                   </div>
                 </div>
@@ -151,8 +148,8 @@ const About = () => {
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
                   <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
                     <div className="flex items-center space-x-4">
-                      <span className="text-3xl">📊</span>
-                      <p className="text-gray-300">35% improvement in predictive maintenance</p>
+                      <span className="text-3xl">🤝</span>
+                      <p className="text-gray-300">Connect Fans Through Equity Investment</p>
                     </div>
                   </div>
                 </div>
@@ -161,8 +158,8 @@ const About = () => {
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
                   <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
                     <div className="flex items-center space-x-4">
-                      <span className="text-3xl">💰</span>
-                      <p className="text-gray-300">$2.1M in estimated annual savings</p>
+                      <span className="text-3xl">🧠</span>
+                      <p className="text-gray-300">AI-Driven Investment Insights</p>
                     </div>
                   </div>
                 </div>
@@ -171,8 +168,8 @@ const About = () => {
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-pink-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
                   <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
                     <div className="flex items-center space-x-4">
-                      <span className="text-3xl">🎵</span>
-                      <p className="text-gray-300">Founded Musi$tash to revolutionize music investment</p>
+                      <span className="text-3xl">⚖️</span>
+                      <p className="text-gray-300">Transform Music Industry Equity</p>
                     </div>
                   </div>
                 </div>

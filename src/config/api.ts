@@ -5,7 +5,9 @@ export const API_ENDPOINTS = {
   analyzeArtist: (name: string, compareArtist?: string) => {
     const baseUrl = `${BACKEND_URL}/analyze-artist/${encodeURIComponent(name)}`;
     return compareArtist ? `${baseUrl}?comparable_artist=${encodeURIComponent(compareArtist)}` : baseUrl;
-  }
+  },
+  googleAuth: () => `${BACKEND_URL}/auth/google`,
+  artistStats: (name: string) => `${BACKEND_URL}/artist-stats/${encodeURIComponent(name)}`
 } as const;
 
 // Google OAuth configuration

@@ -242,12 +242,12 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
               {/* Project Card 1 */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative bg-[#151823] rounded-xl overflow-hidden border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="relative h-48">
+                  <div className="relative h-32 md:h-48">
                     <img 
                       src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f" 
                       alt="Studio Setup" 
@@ -261,36 +261,32 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">Lunar Echoes - Debut Album</h3>
-                    <p className="text-gray-400 text-sm mb-4">My first full-length album exploring themes of technology and human connection</p>
+                  <div className="p-3 md:p-6">
+                    <h3 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2">Lunar Echoes - Debut Album</h3>
+                    <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2 md:line-clamp-none">My first full-length album exploring themes of technology and human connection</p>
                     
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">$32,500</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-blue-400">7.5% ROI</span>
-                      </div>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 md:mb-3 gap-1 md:gap-2">
+                      <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">$32,500</span>
+                      <span className="text-sm md:text-lg font-semibold text-blue-400">7.5% ROI</span>
                     </div>
                     
-                    <div className="relative w-full h-2 bg-gray-800/50 rounded-full mb-3 overflow-hidden">
+                    <div className="relative w-full h-1.5 md:h-2 bg-gray-800/50 rounded-full mb-2 md:mb-3 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: '65%' }}></div>
                     </div>
                     
-                    <div className="flex justify-between text-sm mb-4">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 md:mb-4">
                       <span className="text-gray-400">65% Funded</span>
                       <span className="text-gray-400">0 days left</span>
                     </div>
                     
-                    <div className="flex gap-2 mb-4 flex-wrap">
+                    <div className="hidden md:flex gap-2 mb-4 flex-wrap">
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">producer</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">studio</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">marketing</span>
                     </div>
                     
                     <Link to="/project/lunar-echoes">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-all duration-300">
+                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-all duration-300 text-xs md:text-sm py-2 md:py-3">
                         View Project
                       </Button>
                     </Link>
@@ -302,7 +298,7 @@ const Index = () => {
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative bg-[#151823] rounded-xl overflow-hidden border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300">
-                  <div className="relative h-48">
+                  <div className="relative h-32 md:h-48">
                     <img 
                       src="https://images.unsplash.com/photo-1501612780327-45045538702b" 
                       alt="Live Performance" 
@@ -316,36 +312,32 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">Urban Perspectives - Mixtape</h3>
-                    <p className="text-gray-400 text-sm mb-4">A collaborative mixtape featuring emerging artists from across the city</p>
+                  <div className="p-3 md:p-6">
+                    <h3 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2">Urban Perspectives - Mixtape</h3>
+                    <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2 md:line-clamp-none">A collaborative mixtape featuring emerging artists from across the city</p>
                     
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">$58,000</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-purple-400">10% ROI</span>
-                      </div>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 md:mb-3 gap-1 md:gap-2">
+                      <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">$58,000</span>
+                      <span className="text-sm md:text-lg font-semibold text-purple-400">10% ROI</span>
                     </div>
                     
-                    <div className="relative w-full h-2 bg-gray-800/50 rounded-full mb-3 overflow-hidden">
+                    <div className="relative w-full h-1.5 md:h-2 bg-gray-800/50 rounded-full mb-2 md:mb-3 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: '77%' }}></div>
                     </div>
                     
-                    <div className="flex justify-between text-sm mb-4">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 md:mb-4">
                       <span className="text-gray-400">77% Funded</span>
                       <span className="text-gray-400">0 days left</span>
                     </div>
                     
-                    <div className="flex gap-2 mb-4 flex-wrap">
+                    <div className="hidden md:flex gap-2 mb-4 flex-wrap">
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">producer</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">studio</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">marketing</span>
                     </div>
                     
                     <Link to="/project/urban-perspectives">
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 transition-all duration-300">
+                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 transition-all duration-300 text-xs md:text-sm py-2 md:py-3">
                         View Project
                       </Button>
                     </Link>
@@ -357,7 +349,7 @@ const Index = () => {
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative bg-[#151823] rounded-xl overflow-hidden border border-gray-800/50 hover:border-pink-500/50 transition-all duration-300">
-                  <div className="relative h-48">
+                  <div className="relative h-32 md:h-48">
                     <img 
                       src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae" 
                       alt="Neon Sign" 
@@ -371,36 +363,32 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">Endless Horizons - EP</h3>
-                    <p className="text-gray-400 text-sm mb-4">A 5-track EP exploring atmospheric soundscapes and emotional narratives</p>
+                  <div className="p-3 md:p-6">
+                    <h3 className="text-sm md:text-xl font-bold text-white mb-1 md:mb-2">Endless Horizons - EP</h3>
+                    <p className="text-gray-400 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2 md:line-clamp-none">A 5-track EP exploring atmospheric soundscapes and emotional narratives</p>
                     
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 text-transparent bg-clip-text">$21,000</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-pink-400">6% ROI</span>
-                      </div>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 md:mb-3 gap-1 md:gap-2">
+                      <span className="text-lg md:text-2xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 text-transparent bg-clip-text">$21,000</span>
+                      <span className="text-sm md:text-lg font-semibold text-pink-400">6% ROI</span>
                     </div>
                     
-                    <div className="relative w-full h-2 bg-gray-800/50 rounded-full mb-3 overflow-hidden">
+                    <div className="relative w-full h-1.5 md:h-2 bg-gray-800/50 rounded-full mb-2 md:mb-3 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-blue-500 rounded-full" style={{ width: '60%' }}></div>
                     </div>
                     
-                    <div className="flex justify-between text-sm mb-4">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 md:mb-4">
                       <span className="text-gray-400">60% Funded</span>
                       <span className="text-gray-400">0 days left</span>
                     </div>
                     
-                    <div className="flex gap-2 mb-4 flex-wrap">
+                    <div className="hidden md:flex gap-2 mb-4 flex-wrap">
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">producer</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">studio</span>
                       <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-800/50 text-gray-300 border border-gray-700/50">marketing</span>
                     </div>
                     
                     <Link to="/project/endless-horizons">
-                      <Button className="w-full bg-gradient-to-r from-pink-500 to-blue-500 text-white hover:opacity-90 transition-all duration-300">
+                      <Button className="w-full bg-gradient-to-r from-pink-500 to-blue-500 text-white hover:opacity-90 transition-all duration-300 text-xs md:text-sm py-2 md:py-3">
                         View Project
                       </Button>
                     </Link>
@@ -441,18 +429,18 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               {/* Smart Analysis Card */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-8 h-full border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                      <Search className="w-6 h-6 text-purple-400" />
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-8 h-full border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                      <Search className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white">Smart Analysis</h3>
+                    <h3 className="text-lg md:text-2xl font-bold text-white">Smart Analysis</h3>
                   </div>
-                  <p className="text-gray-300 text-lg leading-relaxed">
+                  <p className="text-gray-300 text-sm md:text-lg leading-relaxed">
                     Our AI analyzes audio features, market trends, and commercial patterns to predict an artist's potential for mainstream success.
                   </p>
                   <div className="mt-6 space-y-3">
@@ -475,14 +463,14 @@ const Index = () => {
               {/* Resonance Score Card */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-8 h-full border border-gray-800/50 hover:border-pink-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                      <Star className="w-6 h-6 text-pink-400" />
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-8 h-full border border-gray-800/50 hover:border-pink-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                      <Star className="w-5 h-5 md:w-6 md:h-6 text-pink-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white">Resonance Score</h3>
+                    <h3 className="text-lg md:text-2xl font-bold text-white">Resonance Score</h3>
                   </div>
-                  <p className="text-gray-300 text-lg leading-relaxed">
+                  <p className="text-gray-300 text-sm md:text-lg leading-relaxed">
                     Get a clear percentage score showing how similar an artist's sound is to proven commercially successful artists.
                   </p>
                   <div className="mt-6 space-y-3">
@@ -505,14 +493,14 @@ const Index = () => {
               {/* Investment Edge Card */}
               <div className="group relative">
                 <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-8 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-blue-400" />
+                <div className="relative bg-[#151823] rounded-xl p-4 md:p-8 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
+                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white">Investment Edge</h3>
+                    <h3 className="text-lg md:text-2xl font-bold text-white">Investment Edge</h3>
                   </div>
-                  <p className="text-gray-300 text-lg leading-relaxed">
+                  <p className="text-gray-300 text-sm md:text-lg leading-relaxed">
                     Make informed investment decisions based on data, not just gut feeling. Reduce risk and maximize potential returns.
                   </p>
                   <div className="mt-6 space-y-3">

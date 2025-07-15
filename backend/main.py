@@ -137,7 +137,7 @@ except Exception as e:
     soundcharts_client = None
 
 # Google OAuth Configuration
-GOOGLE_CLIENT_ID = "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com"
 
 # JWT Configuration
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-this-in-production")
@@ -5478,4 +5478,4 @@ def cache_similarity(key: str, data: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

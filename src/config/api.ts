@@ -1,5 +1,5 @@
 // API Configuration
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+export const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
 export const API_ENDPOINTS = {
   analyzeArtist: (name: string, compareArtist?: string) => {
@@ -22,8 +22,16 @@ if (import.meta.env.MODE === 'development') {
     GOOGLE_CLIENT_ID,
     mode: import.meta.env.MODE,
     envVars: {
+      VITE_API_URL: import.meta.env.VITE_API_URL,
       VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
       VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
     }
+  });
+} else {
+  // Production logging
+  console.log('🚀 Production API Configuration:', {
+    BACKEND_URL,
+    isProduction: true,
+    mode: import.meta.env.MODE
   });
 } 

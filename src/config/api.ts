@@ -1,5 +1,6 @@
 // API Configuration
-export const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+export const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 
+  (import.meta.env.MODE === 'production' ? 'https://musistash-production.up.railway.app' : 'http://localhost:8000');
 
 export const API_ENDPOINTS = {
   analyzeArtist: (name: string, compareArtist?: string) => {
@@ -12,7 +13,7 @@ export const API_ENDPOINTS = {
 
 // Google OAuth configuration
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 
-  "700682656483-ovptamritkbqnbrj7hosfkk00m6ad8ik.apps.googleusercontent.com";
+  "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com";
 
 // Debug logging for development
 if (import.meta.env.MODE === 'development') {

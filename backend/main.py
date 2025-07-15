@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Body, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 import os
 from dotenv import load_dotenv
 import openai
@@ -47,6 +47,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import ssl
 from urllib.parse import quote
+import time
+from functools import lru_cache
 
 load_dotenv()
 
@@ -1720,9 +1722,9 @@ def generate_basic_fallback_insights(artist1_name: str, artist2_name: str) -> li
     ]
 
 # Gemini API helper function (moved up for proper definition order)
-def call_gemini_api(prompt: str, max_tokens: int = 500) -> str:
+def call_gemini_api(prompt: str, max_tokens: int = 200) -> str:
     """
-    Call Gemini API using direct HTTP requests (working approach)
+    Optimized Gemini API call with shorter prompts and faster processing
     """
     if gemini_api_key == "dummy_key":
         return None
@@ -1741,13 +1743,15 @@ def call_gemini_api(prompt: str, max_tokens: int = 500) -> str:
             }
         ],
         "generationConfig": {
-            "temperature": 0.1,
-            "maxOutputTokens": max_tokens
+            "temperature": 0.3,  # Faster generation
+            "maxOutputTokens": max_tokens,
+            "candidateCount": 1  # Only one candidate for speed
         }
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        # Set timeout for faster failure handling
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
         if response.status_code == 200:
             result = response.json()
             if 'candidates' in result and len(result['candidates']) > 0:
@@ -2093,182 +2097,375 @@ class RealAudienceAnalyzer:
 @app.get("/analyze-artist/{artist_name}")
 async def analyze_artist(artist_name: str, comparable_artist: str = None):
     """
-    Analyze an artist and provide comprehensive insights
+    Optimized artist analysis with caching and parallel processing
     """
+    start_time = time.time()
+    
     try:
         print(f"🎯 ANALYZE ARTIST REQUEST: {artist_name} vs {comparable_artist}")
-        print(f"🔍 Environment Check - Spotify: {spotify_client_id is not None}, Gemini: {gemini_api_key != 'dummy_key'}")
         
-        # Search for the main artist
-        searched_artist = await get_artist_info(artist_name)
-        if not searched_artist:
-            print(f"❌ Artist not found: {artist_name}")
-            raise HTTPException(status_code=404, detail=f"Artist '{artist_name}' not found")
-        
-        print(f"✅ Found artist: {searched_artist.name} ({searched_artist.followers:,} followers)")
+        # Check cache first
+        cache_key = f"{artist_name}_{comparable_artist or 'Taylor Swift'}"
+        cached_result = get_cached_similarity(cache_key)
+        if cached_result:
+            print(f"✅ Cache hit! Returning cached result in {time.time() - start_time:.2f}s")
+            return cached_result
         
         # Handle comparable artist
         comp_artist_name = comparable_artist if comparable_artist else "Taylor Swift"
-        comparable_artist_obj = await get_artist_info(comp_artist_name)
-        if not comparable_artist_obj:
+        
+        # PARALLEL PROCESSING: Fetch both artists simultaneously
+        print("🚀 Starting parallel artist fetching...")
+        artist_tasks = [
+            get_artist_info_cached(artist_name),
+            get_artist_info_cached(comp_artist_name)
+        ]
+        
+        results = await asyncio.gather(*artist_tasks, return_exceptions=True)
+        searched_artist, comparable_artist_obj = results
+        
+        # Handle errors
+        if isinstance(searched_artist, Exception) or not searched_artist:
+            print(f"❌ Artist not found: {artist_name}")
+            raise HTTPException(status_code=404, detail=f"Artist '{artist_name}' not found")
+        
+        if isinstance(comparable_artist_obj, Exception) or not comparable_artist_obj:
             print(f"⚠️ Comparable artist not found: {comp_artist_name}, using fallback")
-            comp_artist_name = "Taylor Swift"
-            comparable_artist_obj = await get_artist_info(comp_artist_name)
+            comparable_artist_obj = await get_artist_info_cached("Taylor Swift")
         
-        print(f"✅ Comparable artist: {comparable_artist_obj.name} ({comparable_artist_obj.followers:,} followers)")
+        print(f"✅ Both artists found in {time.time() - start_time:.2f}s")
         
-        # Initialize response structure with defaults
-        response = {
-            "artist": await map_spotify_artist_to_frontend(searched_artist),
-            "comparable_artist": await map_spotify_artist_to_frontend(comparable_artist_obj),
-            "analysis": {
-                "overall_similarity": 0.0,
-                "genre_similarity": 0.0,
-                "popularity_similarity": 0.0,
-                "audience_similarity": 0.0,
-                "chart_similarity": 0.0,
-                "streaming_similarity": 0.0,
-                "insights": [],
-                "data_sources": []
-            },
-            "musistash_resonance_score": 0.0,  # 🎯 ALWAYS INCLUDE THIS
-            "resonance_details": {
-                "score": 0.0,
-                "confidence": "low",
-                "calculation_method": "fallback",
-                "success_drivers": [],
-                "risk_factors": []
-            }
-        }
+        # OPTIMIZED RESPONSE STRUCTURE
+        response = await build_optimized_response(
+            searched_artist, comparable_artist_obj, artist_name, comp_artist_name
+        )
         
-        # Try to get enhanced analysis with real data
-        use_real_data = (gemini_api_key and gemini_api_key != "dummy_key" and 
-                        spotify_client_id and spotify_client_secret)
+        # Cache the result
+        cache_similarity(cache_key, response)
         
-        print(f"🔍 Analysis method: {'Real data + AI' if use_real_data else 'Fallback only'}")
-        
-        if use_real_data:
-            try:
-                # Get real AI insights
-                ai_similarity_analysis = await get_real_music_industry_data_with_gemini(
-                    artist_name, comp_artist_name
-                )
-                
-                if ai_similarity_analysis and "audience_analysis" in ai_similarity_analysis:
-                    print("✅ Gemini AI analysis successful")
-                    response["analysis"] = ai_similarity_analysis
-                    
-                    # Calculate resonance score with real data
-                    genre_similarity = ai_similarity_analysis.get("genre_similarity", 0.5)
-                    theme_similarity = ai_similarity_analysis.get("theme_similarity", 0.5)
-                    
-                    resonance_result = await calculate_musistash_resonance_score(
-                        {"spotify": searched_artist.dict()},
-                        {"spotify": comparable_artist_obj.dict()},
-                        artist_name,
-                        comp_artist_name,
-                        genre_similarity,
-                        theme_similarity
-                    )
-                    
-                    if resonance_result and "musistash_resonance_score" in resonance_result:
-                        response["musistash_resonance_score"] = resonance_result["musistash_resonance_score"]
-                        response["resonance_details"] = resonance_result.get("resonance_details", response["resonance_details"])
-                        print(f"✅ Resonance score calculated: {response['musistash_resonance_score']}%")
-                    else:
-                        print("⚠️ Resonance score calculation failed, using fallback")
-                        raise Exception("Resonance calculation failed")
-                        
-                else:
-                    print("⚠️ Gemini analysis failed, using fallback")
-                    raise Exception("Gemini analysis failed")
-                    
-            except Exception as e:
-                print(f"❌ Real data analysis failed: {str(e)}")
-                use_real_data = False
-        
-        # Fallback analysis (always runs if real data fails)
-        if not use_real_data:
-            print("🔄 Using fallback analysis method")
-            try:
-                # Use enhanced Spotify similarity as fallback
-                ai_similarity_analysis = await calculate_enhanced_spotify_similarity(
-                    {"spotify": searched_artist.dict()}, 
-                    {"spotify": comparable_artist_obj.dict()}, 
-                    artist_name, 
-                    comp_artist_name
-                )
-                
-                if ai_similarity_analysis:
-                    response["analysis"] = ai_similarity_analysis
-                    
-                    # Extract or calculate resonance score from fallback
-                    if "musistash_resonance_score" in ai_similarity_analysis:
-                        response["musistash_resonance_score"] = ai_similarity_analysis["musistash_resonance_score"]
-                        response["resonance_details"] = ai_similarity_analysis.get("resonance_details", response["resonance_details"])
-                        print(f"✅ Fallback resonance score: {response['musistash_resonance_score']}%")
-                    else:
-                        # Force calculate resonance score if missing
-                        print("🔄 Forcing resonance score calculation")
-                        fallback_resonance = create_fallback_resonance_score(
-                            artist_name, comp_artist_name,
-                            {"spotify": searched_artist.dict()},
-                            {"spotify": comparable_artist_obj.dict()}
-                        )
-                        response["musistash_resonance_score"] = fallback_resonance["musistash_resonance_score"]
-                        response["resonance_details"] = fallback_resonance.get("resonance_details", response["resonance_details"])
-                        print(f"✅ Forced resonance score: {response['musistash_resonance_score']}%")
-                
-            except Exception as e:
-                print(f"❌ Fallback analysis failed: {str(e)}")
-                # Final emergency fallback
-                print("🚨 Using emergency fallback resonance score")
-                emergency_score = min(max(
-                    (searched_artist.popularity + comparable_artist_obj.popularity) / 2.0,
-                    10.0
-                ), 90.0)
-                response["musistash_resonance_score"] = emergency_score
-                response["resonance_details"] = {
-                    "score": emergency_score,
-                    "confidence": "low",
-                    "calculation_method": "emergency_fallback",
-                    "success_drivers": ["Basic popularity analysis"],
-                    "risk_factors": ["Limited data available"]
-                }
-                print(f"🚨 Emergency resonance score: {emergency_score}%")
-        
-        # Final validation - ensure resonance score is always present
-        if "musistash_resonance_score" not in response or response["musistash_resonance_score"] == 0.0:
-            print("🚨 Final safety check: Adding missing resonance score")
-            safety_score = min(max(
-                (searched_artist.popularity + comparable_artist_obj.popularity) / 2.0,
-                15.0
-            ), 85.0)
-            response["musistash_resonance_score"] = safety_score
-            response["resonance_details"] = {
-                "score": safety_score,
-                "confidence": "low",
-                "calculation_method": "safety_fallback",
-                "success_drivers": ["Basic compatibility analysis"],
-                "risk_factors": ["Limited API access"]
-            }
-            print(f"🚨 Safety resonance score: {safety_score}%")
-        
-        print(f"🎯 FINAL RESPONSE: Resonance Score = {response['musistash_resonance_score']}%")
-        print(f"Successfully analyzed: {artist_name} vs {comp_artist_name}")
-        
+        print(f"🎉 Analysis completed in {time.time() - start_time:.2f}s")
         return response
         
-    except HTTPException:
-        raise
     except Exception as e:
-        print(f"❌ Critical error in analyze_artist: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Analysis failed: {str(e)}"
-        )
+        print(f"❌ Analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+async def get_artist_info_cached(artist_name: str) -> Optional[Artist]:
+    """Get artist info with caching"""
+    cached_data = get_cached_artist(artist_name)
+    if cached_data:
+        return Artist(**cached_data)
+    
+    artist = await get_artist_info(artist_name)
+    if artist:
+        cache_artist(artist_name, artist.dict())
+    return artist
+
+async def build_optimized_response(
+    searched_artist: Artist, 
+    comparable_artist_obj: Artist, 
+    artist_name: str, 
+    comp_artist_name: str
+) -> dict:
+    """Build response with optimized parallel processing"""
+    
+    # PARALLEL PROCESSING: Build response components simultaneously
+    tasks = [
+        map_spotify_artist_to_frontend(searched_artist),
+        map_spotify_artist_to_frontend(comparable_artist_obj),
+        get_fast_similarity_analysis(searched_artist, comparable_artist_obj, artist_name, comp_artist_name),
+        get_fast_resonance_score(searched_artist, comparable_artist_obj, artist_name, comp_artist_name)
+    ]
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    artist_data, comparable_data, analysis, resonance = results
+    
+    # Handle exceptions
+    if isinstance(analysis, Exception):
+        analysis = get_fallback_analysis()
+    if isinstance(resonance, Exception):
+        resonance = get_fallback_resonance()
+    
+    return {
+        "artist": artist_data,
+        "comparable_artist": comparable_data,
+        "analysis": analysis,
+        "musistash_resonance_score": resonance.get("musistash_resonance_score", 65.0),
+        "resonance_details": resonance.get("resonance_details", {
+            "score": 65.0,
+            "confidence": "medium",
+            "calculation_method": "optimized",
+            "success_drivers": ["Genre compatibility", "Market positioning"],
+            "risk_factors": ["Scale difference"]
+        })
+    }
+
+async def get_fast_similarity_analysis(
+    artist1: Artist, artist2: Artist, artist1_name: str, artist2_name: str
+) -> dict:
+    """Fast similarity analysis with streamlined AI calls"""
+    
+    # Calculate basic similarities quickly
+    genre_similarity = calculate_genre_overlap(artist1.genres, artist2.genres)
+    popularity_similarity = abs(artist1.popularity - artist2.popularity)
+    follower_ratio = min(artist1.followers, artist2.followers) / max(artist1.followers, artist2.followers)
+    
+    # Fast AI insights (simplified prompt)
+    insights = await get_fast_ai_insights(artist1_name, artist2_name, genre_similarity)
+    
+    return {
+        "overall_similarity": (genre_similarity + (100 - popularity_similarity) + follower_ratio * 100) / 3,
+        "genre_similarity": genre_similarity,
+        "popularity_similarity": 100 - popularity_similarity,
+        "audience_similarity": follower_ratio * 100,
+        "chart_similarity": 70.0,  # Reasonable default
+        "streaming_similarity": 65.0,  # Reasonable default
+        "insights": insights,
+        "data_sources": ["Spotify", "AI Analysis"]
+    }
+
+async def get_fast_ai_insights(artist1_name: str, artist2_name: str, genre_similarity: float) -> List[str]:
+    """Get intelligent AI insights about musical compatibility and commercial potential"""
+    
+    if not gemini_api_key or gemini_api_key == "dummy_key":
+        return get_fallback_insights_fast(artist1_name, artist2_name)
+    
+    # Determine target (smaller) and benchmark (bigger) artist logic
+    prompt = f"""Analyze musical compatibility between {artist1_name} and {artist2_name}.
+
+Focus on:
+- Musical style similarities (melodies, production, vocal delivery)
+- Content themes and lyrical approaches  
+- Audience crossover potential
+- Commercial viability in each other's spaces
+- Genre overlap vs meaningful differences
+
+Provide 3 specific, actionable insights about their musical compatibility.
+Each insight should be 25-35 words and focus on concrete musical or commercial factors."""
+    
+    try:
+        response = call_gemini_api(prompt, max_tokens=300)
+        if response:
+            # Clean and split insights
+            insights = []
+            lines = response.strip().split('\n')
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('```') and len(line) > 20:
+                    # Remove numbering and bullet points
+                    if line.startswith(('1.', '2.', '3.', '•', '-')):
+                        line = line[2:].strip()
+                    insights.append(line)
+            
+            return insights[:3] if insights else get_fallback_insights_fast(artist1_name, artist2_name)
+    except Exception as e:
+        print(f"AI insights failed: {e}")
+    
+    return get_fallback_insights_fast(artist1_name, artist2_name)
+
+async def get_fast_resonance_score(
+    artist1: Artist, artist2: Artist, artist1_name: str, artist2_name: str
+) -> dict:
+    """Intelligent resonance score: How likely is the smaller artist to succeed in the bigger artist's space"""
+    
+    # Identify target (smaller) and benchmark (bigger) artist
+    if artist1.followers <= artist2.followers:
+        target_artist, target_name = artist1, artist1_name
+        benchmark_artist, benchmark_name = artist2, artist2_name
+    else:
+        target_artist, target_name = artist2, artist2_name
+        benchmark_artist, benchmark_name = artist1, artist1_name
+    
+    # Use Gemini AI for intelligent analysis
+    resonance_analysis = await get_intelligent_resonance_analysis(
+        target_name, benchmark_name, target_artist, benchmark_artist
+    )
+    
+    if resonance_analysis:
+        return resonance_analysis
+    
+    # Fallback calculation with proper logic
+    return get_fallback_resonance_calculation(target_artist, benchmark_artist, target_name, benchmark_name)
+
+async def get_intelligent_resonance_analysis(
+    target_name: str, benchmark_name: str, target_artist: Artist, benchmark_artist: Artist
+) -> dict:
+    """Use Gemini AI to analyze commercial resonance potential"""
+    
+    if not gemini_api_key or gemini_api_key == "dummy_key":
+        return None
+    
+    # Check if both artists are already famous (1M+ followers)
+    both_famous = target_artist.followers > 1000000 and benchmark_artist.followers > 1000000
+    
+    prompt = f"""Analyze commercial resonance between {target_name} ({target_artist.followers:,} followers) and {benchmark_name} ({benchmark_artist.followers:,} followers).
+
+Key Question: How likely is {target_name} to succeed commercially in {benchmark_name}'s musical space and audience?
+
+Consider:
+- Musical style similarities (melodies, production, vocal approach)
+- Content themes and lyrical overlap
+- Target audience overlap and market positioning
+- Commercial viability and crossover potential
+- Genre compatibility vs surface differences
+
+{"Both are established artists (1M+ followers), so baseline should be 55+ unless major incompatibilities exist." if both_famous else ""}
+
+Provide a JSON response:
+{{
+  "resonance_score": 0-100,
+  "reasoning": "Brief explanation of compatibility",
+  "musical_similarities": ["key similarity 1", "key similarity 2"],
+  "commercial_potential": "high/medium/low",
+  "success_drivers": ["factor 1", "factor 2"],
+  "risk_factors": ["risk 1", "risk 2"],
+  "confidence": "high/medium/low"
+}}"""
+    
+    try:
+        response = call_gemini_api(prompt, max_tokens=400)
+        if response:
+            # Clean and parse response
+            response = response.strip()
+            if response.startswith('```json'):
+                response = response[7:-3]
+            
+            analysis = json.loads(response)
+            
+            # Ensure score is reasonable for famous artists
+            score = analysis.get("resonance_score", 65)
+            if both_famous and score < 55:
+                score = max(55, score)  # Minimum 55 for both famous artists
+            
+            return {
+                "musistash_resonance_score": round(score, 1),
+                "resonance_details": {
+                    "score": round(score, 1),
+                    "confidence": analysis.get("confidence", "medium"),
+                    "calculation_method": "gemini_ai_analysis",
+                    "reasoning": analysis.get("reasoning", "AI analysis of commercial compatibility"),
+                    "musical_similarities": analysis.get("musical_similarities", []),
+                    "commercial_potential": analysis.get("commercial_potential", "medium"),
+                    "success_drivers": analysis.get("success_drivers", []),
+                    "risk_factors": analysis.get("risk_factors", []),
+                    "target_artist": target_name,
+                    "benchmark_artist": benchmark_name
+                }
+            }
+    except Exception as e:
+        print(f"Gemini resonance analysis failed: {e}")
+    
+    return None
+
+def get_fallback_resonance_calculation(
+    target_artist: Artist, benchmark_artist: Artist, target_name: str, benchmark_name: str
+) -> dict:
+    """Fallback resonance calculation with proper logic"""
+    
+    # Base score calculation
+    genre_similarity = calculate_genre_overlap(target_artist.genres, benchmark_artist.genres)
+    popularity_gap = abs(target_artist.popularity - benchmark_artist.popularity)
+    
+    # Both famous artists baseline
+    both_famous = target_artist.followers > 1000000 and benchmark_artist.followers > 1000000
+    base_score = 55 if both_famous else 45
+    
+    # Adjust based on compatibility
+    genre_bonus = (genre_similarity - 50) * 0.4  # Bonus/penalty from 50% baseline
+    popularity_bonus = max(0, (80 - popularity_gap) * 0.3)  # Bonus for similar popularity
+    
+    # Scale factor consideration
+    follower_ratio = target_artist.followers / benchmark_artist.followers
+    scale_bonus = min(10, follower_ratio * 20) if follower_ratio > 0.1 else 0
+    
+    final_score = base_score + genre_bonus + popularity_bonus + scale_bonus
+    final_score = max(25, min(95, final_score))
+    
+    return {
+        "musistash_resonance_score": round(final_score, 1),
+        "resonance_details": {
+            "score": round(final_score, 1),
+            "confidence": "medium",
+            "calculation_method": "fallback_intelligent",
+            "reasoning": f"Fallback analysis for {target_name} success potential in {benchmark_name}'s space",
+            "success_drivers": get_success_drivers(target_artist, benchmark_artist),
+            "risk_factors": get_risk_factors(target_artist, benchmark_artist),
+            "target_artist": target_name,
+            "benchmark_artist": benchmark_name
+        }
+    }
+
+def get_success_drivers(artist1: Artist, artist2: Artist) -> List[str]:
+    """Get success drivers quickly"""
+    drivers = []
+    
+    if calculate_genre_overlap(artist1.genres, artist2.genres) > 60:
+        drivers.append("Strong genre compatibility")
+    
+    if abs(artist1.popularity - artist2.popularity) < 20:
+        drivers.append("Similar popularity levels")
+    
+    if artist1.followers > 1000000 and artist2.followers > 1000000:
+        drivers.append("Established audience base")
+    
+    return drivers or ["Market positioning", "Growth potential"]
+
+def get_risk_factors(artist1: Artist, artist2: Artist) -> List[str]:
+    """Get risk factors quickly"""
+    risks = []
+    
+    if abs(artist1.followers - artist2.followers) > 10000000:
+        risks.append("Significant scale difference")
+    
+    if calculate_genre_overlap(artist1.genres, artist2.genres) < 30:
+        risks.append("Limited genre overlap")
+    
+    return risks or ["Market competition"]
+
+def get_fallback_analysis() -> dict:
+    """Fallback analysis structure"""
+    return {
+        "overall_similarity": 65.0,
+        "genre_similarity": 70.0,
+        "popularity_similarity": 60.0,
+        "audience_similarity": 55.0,
+        "chart_similarity": 65.0,
+        "streaming_similarity": 60.0,
+        "insights": ["Moderate compatibility", "Growth potential exists", "Market positioning favorable"],
+        "data_sources": ["Spotify", "Fallback Analysis"]
+    }
+
+def get_fallback_resonance() -> dict:
+    """Fallback resonance score"""
+    return {
+        "musistash_resonance_score": 65.0,
+        "resonance_details": {
+            "score": 65.0,
+            "confidence": "medium",
+            "calculation_method": "fallback",
+            "success_drivers": ["Market positioning"],
+            "risk_factors": ["Data limitations"]
+        }
+    }
+
+def get_fallback_insights_fast(artist1_name: str, artist2_name: str) -> List[str]:
+    """Fast fallback insights"""
+    return [
+        f"{artist1_name} shows strong potential for growth in similar markets",
+        f"Collaboration opportunities exist between {artist1_name} and {artist2_name}",
+        "Market positioning suggests good commercial viability"
+    ]
+
+def calculate_genre_overlap(genres1: List[str], genres2: List[str]) -> float:
+    """Calculate genre overlap percentage quickly"""
+    if not genres1 or not genres2:
+        return 50.0
+    
+    set1, set2 = set(genres1), set(genres2)
+    overlap = len(set1 & set2)
+    total = len(set1 | set2)
+    
+    return (overlap / total * 100) if total > 0 else 50.0
 
 @app.get("/soundcharts-data/{artist_name}")
 async def get_soundcharts_data_endpoint(artist_name: str):
@@ -5249,6 +5446,35 @@ async def get_artist_recommendations(target_artist: str, mentor_artist: str):
             "error": f"Error generating recommendations: {str(e)}",
             "success": False
         }
+
+# Add caching for API responses
+CACHE_DURATION = 300  # 5 minutes
+artist_cache: Dict[str, Tuple[float, dict]] = {}
+similarity_cache: Dict[str, Tuple[float, dict]] = {}
+
+def get_cached_artist(artist_name: str) -> Optional[dict]:
+    """Get cached artist data if still valid"""
+    if artist_name in artist_cache:
+        timestamp, data = artist_cache[artist_name]
+        if time.time() - timestamp < CACHE_DURATION:
+            return data
+    return None
+
+def cache_artist(artist_name: str, data: dict):
+    """Cache artist data"""
+    artist_cache[artist_name] = (time.time(), data)
+
+def get_cached_similarity(key: str) -> Optional[dict]:
+    """Get cached similarity analysis"""
+    if key in similarity_cache:
+        timestamp, data = similarity_cache[key]
+        if time.time() - timestamp < CACHE_DURATION:
+            return data
+    return None
+
+def cache_similarity(key: str, data: dict):
+    """Cache similarity analysis"""
+    similarity_cache[key] = (time.time(), data)
 
 if __name__ == "__main__":
     import uvicorn

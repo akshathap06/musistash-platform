@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,8 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ProjectCard from '@/components/ui/ProjectCard';
 import { useAuth } from '@/hooks/useAuth';
-import { projects, investments } from '@/lib/mockData';
+import { projects } from '@/lib/mockData';
+import { InvestmentService, UserInvestment } from '@/services/investmentService';
 import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
@@ -21,6 +22,11 @@ const Dashboard = () => {
       navigate('/login');
     }
   }, [isLoading, isAuthenticated, navigate]);
+
+  const handleInvestmentComplete = () => {
+    // This will trigger re-renders in child components
+    // Since we're using the investment service, components will refresh their data
+  };
   
   if (isLoading || !user) {
     return (
@@ -39,11 +45,11 @@ const Dashboard = () => {
   const renderDashboardContent = () => {
     switch (user.role) {
       case 'artist':
-        return <ArtistDashboard />;
+        return <ArtistDashboard onInvestmentComplete={handleInvestmentComplete} />;
       case 'developer':
-        return <DeveloperDashboard />;
+        return <DeveloperDashboard onInvestmentComplete={handleInvestmentComplete} />;
       default:
-        return <ListenerDashboard />;
+        return <ListenerDashboard onInvestmentComplete={handleInvestmentComplete} />;
     }
   };
   
@@ -109,16 +115,38 @@ const Dashboard = () => {
   );
 };
 
-const ListenerDashboard = () => {
-  const myInvestments = investments.filter(inv => inv.userId === 'user1');
-  const investedProjectIds = myInvestments.map(inv => inv.projectId);
+interface DashboardProps {
+  onInvestmentComplete: () => void;
+}
+
+const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => {
+  const { user } = useAuth();
+  const [investmentStats, setInvestmentStats] = useState({
+    totalInvested: 0,
+    totalProjects: 0,
+    potentialReturns: 0,
+    averageROI: 0,
+    investments: [] as UserInvestment[]
+  });
+
+  useEffect(() => {
+    if (user) {
+      const stats = InvestmentService.getUserInvestmentStats(user.id);
+      setInvestmentStats(stats);
+    }
+  }, [user]);
+
+  const handleInvestmentComplete = () => {
+    if (user) {
+      const stats = InvestmentService.getUserInvestmentStats(user.id);
+      setInvestmentStats(stats);
+    }
+    onInvestmentComplete();
+  };
+
+  // Get projects that the user has invested in
+  const investedProjectIds = investmentStats.investments.map(inv => inv.projectId);
   const investedProjects = projects.filter(project => investedProjectIds.includes(project.id));
-  
-  const totalInvested = myInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-  const potentialReturns = investedProjects.reduce((sum, project) => {
-    const investment = myInvestments.find(inv => inv.projectId === project.id);
-    return sum + (investment ? investment.amount * (project.roi / 100) : 0);
-  }, 0);
   
   return (
     <div className="space-y-8 animate-fade-in">
@@ -136,10 +164,10 @@ const ListenerDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${totalInvested.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-white">${investmentStats.totalInvested.toLocaleString()}</div>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
               <TrendingUp className="w-3 h-3 mr-1" />
-              Across {investedProjects.length} projects
+              Across {investmentStats.totalProjects} projects
             </p>
           </CardContent>
         </Card>
@@ -156,7 +184,7 @@ const ListenerDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${potentialReturns.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">${investmentStats.potentialReturns.toFixed(2)}</div>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
               <Zap className="w-3 h-3 mr-1" />
               Based on project ROI estimates
@@ -177,10 +205,7 @@ const ListenerDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {investedProjects.length ? 
-                (investedProjects.reduce((sum, project) => sum + project.roi, 0) / investedProjects.length).toFixed(1) + '%' : 
-                '0%'
-              }
+              {investmentStats.averageROI > 0 ? `${investmentStats.averageROI}%` : '0%'}
             </div>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
               <Music className="w-3 h-3 mr-1" />
@@ -211,7 +236,7 @@ const ListenerDashboard = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Your Investments</h2>
             <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
-              {investedProjects.length} Active
+              {investmentStats.totalProjects} Active
             </Badge>
           </div>
           
@@ -219,7 +244,7 @@ const ListenerDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {investedProjects.map((project) => (
                 <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                  <ProjectCard project={project} />
+                  <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />
                 </div>
               ))}
             </div>
@@ -258,7 +283,7 @@ const ListenerDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.slice(0, 6).map((project) => (
               <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                <ProjectCard project={project} />
+                <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />
               </div>
             ))}
           </div>
@@ -268,7 +293,7 @@ const ListenerDashboard = () => {
   );
 };
 
-const ArtistDashboard = () => {
+const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => {
   const artistProjects = projects.slice(0, 2);
   
   const totalFundingGoal = artistProjects.reduce((sum, project) => sum + project.fundingGoal, 0);
@@ -376,7 +401,7 @@ const ArtistDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {artistProjects.map(project => (
               <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                <ProjectCard project={project} />
+                <ProjectCard project={project} onInvestmentComplete={onInvestmentComplete} />
               </div>
             ))}
           </div>
@@ -426,7 +451,7 @@ const ArtistDashboard = () => {
   );
 };
 
-const DeveloperDashboard = () => {
+const DeveloperDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Stats Grid */}

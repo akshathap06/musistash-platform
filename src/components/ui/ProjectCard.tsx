@@ -1,16 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Project } from '@/lib/mockData';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import InvestmentModal from './InvestmentModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProjectCardProps {
   project: Project;
+  onInvestmentComplete?: () => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete }) => {
+  const { isAuthenticated } = useAuth();
+  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  
   const fundingPercentage = Math.min(100, Math.round((project.currentFunding / project.fundingGoal) * 100));
   const timeLeft = () => {
     const deadlineDate = new Date(project.deadline);
@@ -18,6 +25,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     const diffTime = deadlineDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
+  };
+
+  const handleInvestClick = () => {
+    if (!isAuthenticated) {
+      // Could redirect to login or show login modal
+      return;
+    }
+    setIsInvestmentModalOpen(true);
+  };
+
+  const handleInvestmentComplete = () => {
+    if (onInvestmentComplete) {
+      onInvestmentComplete();
+    }
   };
 
   return (
@@ -75,12 +96,31 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       </CardContent>
       
       <CardFooter className="border-t border-gray-800 bg-gray-900/30 pt-3">
-        <Link to={`/project/${project.id}`} className="w-full">
-          <div className="w-full text-center text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors">
-            View Project
-          </div>
-        </Link>
+        <div className="flex space-x-2 w-full">
+          <Link to={`/project/${project.id}`} className="flex-1">
+            <Button variant="outline" className="w-full border-gray-600 text-gray-300 hover:bg-gray-800">
+              View Project
+            </Button>
+          </Link>
+          {project.status === 'active' && (
+            <Button 
+              onClick={handleInvestClick}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              disabled={!isAuthenticated}
+            >
+              Invest Now
+            </Button>
+          )}
+        </div>
       </CardFooter>
+
+      {/* Investment Modal */}
+      <InvestmentModal
+        isOpen={isInvestmentModalOpen}
+        onClose={() => setIsInvestmentModalOpen(false)}
+        project={project}
+        onInvestmentComplete={handleInvestmentComplete}
+      />
     </Card>
   );
 };

@@ -286,97 +286,133 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      {/* Artist Cards - With Profile Pictures */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-          <div className="flex items-center gap-4 mb-3">
-            {data.artist.avatar ? (
-              <img 
-                src={data.artist.avatar} 
-                alt={data.artist.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-green-400"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-                <span className="text-sm font-bold text-white">T</span>
+      {/* REVERSE L-SHAPE LAYOUT */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        
+        {/* Left Column - Artist Cards (Vertical Part of L) */}
+        <div className="xl:col-span-1 space-y-4">
+          {/* Target Artist Card */}
+          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+            <div className="flex items-center gap-3 mb-3">
+              {data.artist.avatar ? (
+                <img 
+                  src={data.artist.avatar} 
+                  alt={data.artist.name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-green-400"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+                  <span className="text-sm font-bold text-white">T</span>
+                </div>
+              )}
+              <div>
+                <h4 className="text-sm font-semibold text-green-400">{data.artist.name}</h4>
+                <div className="text-xs text-gray-400">{formatLargeNumber(data.artist.followers)} followers</div>
               </div>
-            )}
-            <div>
-              <h4 className="text-base font-semibold text-green-400">{data.artist.name}</h4>
-              <div className="text-sm text-gray-400">{formatLargeNumber(data.artist.followers)} followers</div>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {data.artist.genres.slice(0, 3).map((genre, i) => (
+                <span key={i} className="text-xs bg-green-400/20 text-green-300 px-2 py-1 rounded">
+                  {genre}
+                </span>
+              ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {data.artist.genres.slice(0, 4).map((genre, i) => (
-              <span key={i} className="text-xs bg-green-400/20 text-green-300 px-2 py-1 rounded">
-                {genre}
-              </span>
-            ))}
+          
+          {/* Comparable Artist Card */}
+          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+            <div className="flex items-center gap-3 mb-3">
+              {data.comparable_artist.avatar ? (
+                <img 
+                  src={data.comparable_artist.avatar} 
+                  alt={data.comparable_artist.name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-purple-400"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
+                  <span className="text-sm font-bold text-white">B</span>
+                </div>
+              )}
+              <div>
+                <h4 className="text-sm font-semibold text-purple-400">{data.comparable_artist.name}</h4>
+                <div className="text-xs text-gray-400">{formatLargeNumber(data.comparable_artist.followers)} followers</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {data.comparable_artist.genres.slice(0, 3).map((genre, i) => (
+                <span key={i} className="text-xs bg-purple-400/20 text-purple-300 px-2 py-1 rounded">
+                  {genre}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-        
-        <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-          <div className="flex items-center gap-4 mb-3">
-            {data.comparable_artist.avatar ? (
-              <img 
-                src={data.comparable_artist.avatar} 
-                alt={data.comparable_artist.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-purple-400"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
-                <span className="text-sm font-bold text-white">B</span>
+
+        {/* Right Columns - Core Scores & Quick Metrics (Horizontal Part of L) */}
+        <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+          {/* Genre Compatibility Score */}
+          <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 p-4 rounded-lg border border-purple-500/30">
+            <div className="text-center">
+              <div className="relative w-20 h-20 mx-auto mb-3">
+                <svg className="w-20 h-20 transform -rotate-90">
+                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" className="text-gray-700/50" />
+                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" strokeDasharray={`${2 * Math.PI * 35}`} strokeDashoffset={`${2 * Math.PI * 35 * (1 - enhancedSimilarityScore / 100)}`} className="text-purple-400" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-white">{Math.round(enhancedSimilarityScore)}%</span>
+                </div>
               </div>
-            )}
-            <div>
-              <h4 className="text-base font-semibold text-purple-400">{data.comparable_artist.name}</h4>
-              <div className="text-sm text-gray-400">{formatLargeNumber(data.comparable_artist.followers)} followers</div>
+              <h3 className="text-sm font-bold text-purple-400 mb-1">Genre Compatibility</h3>
+              <p className="text-xs text-gray-400">Market alignment score</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {data.comparable_artist.genres.slice(0, 4).map((genre, i) => (
-              <span key={i} className="text-xs bg-purple-400/20 text-purple-300 px-2 py-1 rounded">
-                {genre}
-              </span>
-            ))}
+
+          {/* Resonance Score */}
+          <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-4 rounded-lg border border-blue-500/30">
+            <div className="text-center">
+              <div className="relative w-20 h-20 mx-auto mb-3">
+                <svg className="w-20 h-20 transform -rotate-90">
+                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" className="text-gray-700/50" />
+                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" strokeDasharray={`${2 * Math.PI * 35}`} strokeDashoffset={`${2 * Math.PI * 35 * (1 - enhancedResonanceScore / 100)}`} className="text-blue-400" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-white">{Math.round(enhancedResonanceScore)}</span>
+                </div>
+              </div>
+              <h3 className="text-sm font-bold text-blue-400 mb-1">Resonance Score</h3>
+              <p className="text-xs text-gray-400">AI compatibility score</p>
+            </div>
           </div>
+          
         </div>
       </div>
 
-      {/* Core Scores - Compact Horizontal Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Genre Compatibility */}
-        <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 p-6 rounded-lg border border-purple-500/30">
-          <div className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-4">
-              <svg className="w-24 h-24 transform -rotate-90">
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" className="text-gray-700/50" />
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - enhancedSimilarityScore / 100)}`} className="text-purple-400" strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xl font-bold text-white">{Math.round(enhancedSimilarityScore)}%</span>
-              </div>
-            </div>
-            <h3 className="text-base font-bold text-purple-400 mb-2">Genre Compatibility</h3>
-            <p className="text-sm text-gray-400">How well the target artist's genre aligns with the benchmark artist's market</p>
+      {/* Quick Metrics Row - Horizontal continuation */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700 text-center">
+          <div className="text-lg font-bold text-green-400">
+            ${formatLargeNumber((data.artist.tier.enhanced_data?.net_worth_millions || 0) * 1000000)}
           </div>
+          <div className="text-xs text-gray-400">Net Worth</div>
         </div>
-
-        {/* Resonance Score */}
-        <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-6 rounded-lg border border-blue-500/30">
-          <div className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-4">
-              <svg className="w-24 h-24 transform -rotate-90">
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" className="text-gray-700/50" />
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - enhancedResonanceScore / 100)}`} className="text-blue-400" strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xl font-bold text-white">{Math.round(enhancedResonanceScore)}</span>
-              </div>
-            </div>
-            <h3 className="text-base font-bold text-blue-400 mb-2">Resonance Score</h3>
-            <p className="text-sm text-gray-400">AI-calculated compatibility score based on musical and market analysis</p>
+        <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700 text-center">
+          <div className="text-lg font-bold text-blue-400">
+            {formatLargeNumber((data.artist.tier.enhanced_data?.monthly_streams_millions || 0) * 1000000)}
           </div>
+          <div className="text-xs text-gray-400">Monthly Streams</div>
+        </div>
+        <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700 text-center">
+          <div className="text-lg font-bold text-purple-400">
+            {formatLargeNumber(data.artist.tier.enhanced_data?.youtube_subscribers || 0)}
+          </div>
+          <div className="text-xs text-gray-400">YouTube Subs</div>
+        </div>
+        <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700 text-center">
+          <div className="text-lg font-bold text-orange-400">
+            {data.resonance_details?.commercial_potential || 'High'}
+          </div>
+          <div className="text-xs text-gray-400">Market Position</div>
         </div>
       </div>
 

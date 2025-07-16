@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { X, Menu } from 'lucide-react';
+import { X, Menu, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,11 +12,21 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useAuth } from '@/hooks/useAuth';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,6 +62,11 @@ const Navbar = () => {
     );
   });
   ListItem.displayName = "ListItem";
+
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header 
@@ -169,18 +184,61 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Desktop Auth Buttons - Right Side */}
+          {/* Desktop Auth Section - Right Side */}
           <div className="hidden md:flex items-center space-x-2">
-            <Link to="/login">
-              <Button variant="ghost" className="text-sm font-medium">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="default" className="text-sm font-medium">
-                Sign Up
-              </Button>
-            </Link>
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-auto px-3 rounded-full hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        className="h-8 w-8 rounded-full object-cover border-2 border-blue-500/50"
+                        src={user.avatar || '/placeholder.svg'}
+                        alt={user.name}
+                      />
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm font-medium text-white">{user.name}</span>
+                        <span className="text-xs text-gray-400 capitalize">{user.role}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-gray-900 border-gray-700" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none text-white">{user.name}</p>
+                      <p className="text-xs leading-none text-gray-400">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center cursor-pointer text-gray-300 hover:text-white hover:bg-gray-800">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>My Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-gray-300 hover:text-white hover:bg-gray-800">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="text-sm font-medium">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="default" className="text-sm font-medium">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -201,19 +259,51 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-800 bg-[#0f1216]/95 backdrop-blur-md">
             <div className="px-4 py-6 space-y-6">
-              {/* Mobile Auth Buttons */}
-              <div className="flex flex-col space-y-3">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full text-left justify-start">
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="default" className="w-full">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
+              {/* Mobile Auth Section */}
+              {isAuthenticated && user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 px-3 py-2 bg-gray-800/50 rounded-lg">
+                    <img
+                      className="h-10 w-10 rounded-full object-cover border-2 border-blue-500/50"
+                      src={user.avatar || '/placeholder.svg'}
+                      alt={user.name}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white">{user.name}</span>
+                      <span className="text-xs text-gray-400">{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" className="w-full text-left justify-start">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        My Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-left justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-3">
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="default" className="w-full">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
 
               {/* Mobile Navigation Links */}
               <div className="space-y-4">

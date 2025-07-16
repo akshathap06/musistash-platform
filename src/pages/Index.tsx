@@ -22,9 +22,9 @@ const Index = () => {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="py-24 px-4 md:px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column - Main Content */}
-            <div className="lg:col-span-5 space-y-12">
+            <div className="lg:col-span-6 space-y-8">
               {/* Terminal Badge */}
               <div className="inline-block bg-[#1a1b26] rounded-lg p-3">
                 <code className="text-green-400 font-mono text-sm">$ revolutionizing_music_investment.exe_</code>
@@ -80,11 +80,33 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-4 border border-gray-800/50">
+                  <div className="text-2xl font-bold text-blue-400">9+</div>
+                  <div className="text-sm text-gray-400">AI Models</div>
+                </div>
+                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-4 border border-gray-800/50">
+                  <div className="text-2xl font-bold text-purple-400">100K+</div>
+                  <div className="text-sm text-gray-400">Artists Analyzed</div>
+                </div>
+              </div>
+
+              {/* Live Demo Indicator */}
+              <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-medium">Live Demo Available</span>
+                </div>
+                <div className="text-gray-500">→</div>
+                <span className="text-gray-400 text-sm">Try analyzing Drake vs The Weeknd</span>
+              </div>
             </div>
 
             {/* Right Column - AI Tool */}
-            <div className="lg:col-span-7 flex items-center">
-              <div className="w-full mt-12 lg:mt-24" ref={aiToolRef}>
+            <div className="lg:col-span-6 flex items-start">
+              <div className="w-full mt-4 lg:mt-6" ref={aiToolRef}>
                 {/* Vibrant container with glow effects */}
                 <div className="relative">
                   {/* Animated background glow */}

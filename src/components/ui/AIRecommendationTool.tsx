@@ -363,18 +363,18 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </div>
 
         {/* Resonance Score */}
-        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 p-6 rounded-lg border border-yellow-500/30">
+        <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-6 rounded-lg border border-blue-500/30">
           <div className="text-center">
             <div className="relative w-24 h-24 mx-auto mb-4">
               <svg className="w-24 h-24 transform -rotate-90">
                 <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" className="text-gray-700/50" />
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - enhancedResonanceScore / 100)}`} className="text-yellow-400" strokeLinecap="round" />
+                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="none" strokeDasharray={`${2 * Math.PI * 40}`} strokeDashoffset={`${2 * Math.PI * 40 * (1 - enhancedResonanceScore / 100)}`} className="text-blue-400" strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xl font-bold text-white">{Math.round(enhancedResonanceScore)}</span>
               </div>
             </div>
-            <h3 className="text-base font-bold text-yellow-400 mb-2">Resonance Score</h3>
+            <h3 className="text-base font-bold text-blue-400 mb-2">Resonance Score</h3>
             <p className="text-sm text-gray-400">AI-calculated compatibility score based on musical and market analysis</p>
           </div>
         </div>

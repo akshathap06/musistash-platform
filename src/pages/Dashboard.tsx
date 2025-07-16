@@ -10,6 +10,7 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import { useAuth } from '@/hooks/useAuth';
 import { projects } from '@/lib/mockData';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
+import { artistProfileService } from '@/services/artistProfileService';
 import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
@@ -78,7 +79,7 @@ const Dashboard = () => {
                   <p className="text-gray-300 text-lg">
                     {user.role === 'artist' ? 'Create and manage your music projects' : 
                      user.role === 'developer' ? 'Build the future of music technology' :
-                     'Discover and invest in the next big hits'}
+                     'Discover and invest in the next big hits, or create your own artist profile'}
                   </p>
                   <Badge variant="outline" className="mt-2 bg-blue-500/20 text-blue-300 border-blue-500/50 capitalize">
                     {user.role}
@@ -86,13 +87,21 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {user.role === 'artist' && (
-                <Link to="/create-project">
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create New Project
-                  </Button>
-                </Link>
+              {(user.role === 'artist' || user.role === 'listener') && (
+                <div className="flex space-x-4">
+                  <Link to="/artist-profile">
+                    <Button variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
+                      <User className="mr-2 h-4 w-4" />
+                      {user.role === 'artist' ? 'Manage Profile' : 'Create Artist Profile'}
+                    </Button>
+                  </Link>
+                  <Link to="/create-project">
+                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create New Project
+                    </Button>
+                  </Link>
+                </div>
               )}
               
               {user.role === 'developer' && (
@@ -294,11 +303,25 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
 };
 
 const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => {
-  const artistProjects = projects.slice(0, 2);
+  const { user } = useAuth();
+  const [artistProjects, setArtistProjects] = useState([]);
+  const [artistProfile, setArtistProfile] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      const profile = artistProfileService.getProfileByUserId(user.id);
+      setArtistProfile(profile);
+      
+      if (profile) {
+        const userProjects = artistProfileService.getProjectsByArtistId(profile.id);
+        setArtistProjects(userProjects);
+      }
+    }
+  }, [user]);
   
   const totalFundingGoal = artistProjects.reduce((sum, project) => sum + project.fundingGoal, 0);
   const totalCurrentFunding = artistProjects.reduce((sum, project) => sum + project.currentFunding, 0);
-  const fundingPercentage = Math.round((totalCurrentFunding / totalFundingGoal) * 100);
+  const fundingPercentage = totalFundingGoal > 0 ? Math.round((totalCurrentFunding / totalFundingGoal) * 100) : 0;
   
   return (
     <div className="space-y-8 animate-fade-in">
@@ -399,11 +422,27 @@ const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => 
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {artistProjects.map(project => (
-              <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                <ProjectCard project={project} onInvestmentComplete={onInvestmentComplete} />
+            {artistProjects.length > 0 ? (
+              artistProjects.map(project => (
+                <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
+                  <ProjectCard project={project} onInvestmentComplete={onInvestmentComplete} />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Music className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold text-white mb-2">No Projects Yet</h3>
+                  <p className="text-gray-400 mb-6">Create your first project to start raising funds for your music</p>
+                  <Link to="/create-project">
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create Your First Project
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </TabsContent>
         

@@ -31,6 +31,8 @@ import AITools from "./pages/AITools";
 import InvestmentTools from "./pages/InvestmentTools";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
+import ArtistProfileManager from "./pages/ArtistProfileManager";
+import CreateProject from "./pages/CreateProject";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,8 @@ const App = () => (
               <Route path="/artist-services" element={<ArtistServices />} />
               <Route path="/investor-services" element={<InvestorServices />} />
               <Route path="/legal" element={<Legal />} />
+              <Route path="/artist-profile" element={<ArtistProfileManager />} />
+              <Route path="/create-project" element={<CreateProject />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

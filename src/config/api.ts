@@ -1,6 +1,6 @@
 // API Configuration
 export const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 
-  (import.meta.env.MODE === 'production' ? 'https://musistash-production.up.railway.app' : 'http://localhost:8000');
+  (import.meta.env.MODE === 'production' ? 'https://musistash-platform-production-3168.up.railway.app' : 'http://localhost:8000');
 
 export const API_ENDPOINTS = {
   analyzeArtist: (name: string, compareArtist?: string) => {

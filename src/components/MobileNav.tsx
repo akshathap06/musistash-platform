@@ -8,16 +8,20 @@ const MobileNav = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNav = () => {
+    console.log("Mobile nav toggle clicked, current state:", isOpen);
     setIsOpen(!isOpen);
   };
 
   const closeNav = () => {
+    console.log("Mobile nav closing");
     setIsOpen(false);
   };
 
+  console.log("MobileNav render - isOpen:", isOpen);
+
   return (
     <>
-      {/* Mobile menu button - highest z-index to ensure it's always clickable */}
+      {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="sm"
@@ -27,62 +31,90 @@ const MobileNav = () => {
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
 
-      {/* Mobile navigation overlay */}
+      {/* Mobile navigation overlay - render at the root level */}
       {isOpen && (
-        <div className="fixed inset-0 z-[9998] md:hidden">
+        <div 
+          className="fixed inset-0 z-[9998] md:hidden"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 9998
+          }}
+        >
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={closeNav}
+            style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0
+            }}
           />
           
-          {/* Mobile menu */}
-          <div className="absolute top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md transform transition-transform duration-300 ease-in-out">
-            <div className="flex flex-col p-6 pt-20 space-y-6">
+          {/* Mobile menu panel */}
+          <div 
+            className="absolute top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md border-l border-white/10"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              height: '100vh',
+              width: '320px',
+              backgroundColor: 'rgba(0, 0, 0, 0.95)',
+              backdropFilter: 'blur(12px)'
+            }}
+          >
+            <div className="flex flex-col p-6 pt-20 space-y-6 h-full overflow-y-auto">
               <Link 
                 to="/how-it-works" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 How It Works
               </Link>
               <Link 
                 to="/services" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 Services
               </Link>
               <Link 
                 to="/artists" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 Artists
               </Link>
               <Link 
                 to="/discover-projects" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 Discover Projects
               </Link>
               <Link 
                 to="/about" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 About
               </Link>
               <Link 
                 to="/contact" 
-                className="text-white hover:text-primary transition-colors text-lg"
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
                 onClick={closeNav}
               >
                 Contact
               </Link>
               
-              <div className="pt-6 border-t border-white/20 space-y-4">
+              <div className="pt-6 border-t border-white/20 space-y-4 mt-auto">
                 <Link to="/login" onClick={closeNav}>
                   <Button variant="ghost" className="w-full text-white hover:bg-white/10">
                     Sign In

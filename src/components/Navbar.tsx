@@ -39,6 +39,13 @@ const Navbar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Cleanup body overflow on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
     <>
       {/* Main Navbar */}
@@ -109,7 +116,10 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div 
+          className="fixed inset-0 z-50 md:hidden"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -117,12 +127,13 @@ const Navbar = () => {
           />
           
           {/* Mobile Menu Panel */}
-          <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-black/95 backdrop-blur-md">
-            {/* Close Button */}
-            <div className="flex justify-end p-4">
+          <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-black/95 backdrop-blur-md overflow-y-auto">
+            {/* Header with Close Button */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <span className="text-white font-semibold text-lg">Menu</span>
               <button
                 onClick={closeMobileMenu}
-                className="text-white p-2"
+                className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
                 aria-label="Close mobile menu"
               >
                 <X className="h-6 w-6" />
@@ -130,60 +141,122 @@ const Navbar = () => {
             </div>
 
             {/* Menu Content */}
-            <div className="px-6 py-4 space-y-6">
-              <Link 
-                to="/how-it-works" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                How It Works
-              </Link>
-              <Link 
-                to="/services" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                Services
-              </Link>
-              <Link 
-                to="/artists" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                Artists
-              </Link>
-              <Link 
-                to="/discover-projects" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                Discover Projects
-              </Link>
-              <Link 
-                to="/about" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                About
-              </Link>
-              <Link 
-                to="/contact" 
-                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
-                onClick={closeMobileMenu}
-              >
-                Contact
-              </Link>
+            <div className="px-6 py-6 space-y-8">
+              {/* Platform Section */}
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-4">Platform</h3>
+                <div className="space-y-3">
+                  <Link 
+                    to="/how-it-works" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    How It Works
+                  </Link>
+                  <Link 
+                    to="/discover-projects" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Discover Projects
+                  </Link>
+                  <Link 
+                    to="/artists" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Browse Artists
+                  </Link>
+                  <Link 
+                    to="/artist-feuds" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Artist Feuds
+                  </Link>
+                </div>
+              </div>
+
+              {/* Services Section */}
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-4">Services</h3>
+                <div className="space-y-3">
+                  <Link 
+                    to="/services" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Our Services
+                  </Link>
+                  <Link 
+                    to="/ai-tools" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    AI Tools
+                  </Link>
+                  <Link 
+                    to="/investment-tools" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Investment Tools
+                  </Link>
+                  <Link 
+                    to="/artist-services" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Artist Services
+                  </Link>
+                </div>
+              </div>
+
+              {/* Company Section */}
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-4">Company</h3>
+                <div className="space-y-3">
+                  <Link 
+                    to="/about" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    About Us
+                  </Link>
+                  <Link 
+                    to="/careers" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Careers
+                  </Link>
+                  <Link 
+                    to="/contact" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Contact
+                  </Link>
+                  <Link 
+                    to="/blog" 
+                    className="block text-gray-300 hover:text-white transition-colors text-base py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Blog
+                  </Link>
+                </div>
+              </div>
               
               {/* Auth Buttons */}
               <div className="pt-6 border-t border-white/20 space-y-4">
                 <Link to="/login" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full text-white hover:bg-white/10">
-                    Sign In
+                  <Button variant="ghost" className="w-full text-white hover:bg-white/10 justify-start">
+                    Log In
                   </Button>
                 </Link>
                 <Link to="/register" onClick={closeMobileMenu}>
                   <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                    Get Started
+                    Sign Up
                   </Button>
                 </Link>
               </div>

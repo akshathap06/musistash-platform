@@ -18,29 +18,47 @@ const Navbar = () => {
   }, []);
 
   const toggleMobileNav = () => {
-    console.log("Mobile nav toggle clicked from navbar, current state:", isMobileNavOpen);
+    console.log("Mobile nav toggle clicked, current state:", isMobileNavOpen);
     const newState = !isMobileNavOpen;
     setIsMobileNavOpen(newState);
-    console.log("Mobile nav new state from navbar:", newState);
+    console.log("Mobile nav new state:", newState);
     
     // Prevent body scroll when menu is open
     if (newState) {
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     }
   };
 
   const closeMobileNav = () => {
-    console.log("Mobile nav closing from navbar");
+    console.log("Mobile nav closing");
     setIsMobileNavOpen(false);
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
   };
+
+  // Close mobile nav when window is resized to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isMobileNavOpen) {
+        closeMobileNav();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobileNavOpen]);
 
   return (
     <>
-      <nav className={`fixed top-0 w-full z-30 transition-all duration-300 ${
-        isScrolled ? "bg-black/80 backdrop-blur-md" : "bg-transparent"
+      <nav className={`fixed top-0 w-full transition-all duration-300 ${
+        isScrolled ? "bg-black/80 backdrop-blur-md z-40" : "bg-transparent z-40"
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -91,12 +109,13 @@ const Navbar = () => {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden relative z-50">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleMobileNav}
-                className="text-white hover:bg-white/10"
+                className="text-white hover:bg-white/10 relative z-50"
+                aria-label="Toggle mobile menu"
               >
                 {isMobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
@@ -105,17 +124,34 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile navigation overlay - rendered at root level */}
+      {/* Mobile navigation overlay */}
       {isMobileNavOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
+        <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
             onClick={closeMobileNav}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 40
+            }}
           />
           
           {/* Mobile menu panel */}
-          <div className="fixed top-0 right-0 h-screen w-80 bg-black/95 backdrop-blur-md border-l border-white/10">
+          <div 
+            className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-black/95 backdrop-blur-md border-l border-white/10 z-50 md:hidden"
+            style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              height: '100vh',
+              zIndex: 50
+            }}
+          >
             <div className="flex flex-col p-6 pt-20 space-y-6 h-full overflow-y-auto">
               <Link 
                 to="/how-it-works" 
@@ -174,7 +210,7 @@ const Navbar = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

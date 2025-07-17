@@ -51,31 +51,30 @@ const MobileNav = () => {
           
           {/* Mobile menu */}
           <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-black/95 backdrop-blur-md shadow-2xl">
-            {/* Header with close button */}
+            {/* Header with close button - FIXED */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <span className="text-white font-semibold text-lg">ArtistFlow</span>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={closeNav}
-                className="text-white hover:bg-white/10 p-2"
+                className="text-white hover:bg-white/10 p-2 rounded-md transition-colors flex items-center justify-center"
+                aria-label="Close menu"
               >
                 <X className="h-6 w-6" />
-              </Button>
+              </button>
             </div>
 
             {/* Navigation content */}
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full overflow-y-auto">
               {/* Auth buttons */}
               <div className="p-4 border-b border-white/20 space-y-3">
                 <Link to="/login" onClick={closeNav}>
                   <Button variant="ghost" className="w-full text-white hover:bg-white/10 justify-start">
-                    Sign In
+                    Log In
                   </Button>
                 </Link>
                 <Link to="/register" onClick={closeNav}>
                   <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
-                    Get Started
+                    Sign Up
                   </Button>
                 </Link>
               </div>
@@ -103,7 +102,14 @@ const MobileNav = () => {
                     className="block text-white hover:text-primary transition-colors py-2"
                     onClick={closeNav}
                   >
-                    Artists
+                    Browse Artists
+                  </Link>
+                  <Link 
+                    to="/artist-feuds" 
+                    className="block text-white hover:text-primary transition-colors py-2"
+                    onClick={closeNav}
+                  >
+                    Artist Feuds
                   </Link>
                 </div>
               </div>
@@ -133,6 +139,13 @@ const MobileNav = () => {
                   >
                     Investment Tools
                   </Link>
+                  <Link 
+                    to="/artist-services" 
+                    className="block text-white hover:text-primary transition-colors py-2"
+                    onClick={closeNav}
+                  >
+                    Artist Services
+                  </Link>
                 </div>
               </div>
 
@@ -145,7 +158,14 @@ const MobileNav = () => {
                     className="block text-white hover:text-primary transition-colors py-2"
                     onClick={closeNav}
                   >
-                    About
+                    About Us
+                  </Link>
+                  <Link 
+                    to="/careers" 
+                    className="block text-white hover:text-primary transition-colors py-2"
+                    onClick={closeNav}
+                  >
+                    Careers
                   </Link>
                   <Link 
                     to="/contact" 
@@ -153,6 +173,13 @@ const MobileNav = () => {
                     onClick={closeNav}
                   >
                     Contact
+                  </Link>
+                  <Link 
+                    to="/blog" 
+                    className="block text-white hover:text-primary transition-colors py-2"
+                    onClick={closeNav}
+                  >
+                    Blog
                   </Link>
                 </div>
               </div>

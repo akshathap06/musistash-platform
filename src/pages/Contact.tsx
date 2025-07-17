@@ -37,7 +37,7 @@ const Contact = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/30 hover:border-blue-500/50 transition-all duration-300 backdrop-blur-sm h-full">
+              <Card className="bg-gray-900/80 border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 backdrop-blur-sm h-full">
                 <CardHeader className="pb-4">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
@@ -55,11 +55,11 @@ const Contact = () => {
                     or any questions about the Musi$tash platform.
                   </p>
                   <a 
-                    href="mailto:Akshathapliyal27@gmail.com" 
+                    href="mailto:contact@musistash.com" 
                     className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200"
                   >
                     <Mail className="mr-2 h-5 w-5" />
-                    Akshathapliyal27@gmail.com
+                    contact@musistash.com
                   </a>
                 </CardContent>
               </Card>
@@ -70,7 +70,7 @@ const Contact = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-700/30 hover:border-purple-500/50 transition-all duration-300 backdrop-blur-sm h-full">
+              <Card className="bg-gray-900/80 border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 backdrop-blur-sm h-full">
                 <CardHeader className="pb-4">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
@@ -197,7 +197,7 @@ const Contact = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="mailto:Akshathapliyal27@gmail.com"
+                href="mailto:contact@musistash.com"
                 className="inline-flex"
               >
                 <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-12 py-4 text-lg transition-all duration-200 shadow-lg hover:shadow-xl">

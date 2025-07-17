@@ -111,18 +111,20 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-400">
-              © {new Date().getFullYear()} MusiStash. All rights reserved.
-            </p>
+            <div className="flex flex-col items-center md:items-start">
+              <p className="text-sm text-gray-400 mb-2">
+                © {new Date().getFullYear()} MusiStash. All rights reserved.
+              </p>
+              <a href="mailto:contact@musistash.com" className="text-sm text-gray-400 hover:text-white transition-colors">
+                contact@musistash.com
+              </a>
+            </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="https://twitter.com/musistash" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 Twitter
               </a>
               <a href="https://linkedin.com/company/musistash" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 LinkedIn
-              </a>
-              <a href="https://github.com/musistash" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
-                GitHub
               </a>
               <a href="https://instagram.com/musistash" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 Instagram

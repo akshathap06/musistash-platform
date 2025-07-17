@@ -17,12 +17,12 @@ const MobileNav = () => {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile menu button - fixed positioning with high z-index */}
       <Button
         variant="ghost"
         size="sm"
         onClick={toggleNav}
-        className="md:hidden text-white hover:bg-white/10 fixed top-4 right-4 z-[60]"
+        className="md:hidden text-white hover:bg-white/10 fixed top-4 right-4 z-[100] bg-black/20 backdrop-blur-sm"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </Button>
@@ -32,13 +32,13 @@ const MobileNav = () => {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 z-[50] md:hidden"
+            className="fixed inset-0 bg-black/50 z-[90] md:hidden"
             onClick={closeNav}
           />
           
           {/* Mobile menu */}
-          <div className="fixed top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md z-[55] transform transition-transform duration-300 ease-in-out md:hidden">
-            <div className="flex flex-col p-6 pt-16 space-y-6">
+          <div className="fixed top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md z-[95] transform transition-transform duration-300 ease-in-out md:hidden">
+            <div className="flex flex-col p-6 pt-20 space-y-6">
               <Link 
                 to="/how-it-works" 
                 className="text-white hover:text-primary transition-colors text-lg"

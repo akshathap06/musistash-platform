@@ -297,7 +297,7 @@ const Navbar = () => {
       {/* Mobile Menu Full Screen Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="md:hidden fixed inset-0 z-[99998] bg-black"
+          className="md:hidden fixed inset-0 z-[99998] bg-black mobile-menu-overlay"
           style={{ 
             zIndex: 99998,
             position: 'fixed',
@@ -308,15 +308,15 @@ const Navbar = () => {
             backgroundColor: 'rgba(0, 0, 0, 0.98)'
           }}
         >
-          {/* Header with Close Button */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-            <div className="flex items-center space-x-2">
+          {/* Header with Close Button - Fixed at Top */}
+          <div className="sticky top-0 z-[99999] flex justify-between items-center p-4 border-b border-gray-800 bg-black/95 backdrop-blur-lg shadow-lg">
+            <div className="flex items-center space-x-3">
               <img 
                 src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
                 alt="MusiStash Logo" 
-                className="h-6 w-auto"
+                className="h-10 w-auto"
               />
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
                 Musi$tash
               </span>
             </div>
@@ -324,29 +324,29 @@ const Navbar = () => {
               variant="ghost"
               size="lg"
               onClick={closeMobileMenu}
-              className="text-white hover:bg-white/20 rounded-full p-3 bg-white/10 border border-white/20"
-              style={{ minWidth: '48px', minHeight: '48px' }}
+              className="text-white hover:bg-white/20 rounded-full p-3 bg-white/25 border-2 border-white/40 shadow-xl"
+              style={{ minWidth: '56px', minHeight: '56px' }}
             >
-              <X className="h-8 w-8" />
+              <X className="h-9 w-9" />
             </Button>
           </div>
 
           {/* Mobile Menu Content */}
-          <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex flex-col h-full overflow-y-auto pt-2">
             {/* Floating Close Button - Always Visible */}
-            <div className="fixed top-4 right-4 z-[99999] md:hidden">
+            <div className="fixed top-8 right-8 z-[99999] md:hidden">
               <Button
                 variant="ghost"
                 size="lg"
                 onClick={closeMobileMenu}
-                className="text-white hover:bg-white/20 rounded-full p-3 bg-black/80 backdrop-blur-sm border border-white/30 shadow-lg"
-                style={{ minWidth: '48px', minHeight: '48px' }}
+                className="text-white hover:bg-white/20 rounded-full p-4 bg-black/95 backdrop-blur-md border-2 border-white/50 shadow-2xl"
+                style={{ minWidth: '60px', minHeight: '60px' }}
               >
-                <X className="h-8 w-8" />
+                <X className="h-10 w-10" />
               </Button>
             </div>
 
-            <div className="flex-1 px-4 py-6 space-y-8">
+            <div className="flex-1 px-4 py-6 space-y-8 pb-20">
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (
                 <div className="space-y-4">

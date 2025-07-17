@@ -286,11 +286,11 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      {/* REVERSE L-SHAPE LAYOUT */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      {/* HORIZONTAL ARTIST PROFILES & COMPACT SCORES */}
+      <div className="space-y-4">
         
-        {/* Left Column - Artist Cards (Vertical Part of L) */}
-        <div className="xl:col-span-1 space-y-4">
+        {/* Artist Profiles - Horizontal Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Target Artist Card */}
           <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
             <div className="flex items-center gap-3 mb-3">
@@ -348,40 +348,44 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
           </div>
         </div>
 
-        {/* Right Columns - Core Scores & Quick Metrics (Horizontal Part of L) */}
-        <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Compact Scores - Horizontal Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           {/* Genre Compatibility Score */}
           <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 p-4 rounded-lg border border-purple-500/30">
-            <div className="text-center">
-              <div className="relative w-20 h-20 mx-auto mb-3">
-                <svg className="w-20 h-20 transform -rotate-90">
-                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" className="text-gray-700/50" />
-                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" strokeDasharray={`${2 * Math.PI * 35}`} strokeDashoffset={`${2 * Math.PI * 35 * (1 - enhancedSimilarityScore / 100)}`} className="text-purple-400" strokeLinecap="round" />
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-purple-400 mb-1">Genre Compatibility</h3>
+                <p className="text-xs text-gray-400">Market alignment score</p>
+              </div>
+              <div className="relative w-16 h-16">
+                <svg className="w-16 h-16 transform -rotate-90">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-gray-700/50" />
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray={`${2 * Math.PI * 28}`} strokeDashoffset={`${2 * Math.PI * 28 * (1 - enhancedSimilarityScore / 100)}`} className="text-purple-400" strokeLinecap="round" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{Math.round(enhancedSimilarityScore)}%</span>
+                  <span className="text-sm font-bold text-white">{Math.round(enhancedSimilarityScore)}%</span>
                 </div>
               </div>
-              <h3 className="text-sm font-bold text-purple-400 mb-1">Genre Compatibility</h3>
-              <p className="text-xs text-gray-400">Market alignment score</p>
             </div>
           </div>
 
           {/* Resonance Score */}
           <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-4 rounded-lg border border-blue-500/30">
-            <div className="text-center">
-              <div className="relative w-20 h-20 mx-auto mb-3">
-                <svg className="w-20 h-20 transform -rotate-90">
-                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" className="text-gray-700/50" />
-                  <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="5" fill="none" strokeDasharray={`${2 * Math.PI * 35}`} strokeDashoffset={`${2 * Math.PI * 35 * (1 - enhancedResonanceScore / 100)}`} className="text-blue-400" strokeLinecap="round" />
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-blue-400 mb-1">Resonance Score</h3>
+                <p className="text-xs text-gray-400">AI compatibility score</p>
+              </div>
+              <div className="relative w-16 h-16">
+                <svg className="w-16 h-16 transform -rotate-90">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-gray-700/50" />
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray={`${2 * Math.PI * 28}`} strokeDashoffset={`${2 * Math.PI * 28 * (1 - enhancedResonanceScore / 100)}`} className="text-blue-400" strokeLinecap="round" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-white">{Math.round(enhancedResonanceScore)}</span>
+                  <span className="text-sm font-bold text-white">{Math.round(enhancedResonanceScore)}</span>
                 </div>
               </div>
-              <h3 className="text-sm font-bold text-blue-400 mb-1">Resonance Score</h3>
-              <p className="text-xs text-gray-400">AI compatibility score</p>
             </div>
           </div>
           
@@ -443,85 +447,95 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </details>
       </div>
 
-      {/* Compact Analysis Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Musical Compatibility */}
+      {/* Collapsible Musical Compatibility & Key Metrics */}
+      <div className="space-y-4">
+        {/* Musical Compatibility - Collapsible */}
         <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Music className="h-4 w-4 text-purple-400" />
-            Musical Compatibility
-          </h3>
-          <div className="space-y-3">
-            <div className="text-xs text-gray-300">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-purple-400">•</span>
-                <span className="font-medium">Key Signatures:</span>
+          <details className="group">
+            <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-purple-400 hover:text-purple-300">
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4" />
+                Musical Compatibility
               </div>
-              <div className="ml-4 text-gray-400 leading-tight">
-                {data.artist.name} typically performs in C major and A minor keys, while {data.comparable_artist.name} favors D minor and F major - complementary ranges that would blend well for audience crossover.
+              <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="mt-3 space-y-3">
+              <div className="text-xs text-gray-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-purple-400">•</span>
+                  <span className="font-medium">Key Signatures:</span>
+                </div>
+                <div className="ml-4 text-gray-400 leading-tight">
+                  {data.artist.name} typically performs in C major and A minor keys, while {data.comparable_artist.name} favors D minor and F major - complementary ranges that would blend well for audience crossover.
+                </div>
+              </div>
+              <div className="text-xs text-gray-300">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-purple-400">•</span>
+                  <span className="font-medium">Collaboration History:</span>
+                </div>
+                <div className="ml-4 text-gray-400 leading-tight">
+                  These artists have collaborated before on tracks like "Crew Love" and share mutual connections, indicating natural musical chemistry and audience acceptance.
+                </div>
               </div>
             </div>
-            <div className="text-xs text-gray-300">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-purple-400">•</span>
-                <span className="font-medium">Collaboration History:</span>
-              </div>
-              <div className="ml-4 text-gray-400 leading-tight">
-                These artists have collaborated before on tracks like "Crew Love" and share mutual connections, indicating natural musical chemistry and audience acceptance.
-              </div>
-            </div>
-          </div>
+          </details>
         </div>
 
-        {/* Key Metrics Comparison */}
+        {/* Key Metrics Comparison - Collapsible */}
         <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-green-400" />
-            Key Metrics Comparison
-          </h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Net Worth</span>
+          <details className="group">
+            <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-green-400 hover:text-green-300">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-green-400">
-                  ${formatLargeNumber((data.artist.tier.enhanced_data?.net_worth_millions || 0) * 1000000)}
-                </span>
-                <span className="text-xs text-gray-500">vs</span>
-                <span className="text-xs font-medium text-blue-400">
-                  ${formatLargeNumber((data.comparable_artist.tier.enhanced_data?.net_worth_millions || 0) * 1000000)}
-                </span>
+                <TrendingUp className="h-4 w-4" />
+                Key Metrics Comparison
+              </div>
+              <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="mt-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-400">Net Worth</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-green-400">
+                    ${formatLargeNumber((data.artist.tier.enhanced_data?.net_worth_millions || 0) * 1000000)}
+                  </span>
+                  <span className="text-xs text-gray-500">vs</span>
+                  <span className="text-xs font-medium text-blue-400">
+                    ${formatLargeNumber((data.comparable_artist.tier.enhanced_data?.net_worth_millions || 0) * 1000000)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-400">Monthly Streams</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-green-400">
+                    {formatLargeNumber((data.artist.tier.enhanced_data?.monthly_streams_millions || 0) * 1000000)}
+                  </span>
+                  <span className="text-xs text-gray-500">vs</span>
+                  <span className="text-xs font-medium text-blue-400">
+                    {formatLargeNumber((data.comparable_artist.tier.enhanced_data?.monthly_streams_millions || 0) * 1000000)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-400">YouTube Subs</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-green-400">
+                    {formatLargeNumber(data.artist.tier.enhanced_data?.youtube_subscribers || 0)}
+                  </span>
+                  <span className="text-xs text-gray-500">vs</span>
+                  <span className="text-xs font-medium text-blue-400">
+                    {formatLargeNumber(data.comparable_artist.tier.enhanced_data?.youtube_subscribers || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-gray-700">
+                <div className="text-xs text-gray-400">
+                  <span className="font-medium">Market Position:</span> {data.resonance_details?.commercial_potential || 'High'}
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Monthly Streams</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-green-400">
-                  {formatLargeNumber((data.artist.tier.enhanced_data?.monthly_streams_millions || 0) * 1000000)}
-                </span>
-                <span className="text-xs text-gray-500">vs</span>
-                <span className="text-xs font-medium text-blue-400">
-                  {formatLargeNumber((data.comparable_artist.tier.enhanced_data?.monthly_streams_millions || 0) * 1000000)}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">YouTube Subs</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-green-400">
-                  {formatLargeNumber(data.artist.tier.enhanced_data?.youtube_subscribers || 0)}
-                </span>
-                <span className="text-xs text-gray-500">vs</span>
-                <span className="text-xs font-medium text-blue-400">
-                  {formatLargeNumber(data.comparable_artist.tier.enhanced_data?.youtube_subscribers || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-gray-700">
-              <div className="text-xs text-gray-400">
-                <span className="font-medium">Market Position:</span> {data.resonance_details?.commercial_potential || 'High'}
-              </div>
-            </div>
-          </div>
+          </details>
         </div>
       </div>
 
@@ -558,77 +572,84 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </details>
       </div>
 
-      {/* Combined Success Drivers & Risk Factors - Compact */}
+      {/* Collapsible Success Drivers & Risk Analysis */}
       <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Zap className="h-4 w-4 text-orange-400" />
-          Success Drivers & Risk Analysis
-        </h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Success Drivers */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <TrendingUp className="h-3 w-3 text-green-400" />
-              Success Drivers
-            </h4>
-            <ul className="space-y-1">
-              {key_drivers.slice(0, 3).map((driver, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
-                  <span className="text-green-400 mt-1 flex-shrink-0">•</span>
-                  <span className="text-gray-300 leading-tight">
-                    {driver.replace(/\*\*(.*?)\*\*/g, '$1')}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          {/* Risk Factors */}
-          <div>
-            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <AlertTriangle className="h-3 w-3 text-red-400" />
-              Risk Factors
-            </h4>
-            <ul className="space-y-1">
-              {risk_factors.slice(0, 3).map((risk, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs">
-                  <span className="text-red-400 mt-1 flex-shrink-0">•</span>
-                  <span className="text-gray-300 leading-tight">
-                    {risk.replace(/\*\*(.*?)\*\*/g, '$1')}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        
-        {/* AI Analysis Insights */}
-        {data.analysis?.insights && data.analysis.insights.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-gray-700">
-            <h5 className="text-xs font-medium text-gray-400 mb-2">AI Analysis:</h5>
-            <div className="text-xs text-gray-300 space-y-1">
-              {data.analysis.insights.slice(0, 2).map((insight, i) => (
-                <div key={i} className="text-xs text-gray-400 leading-tight">
-                  {insight.replace(/\*\*(.*?)\*\*/g, '$1')}
-                </div>
-              ))}
+        <details className="group">
+          <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-orange-400 hover:text-orange-300">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Success Drivers & Risk Analysis
             </div>
-          </div>
-        )}
-        
-        {/* Musical Similarities */}
-        {data.resonance_details?.musical_similarities && data.resonance_details.musical_similarities.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-gray-700">
-            <h5 className="text-xs font-medium text-gray-400 mb-2">Musical Similarities:</h5>
-            <div className="text-xs text-gray-300 space-y-1">
-              {data.resonance_details.musical_similarities.slice(0, 2).map((similarity, i) => (
-                <div key={i} className="text-xs text-gray-400 leading-tight">
-                  • {similarity.replace(/\*\*(.*?)\*\*/g, '$1')}
-                </div>
-              ))}
+            <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div className="mt-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Success Drivers */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <TrendingUp className="h-3 w-3 text-green-400" />
+                  Success Drivers
+                </h4>
+                <ul className="space-y-1">
+                  {key_drivers.slice(0, 3).map((driver, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs">
+                      <span className="text-green-400 mt-1 flex-shrink-0">•</span>
+                      <span className="text-gray-300 leading-tight">
+                        {driver.replace(/\*\*(.*?)\*\*/g, '$1')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Risk Factors */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3 w-3 text-red-400" />
+                  Risk Factors
+                </h4>
+                <ul className="space-y-1">
+                  {risk_factors.slice(0, 3).map((risk, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs">
+                      <span className="text-red-400 mt-1 flex-shrink-0">•</span>
+                      <span className="text-gray-300 leading-tight">
+                        {risk.replace(/\*\*(.*?)\*\*/g, '$1')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
+            
+            {/* AI Analysis Insights */}
+            {data.analysis?.insights && data.analysis.insights.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-gray-700">
+                <h5 className="text-xs font-medium text-gray-400 mb-2">AI Analysis:</h5>
+                <div className="text-xs text-gray-300 space-y-1">
+                  {data.analysis.insights.slice(0, 2).map((insight, i) => (
+                    <div key={i} className="text-xs text-gray-400 leading-tight">
+                      {insight.replace(/\*\*(.*?)\*\*/g, '$1')}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Musical Similarities */}
+            {data.resonance_details?.musical_similarities && data.resonance_details.musical_similarities.length > 0 && (
+              <div className="mt-3 pt-2 border-t border-gray-700">
+                <h5 className="text-xs font-medium text-gray-400 mb-2">Musical Similarities:</h5>
+                <div className="text-xs text-gray-300 space-y-1">
+                  {data.resonance_details.musical_similarities.slice(0, 2).map((similarity, i) => (
+                    <div key={i} className="text-xs text-gray-400 leading-tight">
+                      • {similarity.replace(/\*\*(.*?)\*\*/g, '$1')}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </details>
       </div>
 
       {/* Data Quality Footer - Compact */}
@@ -668,7 +689,7 @@ const AIRecommendationTool = () => {
 
     try {
       // Show loading progress
-      setLoadingStage('🎯 Fetching artist data...');
+      setLoadingStage('🎯 Retrieving artist data...');
       
       const startTime = Date.now();
       
@@ -693,7 +714,7 @@ const AIRecommendationTool = () => {
         throw new Error(`API returned status ${response.status}: ${response.statusText}`);
       }
       
-      setLoadingStage('📊 Analyzing compatibility...');
+      setLoadingStage('📊 Computing compatibility scores...');
       const result = await response.json();
       
       // Validate response structure
@@ -734,7 +755,7 @@ const AIRecommendationTool = () => {
           <h2 className="text-xl font-semibold">AI Artist Analysis</h2>
         </div>
         <p className="text-sm text-gray-400 mb-4">
-          Get comprehensive insights on artist commercial potential and market positioning
+          Compare artists and evaluate market compatibility using advanced AI algorithms
         </p>
         
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -774,7 +795,7 @@ const AIRecommendationTool = () => {
               ) : (
                 <>
                   <Zap className="h-4 w-4 mr-2" />
-                  Analyze Artists
+                  Generate Analysis
                 </>
               )}
             </Button>
@@ -803,7 +824,7 @@ const AIRecommendationTool = () => {
           >
             <Sparkles className="h-8 w-8 text-blue-400 animate-spin mx-auto mb-3" />
             <p className="text-sm text-gray-400">
-              {loadingStage || 'Analyzing artist data and market positioning...'}
+              {loadingStage || 'Processing artist data and generating analysis...'}
             </p>
             <div className="mt-4 text-xs text-gray-500">
               ⚡ Optimized for speed - typically completes in under 3 seconds

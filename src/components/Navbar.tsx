@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import MobileNav from "./MobileNav";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +16,26 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const toggleMobileNav = () => {
+    console.log("Mobile nav toggle clicked from navbar, current state:", isMobileNavOpen);
+    const newState = !isMobileNavOpen;
+    setIsMobileNavOpen(newState);
+    console.log("Mobile nav new state from navbar:", newState);
+    
+    // Prevent body scroll when menu is open
+    if (newState) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  };
+
+  const closeMobileNav = () => {
+    console.log("Mobile nav closing from navbar");
+    setIsMobileNavOpen(false);
+    document.body.style.overflow = 'unset';
+  };
 
   return (
     <>
@@ -68,12 +89,93 @@ const Navbar = () => {
                 </Button>
               </Link>
             </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleMobileNav}
+                className="text-white hover:bg-white/10"
+              >
+                {isMobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Navigation Component - render outside and independently */}
-      <MobileNav />
+      {/* Mobile navigation overlay - rendered at root level */}
+      {isMobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={closeMobileNav}
+          />
+          
+          {/* Mobile menu panel */}
+          <div className="fixed top-0 right-0 h-screen w-80 bg-black/95 backdrop-blur-md border-l border-white/10">
+            <div className="flex flex-col p-6 pt-20 space-y-6 h-full overflow-y-auto">
+              <Link 
+                to="/how-it-works" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                How It Works
+              </Link>
+              <Link 
+                to="/services" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                Services
+              </Link>
+              <Link 
+                to="/artists" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                Artists
+              </Link>
+              <Link 
+                to="/discover-projects" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                Discover Projects
+              </Link>
+              <Link 
+                to="/about" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                About
+              </Link>
+              <Link 
+                to="/contact" 
+                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
+                onClick={closeMobileNav}
+              >
+                Contact
+              </Link>
+              
+              <div className="pt-6 border-t border-white/20 space-y-4 mt-auto">
+                <Link to="/login" onClick={closeMobileNav}>
+                  <Button variant="ghost" className="w-full text-white hover:bg-white/10">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={closeMobileNav}>
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

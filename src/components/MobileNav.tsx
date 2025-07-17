@@ -51,15 +51,15 @@ const MobileNav = () => {
           
           {/* Mobile menu */}
           <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-black/95 backdrop-blur-md shadow-2xl">
-            {/* Header with close button - FIXED */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+            {/* Header with prominent close button */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black">
               <span className="text-white font-semibold text-lg">ArtistFlow</span>
               <button
                 onClick={closeNav}
-                className="text-white hover:bg-white/10 p-2 rounded-md transition-colors flex items-center justify-center"
-                aria-label="Close menu"
+                className="text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition-all duration-200 border border-white/20 hover:border-white/40"
+                aria-label="Close navigation menu"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 

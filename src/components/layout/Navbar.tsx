@@ -37,6 +37,32 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [isMobileMenuOpen]);
+
   const ListItem = React.forwardRef<
     React.ElementRef<"a">,
     React.ComponentPropsWithoutRef<"a">
@@ -244,8 +270,9 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <Button 
             variant="ghost" 
-            className="md:hidden p-2" 
+            className="md:hidden p-2 z-[99999]" 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{ zIndex: 99999 }}
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6" />
@@ -257,8 +284,44 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden fixed left-0 right-0 top-16 bottom-0 border-t border-gray-800 bg-black/95 backdrop-blur-md z-40 overflow-y-auto">
+          <div className="md:hidden fixed inset-0 bg-black/98 backdrop-blur-lg z-[99999] overflow-y-auto">
+            {/* Header with Close Button */}
+            <div className="sticky top-0 z-[99999] flex justify-between items-center p-4 border-b border-gray-800 bg-black/95 backdrop-blur-lg shadow-lg">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
+                  alt="MusiStash Logo" 
+                  className="h-10 w-auto"
+                />
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+                  Musi$tash
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-white hover:bg-white/20 rounded-full p-3 bg-white/25 border-2 border-white/40 shadow-xl"
+                style={{ minWidth: '56px', minHeight: '56px' }}
+              >
+                <X className="h-9 w-9" />
+              </Button>
+            </div>
+
             <div className="px-4 py-6 space-y-6 pb-20">
+              {/* Floating Close Button - Always Visible */}
+              <div className="fixed top-8 right-8 z-[99999] md:hidden">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-white hover:bg-white/20 rounded-full p-4 bg-black/95 backdrop-blur-md border-2 border-white/50 shadow-2xl"
+                  style={{ minWidth: '60px', minHeight: '60px' }}
+                >
+                  <X className="h-10 w-10" />
+                </Button>
+              </div>
+
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (
                 <div className="space-y-4">

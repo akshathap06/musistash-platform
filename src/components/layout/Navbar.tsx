@@ -209,9 +209,6 @@ const Navbar = () => {
                           <ListItem href="/cookie-policy" title="Cookie Policy">
                             Our cookie usage policy
                           </ListItem>
-                          <ListItem href="/security" title="Security">
-                            Our commitment to your security
-                          </ListItem>
                         </ul>
                       </NavigationMenuContent>
                     </NavigationMenuItem>
@@ -445,9 +442,6 @@ const Navbar = () => {
                     </Link>
                     <Link to="/cookie-policy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
                       Cookie Policy
-                    </Link>
-                    <Link to="/security" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
-                      Security
                     </Link>
                   </div>
                 </div>

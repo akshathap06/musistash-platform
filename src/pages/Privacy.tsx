@@ -191,7 +191,7 @@ const Privacy = () => {
                 </p>
                 <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
                   <p className="text-green-400 font-semibold">Musi$tash Privacy Team</p>
-                  <p className="text-gray-300">Email: Akshathapliyal27@gmail.com</p>
+                  <p className="text-gray-300">Email: contact@musistash.com</p>
                   <p className="text-gray-300">Website: https://musistash.com</p>
                   <p className="text-gray-300 mt-2">
                     For privacy-related inquiries, please include "Privacy Policy" in your subject line.

@@ -118,7 +118,7 @@ const Cookies = () => {
                 If you have any questions about our use of cookies, please contact us at:
               </p>
               <div className="mt-4 text-blue-400">
-                <p>Email: privacy@musistash.com</p>
+                <p>Email: contact@musistash.com</p>
                 <p>Address: MusiStash, Inc.</p>
               </div>
             </section>

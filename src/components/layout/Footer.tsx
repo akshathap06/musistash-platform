@@ -99,11 +99,6 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
                   Cookie Policy
                 </Link>
               </li>
-              <li>
-                <Link to="/security" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Security
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

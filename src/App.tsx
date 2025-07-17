@@ -22,7 +22,7 @@ import Careers from "./pages/Careers";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Cookies from "./pages/Cookies";
-import Security from "./pages/Security";
+
 import Blog from "./pages/Blog";
 import DiscoverProjects from "./pages/DiscoverProjects";
 import BrowseArtists from "./pages/BrowseArtists";
@@ -71,7 +71,7 @@ const AppContent = () => {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/cookie-policy" element={<Cookies />} />
-              <Route path="/security" element={<Security />} />
+
               <Route path="/blog" element={<Blog />} />
               <Route path="/discover-projects" element={<DiscoverProjects />} />
               <Route path="/browse-artists" element={<BrowseArtists />} />

@@ -81,95 +81,120 @@ const About = () => {
       </section>
 
       {/* Founder Section */}
-      <section className="py-20 px-4 relative overflow-hidden">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Enhanced Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '3s'}}></div>
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-gradient-to-r from-blue-500/15 to-purple-500/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-pink-500/10 to-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
         </div>
 
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-transparent bg-clip-text">
               Meet Our Founder
             </h2>
-            <p className="text-xl text-gray-400">
-              The visionary behind Musi$tash's revolutionary approach to music investment
+            <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              A passionate advocate for artists who's building the future of music investment
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            {/* Profile Image */}
-            <div className="lg:col-span-4">
+          {/* Founder Header */}
+          <div className="flex flex-col items-center mb-16">
+            <div className="flex items-center space-x-6 mb-6">
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative rounded-xl overflow-hidden">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full blur-lg opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                <div className="relative rounded-full overflow-hidden shadow-2xl">
                   <img 
                     src="/assets/founder-image.jpg"
                     alt="Akshat Thapliyal" 
-                    className="w-full aspect-[3/4] object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-24 h-24 object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f1216] via-transparent to-transparent"></div>
                 </div>
               </div>
-              <div className="text-center mt-6">
-                <h3 className="text-2xl font-bold text-white">Akshat Thapliyal</h3>
-                <p className="text-blue-400 font-semibold">Founder & CEO</p>
-                <p className="text-gray-400">CS & Applied Math @ FSU | AI Engineer</p>
+              <div className="text-center">
+                <h3 className="text-3xl font-bold text-white mb-1">Akshat Thapliyal</h3>
+                <p className="text-xl text-blue-400 font-semibold mb-1">Founder & CEO</p>
+                <p className="text-gray-400 text-lg">CS & Applied Math @ FSU | AI Engineer</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="max-w-5xl mx-auto space-y-12">
+            {/* Enhanced Bio */}
+            <div className="relative">
+              <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-2xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-[#151823] to-[#1a1f2e] rounded-2xl p-12 border border-gray-800/50 shadow-2xl">
+                <div className="space-y-8">
+                  <p className="text-gray-200 text-xl leading-relaxed">
+                    My journey with MusiStash isn't just about building another tech platform—it's deeply personal. I've seen firsthand how the music industry has systematically undervalued and underpaid artists, leaving them struggling to make ends meet while their music generates millions for others. This injustice has haunted me for years.
+                  </p>
+                  
+                  <p className="text-gray-200 text-xl leading-relaxed">
+                    I care deeply about artists because I understand their struggle. They pour their hearts and souls into creating music that moves us, that becomes the soundtrack to our lives, yet they're often left with scraps while others profit from their creativity. This isn't just a business problem—it's a moral one that I'm determined to solve.
+                  </p>
+                  
+                  <p className="text-gray-200 text-xl leading-relaxed">
+                    MusiStash is my answer to this deeply rooted issue. I'm building a platform where artists can access the funding they need while maintaining complete creative control, and where fans can finally share in the success of the music they love. It's about creating a fair, equitable system that honors the value of artistic expression.
+                  </p>
+                  
+                  <p className="text-gray-200 text-xl leading-relaxed">
+                    With my background in AI engineering, data science, and building LLM-powered platforms that generated $2M+ in impact at Sorba.AI, I'm applying cutting-edge technology to solve this fundamental problem. But more than the technical expertise, it's my unwavering commitment to artists and belief in their worth that drives every decision we make at MusiStash.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Bio */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-25"></div>
-                <div className="relative bg-[#151823] rounded-xl p-8 border border-gray-800/50">
-                  <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                    Akshat Thapliyal is an AI engineer and music-tech builder focused on creating a fairer financial system for artists and fans. After developing LLM-powered platforms for Fortune 500s and generating $2M+ in impact at Sorba.AI, he turned his focus to the music industry—where artists are underpaid and fans have no stake.
-                  </p>
-                  <p className="text-gray-300 text-lg leading-relaxed">
-                    He founded MusiStash to flip that model. With a deep background in data and a passion for equity-driven design, Akshat is building a platform where fans invest in music they believe in—and artists keep creative control.
-                  </p>
+            {/* Enhanced Platform Goals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                <div className="relative bg-gradient-to-br from-[#151823] to-[#1a1f2e] p-8 rounded-xl border border-gray-800/50 shadow-xl group-hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-4xl bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-lg">🎨</div>
+                    <div>
+                      <h4 className="text-white font-semibold text-lg mb-1">Empower Artists</h4>
+                      <p className="text-gray-300 text-sm">Direct funding with creative control</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Platform Goals */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-                  <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">🎨</span>
-                      <p className="text-gray-300">Empower Artists with Direct Funding</p>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-blue-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                <div className="relative bg-gradient-to-br from-[#151823] to-[#1a1f2e] p-8 rounded-xl border border-gray-800/50 shadow-xl group-hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-4xl bg-gradient-to-r from-pink-500 to-blue-500 p-3 rounded-lg">🤝</div>
+                    <div>
+                      <h4 className="text-white font-semibold text-lg mb-1">Connect Fans</h4>
+                      <p className="text-gray-300 text-sm">Equity investment in music they love</p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-                  <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">🤝</span>
-                      <p className="text-gray-300">Connect Fans Through Equity Investment</p>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                <div className="relative bg-gradient-to-br from-[#151823] to-[#1a1f2e] p-8 rounded-xl border border-gray-800/50 shadow-xl group-hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-4xl bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-lg">🧠</div>
+                    <div>
+                      <h4 className="text-white font-semibold text-lg mb-1">AI Insights</h4>
+                      <p className="text-gray-300 text-sm">Data-driven investment guidance</p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-                  <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">🧠</span>
-                      <p className="text-gray-300">AI-Driven Investment Insights</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-pink-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-                  <div className="relative bg-[#151823] p-6 rounded-lg border border-gray-800/50">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">⚖️</span>
-                      <p className="text-gray-300">Transform Music Industry Equity</p>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+                <div className="relative bg-gradient-to-br from-[#151823] to-[#1a1f2e] p-8 rounded-xl border border-gray-800/50 shadow-xl group-hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-4xl bg-gradient-to-r from-purple-500 to-blue-500 p-3 rounded-lg">⚖️</div>
+                    <div>
+                      <h4 className="text-white font-semibold text-lg mb-1">Transform Equity</h4>
+                      <p className="text-gray-300 text-sm">Fair music industry economics</p>
                     </div>
                   </div>
                 </div>

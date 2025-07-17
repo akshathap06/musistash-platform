@@ -170,7 +170,7 @@ const Terms = () => {
                 </p>
                 <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
                   <p className="text-blue-400 font-semibold">Musi$tash</p>
-                  <p className="text-gray-300">Email: Akshathapliyal27@gmail.com</p>
+                  <p className="text-gray-300">Email: contact@musistash.com</p>
                   <p className="text-gray-300">Website: https://musistash.com</p>
                 </div>
               </section>

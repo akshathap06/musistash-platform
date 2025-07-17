@@ -72,7 +72,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation Component - render outside of nav */}
+      {/* Mobile Navigation Component - render outside and independently */}
       <MobileNav />
     </>
   );

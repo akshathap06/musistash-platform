@@ -17,7 +17,9 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleMobileNav = () => {
+  const toggleMobileNav = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log("Mobile nav toggle clicked, current state:", isMobileNavOpen);
     const newState = !isMobileNavOpen;
     setIsMobileNavOpen(newState);
@@ -28,19 +30,30 @@ const Navbar = () => {
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
     } else {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
   };
 
   const closeMobileNav = () => {
     console.log("Mobile nav closing");
+    const scrollY = document.body.style.top;
     setIsMobileNavOpen(false);
     document.body.style.overflow = '';
     document.body.style.position = '';
     document.body.style.width = '';
+    document.body.style.top = '';
+    if (scrollY) {
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
   };
 
   // Close mobile nav when window is resized to desktop
@@ -57,9 +70,12 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 w-full transition-all duration-300 ${
-        isScrolled ? "bg-black/80 backdrop-blur-md z-40" : "bg-transparent z-40"
-      }`}>
+      <nav 
+        className={`fixed top-0 w-full transition-all duration-300 ${
+          isScrolled ? "bg-black/80 backdrop-blur-md" : "bg-transparent"
+        }`}
+        style={{ zIndex: 9999 }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -109,17 +125,14 @@ const Navbar = () => {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden relative z-50">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMobileNav}
-                className="text-white hover:bg-white/10 relative z-50"
-                aria-label="Toggle mobile menu"
-              >
-                {isMobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
+            <button
+              className="md:hidden text-white hover:bg-white/10 p-2 rounded-md transition-colors"
+              onClick={toggleMobileNav}
+              style={{ zIndex: 10001 }}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
       </nav>
@@ -129,28 +142,15 @@ const Navbar = () => {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm md:hidden"
             onClick={closeMobileNav}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 40
-            }}
+            style={{ zIndex: 10000 }}
           />
           
           {/* Mobile menu panel */}
           <div 
-            className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-black/95 backdrop-blur-md border-l border-white/10 z-50 md:hidden"
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              height: '100vh',
-              zIndex: 50
-            }}
+            className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-black/95 backdrop-blur-md border-l border-white/10 md:hidden"
+            style={{ zIndex: 10001 }}
           >
             <div className="flex flex-col p-6 pt-20 space-y-6 h-full overflow-y-auto">
               <Link 

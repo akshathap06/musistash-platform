@@ -13,6 +13,7 @@ import { InvestmentService, UserInvestment } from '@/services/investmentService'
 import { artistProfileService } from '@/services/artistProfileService';
 import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import ThemeSelector from '@/components/ui/ThemeSelector';
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -31,7 +32,7 @@ const Dashboard = () => {
   
   if (isLoading || !user) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-pulse text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <Music className="w-8 h-8 text-white animate-bounce" />
@@ -55,7 +56,7 @@ const Dashboard = () => {
   };
   
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       
       <div className="flex-1 pt-20">
@@ -87,22 +88,26 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {(user.role === 'artist' || user.role === 'listener') && (
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <Link to="/artist-profile" className="w-full sm:w-auto">
-                    <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <ThemeSelector />
+                
+                {(user.role === 'artist' || user.role === 'listener') && (
+                  <>
+                                      <Link to="/artist-profile" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
                       <User className="mr-2 h-4 w-4" />
                       {user.role === 'artist' ? 'Manage Profile' : 'Create Artist Profile'}
                     </Button>
                   </Link>
-                  <Link to="/create-project" className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Create New Project
-                    </Button>
-                  </Link>
-                </div>
-              )}
+                    <Link to="/create-project" className="w-full sm:w-auto">
+                      <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create New Project
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
               
               {user.role === 'developer' && (
                 <Link to="/create-service">

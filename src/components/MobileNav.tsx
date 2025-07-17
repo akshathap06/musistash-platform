@@ -30,61 +30,40 @@ const MobileNav = () => {
 
   return (
     <>
-      {/* Mobile menu button - highest z-index to ensure it's always clickable */}
+      {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="sm"
         onClick={toggleNav}
-        className="md:hidden text-white hover:bg-white/10 fixed top-4 right-4 z-[99999] bg-black/20 backdrop-blur-sm border border-white/10"
-        style={{ zIndex: 99999 }}
+        className="md:hidden text-white hover:bg-white/10"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        <Menu className="h-6 w-6" />
       </Button>
 
       {/* Mobile navigation overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-[99998] md:hidden"
-          style={{ 
-            zIndex: 99998,
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}
-        >
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(4px)'
-            }}
             onClick={closeNav}
           />
           
           {/* Mobile menu */}
-          <div 
-            className="absolute top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md transform transition-transform duration-300 ease-in-out shadow-2xl"
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              height: '100vh',
-              width: '320px',
-              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 0 40px rgba(0, 0, 0, 0.5)',
-              zIndex: 99999
-            }}
-          >
-            <div className="flex flex-col p-6 pt-20 space-y-6 h-full">
+          <div className="absolute top-0 right-0 h-full w-80 bg-black/95 backdrop-blur-md shadow-2xl">
+            {/* Close button */}
+            <div className="flex justify-end p-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={closeNav}
+                className="text-white hover:bg-white/10"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+
+            <div className="flex flex-col p-6 space-y-6">
               <Link 
                 to="/how-it-works" 
                 className="text-white hover:text-primary transition-colors text-lg font-medium"
@@ -128,7 +107,7 @@ const MobileNav = () => {
                 Contact
               </Link>
               
-              <div className="pt-6 border-t border-white/20 space-y-4 mt-auto">
+              <div className="pt-6 border-t border-white/20 space-y-4">
                 <Link to="/login" onClick={closeNav}>
                   <Button variant="ghost" className="w-full text-white hover:bg-white/10">
                     Sign In

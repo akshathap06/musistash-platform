@@ -72,7 +72,7 @@ const Navbar = () => {
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-[#0f1216]/90 backdrop-blur-md shadow-lg border-b border-gray-800'
+          ? 'bg-black/90 backdrop-blur-md shadow-lg border-b border-gray-800'
           : 'bg-transparent'
       }`}
     >
@@ -81,13 +81,13 @@ const Navbar = () => {
           {/* Logo and Navigation Menu - Left Side */}
           <div className="flex items-center space-x-8">
             {/* Logo */}
-            <Link to="/" className="group flex items-center space-x-3">
+            <Link to="/" className="group flex items-center space-x-2 sm:space-x-3">
               <img 
                 src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
                 alt="MusiStash Logo" 
-                className="h-8 w-auto transition-all duration-300 group-hover:opacity-80"
+                className="h-7 sm:h-8 w-auto transition-all duration-300 group-hover:opacity-80"
               />
-              <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text transition-all duration-300 group-hover:opacity-80">
+              <span className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text transition-all duration-300 group-hover:opacity-80">
                 Musi$tash
               </span>
             </Link>
@@ -257,8 +257,8 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-800 bg-[#0f1216]/95 backdrop-blur-md">
-            <div className="px-4 py-6 space-y-6">
+          <div className="md:hidden fixed left-0 right-0 top-16 bottom-0 border-t border-gray-800 bg-black/95 backdrop-blur-md z-40 overflow-y-auto">
+            <div className="px-4 py-6 space-y-6 pb-20">
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (
                 <div className="space-y-4">

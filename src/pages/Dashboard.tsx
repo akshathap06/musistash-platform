@@ -59,12 +59,12 @@ const Dashboard = () => {
       <Navbar />
       
       <div className="flex-1 pt-20">
-        <div className="container max-w-7xl mx-auto px-4 py-8">
+        <div className="container max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Header Section with Gradient Background */}
-          <div className="relative mb-12 p-8 rounded-2xl bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-blue-500/30 backdrop-blur-sm">
+          <div className="relative mb-8 md:mb-12 p-4 md:p-8 rounded-2xl bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-blue-500/30 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-center space-x-4">
+            <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 p-0.5">
                   <img
                     className="w-full h-full rounded-full object-cover bg-gray-800"
@@ -73,10 +73,10 @@ const Dashboard = () => {
                   />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 text-transparent bg-clip-text">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-100 text-transparent bg-clip-text">
                     Welcome back, {user.name.split(' ')[0]}!
                   </h1>
-                  <p className="text-gray-300 text-lg">
+                  <p className="text-gray-300 text-sm sm:text-base lg:text-lg mt-1">
                     {user.role === 'artist' ? 'Create and manage your music projects' : 
                      user.role === 'developer' ? 'Build the future of music technology' :
                      'Discover and invest in the next big hits, or create your own artist profile'}
@@ -88,15 +88,15 @@ const Dashboard = () => {
               </div>
               
               {(user.role === 'artist' || user.role === 'listener') && (
-                <div className="flex space-x-4">
-                  <Link to="/artist-profile">
-                    <Button variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <Link to="/artist-profile" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20">
                       <User className="mr-2 h-4 w-4" />
                       {user.role === 'artist' ? 'Manage Profile' : 'Create Artist Profile'}
                     </Button>
                   </Link>
-                  <Link to="/create-project">
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                  <Link to="/create-project" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Create New Project
                     </Button>
@@ -158,9 +158,9 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
   const investedProjects = projects.filter(project => investedProjectIds.includes(project.id));
   
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -250,7 +250,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
           </div>
           
           {investedProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {investedProjects.map((project) => (
                 <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
                   <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />

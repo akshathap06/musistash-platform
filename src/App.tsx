@@ -38,7 +38,7 @@ import ScrollToTop from "./components/ScrollToTop";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <div className="min-h-screen bg-[rgb(15,18,22)] text-white">
+  <div className="min-h-screen bg-black text-white">
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>

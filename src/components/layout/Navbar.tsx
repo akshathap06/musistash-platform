@@ -309,7 +309,7 @@ const Navbar = () => {
           }}
         >
           {/* Header with Close Button */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-800">
+          <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-black/50 backdrop-blur-sm">
             <div className="flex items-center space-x-2">
               <img 
                 src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
@@ -322,16 +322,30 @@ const Navbar = () => {
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="lg"
               onClick={closeMobileMenu}
-              className="text-white hover:bg-white/10 rounded-full p-2"
+              className="text-white hover:bg-white/20 rounded-full p-3 bg-white/10 border border-white/20"
+              style={{ minWidth: '48px', minHeight: '48px' }}
             >
-              <X className="h-6 w-6" />
+              <X className="h-8 w-8" />
             </Button>
           </div>
 
           {/* Mobile Menu Content */}
           <div className="flex flex-col h-full overflow-y-auto">
+            {/* Floating Close Button - Always Visible */}
+            <div className="fixed top-4 right-4 z-[99999] md:hidden">
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={closeMobileMenu}
+                className="text-white hover:bg-white/20 rounded-full p-3 bg-black/80 backdrop-blur-sm border border-white/30 shadow-lg"
+                style={{ minWidth: '48px', minHeight: '48px' }}
+              >
+                <X className="h-8 w-8" />
+              </Button>
+            </div>
+
             <div className="flex-1 px-4 py-6 space-y-8">
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (

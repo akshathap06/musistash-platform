@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,69 +17,40 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleMobileNav = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Mobile nav toggle clicked, current state:", isMobileNavOpen);
-    const newState = !isMobileNavOpen;
-    setIsMobileNavOpen(newState);
-    console.log("Mobile nav new state:", newState);
-    
-    // Prevent body scroll when menu is open
-    if (newState) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${window.scrollY}px`;
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
+  const openMobileMenu = () => {
+    setIsMobileMenuOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
-  const closeMobileNav = () => {
-    console.log("Mobile nav closing");
-    const scrollY = document.body.style.top;
-    setIsMobileNavOpen(false);
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
     document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    if (scrollY) {
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
   };
 
-  // Close mobile nav when window is resized to desktop
+  // Close mobile menu on window resize to desktop size
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && isMobileNavOpen) {
-        closeMobileNav();
+      if (window.innerWidth >= 768) {
+        closeMobileMenu();
       }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isMobileNavOpen]);
+  }, []);
 
   return (
     <>
+      {/* Main Navbar */}
       <nav 
-        className={`fixed top-0 w-full transition-all duration-300 ${
+        className={`fixed top-0 w-full transition-all duration-300 z-40 ${
           isScrolled ? "bg-black/80 backdrop-blur-md" : "bg-transparent"
         }`}
-        style={{ zIndex: 9999 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2 z-50">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
@@ -126,83 +97,91 @@ const Navbar = () => {
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden text-white hover:bg-white/10 p-2 rounded-md transition-colors"
-              onClick={toggleMobileNav}
-              style={{ zIndex: 10001 }}
-              aria-label="Toggle mobile menu"
+              onClick={openMobileMenu}
+              className="md:hidden text-white p-2 z-50 relative"
+              aria-label="Open mobile menu"
             >
-              {isMobileNavOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile navigation overlay */}
-      {isMobileNavOpen && (
-        <>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm md:hidden"
-            onClick={closeMobileNav}
-            style={{ zIndex: 10000 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeMobileMenu}
           />
           
-          {/* Mobile menu panel */}
-          <div 
-            className="fixed top-0 right-0 h-full w-80 max-w-[80vw] bg-black/95 backdrop-blur-md border-l border-white/10 md:hidden"
-            style={{ zIndex: 10001 }}
-          >
-            <div className="flex flex-col p-6 pt-20 space-y-6 h-full overflow-y-auto">
+          {/* Mobile Menu Panel */}
+          <div className="absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-black/95 backdrop-blur-md">
+            {/* Close Button */}
+            <div className="flex justify-end p-4">
+              <button
+                onClick={closeMobileMenu}
+                className="text-white p-2"
+                aria-label="Close mobile menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Menu Content */}
+            <div className="px-6 py-4 space-y-6">
               <Link 
                 to="/how-it-works" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 How It Works
               </Link>
               <Link 
                 to="/services" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 Services
               </Link>
               <Link 
                 to="/artists" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 Artists
               </Link>
               <Link 
                 to="/discover-projects" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 Discover Projects
               </Link>
               <Link 
                 to="/about" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 About
               </Link>
               <Link 
                 to="/contact" 
-                className="text-white hover:text-blue-400 transition-colors text-lg font-medium"
-                onClick={closeMobileNav}
+                className="block text-white hover:text-blue-400 transition-colors text-lg font-medium py-2"
+                onClick={closeMobileMenu}
               >
                 Contact
               </Link>
               
-              <div className="pt-6 border-t border-white/20 space-y-4 mt-auto">
-                <Link to="/login" onClick={closeMobileNav}>
+              {/* Auth Buttons */}
+              <div className="pt-6 border-t border-white/20 space-y-4">
+                <Link to="/login" onClick={closeMobileMenu}>
                   <Button variant="ghost" className="w-full text-white hover:bg-white/10">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/register" onClick={closeMobileNav}>
+                <Link to="/register" onClick={closeMobileMenu}>
                   <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
                     Get Started
                   </Button>
@@ -210,7 +189,7 @@ const Navbar = () => {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

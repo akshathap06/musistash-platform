@@ -322,7 +322,19 @@ const Navbar = () => {
               zIndex: 99999
             }}
           >
-            <div className="px-4 py-6 space-y-6 pb-20 pt-20">
+            {/* Close Button */}
+            <div className="sticky top-0 z-10 flex justify-end p-4 bg-black/20 backdrop-blur-sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={closeMobileMenu}
+                className="text-white hover:bg-white/10 rounded-full p-2"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+
+            <div className="px-4 py-6 space-y-6 pb-20">
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (
                 <div className="space-y-4">

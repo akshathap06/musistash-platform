@@ -37,7 +37,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Prevent body scroll when mobile menu is open
+  // Body scroll lock when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -94,8 +94,17 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <>
+      {/* Main Header */}
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
@@ -271,9 +280,8 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <Button 
               variant="ghost" 
-              className="md:hidden p-2 z-[99999]" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{ zIndex: 99999 }}
+              className="md:hidden p-2 text-white hover:bg-white/10" 
+              onClick={toggleMobileMenu}
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -285,163 +293,163 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Mobile Menu - Rendered outside header for proper overlay */}
+      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/98 backdrop-blur-lg z-[99999] overflow-y-auto">
-          {/* Header with Close Button */}
-          <div className="sticky top-0 z-[99999] flex justify-between items-center p-4 border-b border-gray-800 bg-black/95 backdrop-blur-lg shadow-lg">
+        <div 
+          className="md:hidden fixed inset-0 bg-black z-[99999]"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99999,
+            backgroundColor: 'rgba(0, 0, 0, 0.95)'
+          }}
+        >
+          {/* Mobile Menu Header */}
+          <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-black/90">
             <div className="flex items-center space-x-3">
               <img 
                 src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
                 alt="MusiStash Logo" 
-                className="h-10 w-auto"
+                className="h-8 w-auto"
               />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
                 Musi$tash
               </span>
             </div>
             <Button
               variant="ghost"
               size="lg"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="text-white hover:bg-white/20 rounded-full p-3 bg-white/25 border-2 border-white/40 shadow-xl"
-              style={{ minWidth: '56px', minHeight: '56px' }}
+              onClick={closeMobileMenu}
+              className="text-white hover:bg-white/20 rounded-full p-2 bg-white/10 border border-white/20"
             >
-              <X className="h-9 w-9" />
+              <X className="h-6 w-6" />
             </Button>
           </div>
 
-          <div className="px-4 py-6 space-y-6 pb-20">
-            {/* Floating Close Button - Always Visible */}
-            <div className="fixed top-8 right-8 z-[99999] md:hidden">
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-white hover:bg-white/20 rounded-full p-4 bg-black/95 backdrop-blur-md border-2 border-white/50 shadow-2xl"
-                style={{ minWidth: '60px', minHeight: '60px' }}
-              >
-                <X className="h-10 w-10" />
-              </Button>
-            </div>
-
-            {/* Mobile Auth Section */}
-            {isAuthenticated && user ? (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 px-3 py-2 bg-gray-800/50 rounded-lg">
-                  <img
-                    className="h-10 w-10 rounded-full object-cover border-2 border-blue-500/50"
-                    src={user.avatar || '/placeholder.svg'}
-                    alt={user.name}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-white">{user.name}</span>
-                    <span className="text-xs text-gray-400">{user.email}</span>
+          {/* Mobile Menu Content */}
+          <div className="flex flex-col h-full overflow-y-auto">
+            <div className="flex-1 px-4 py-6 space-y-6">
+              {/* Auth Section */}
+              {isAuthenticated && user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 px-3 py-2 bg-gray-800/50 rounded-lg">
+                    <img
+                      className="h-10 w-10 rounded-full object-cover border-2 border-blue-500/50"
+                      src={user.avatar || '/placeholder.svg'}
+                      alt={user.name}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white">{user.name}</span>
+                      <span className="text-xs text-gray-400">{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <Link to="/dashboard" onClick={closeMobileMenu}>
+                      <Button variant="ghost" className="w-full text-left justify-start text-white">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        My Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-left justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </Button>
                   </div>
                 </div>
-                <div className="flex flex-col space-y-2">
-                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full text-left justify-start">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      My Dashboard
+              ) : (
+                <div className="flex flex-col space-y-3">
+                  <Link to="/login" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full text-left justify-start text-white">
+                      Log In
                     </Button>
                   </Link>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full text-left justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col space-y-3">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full text-left justify-start">
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="default" className="w-full">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile Navigation Links */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-3">Platform</h3>
-                <div className="space-y-2">
-                  <Link to="/how-it-works" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    How It Works
-                  </Link>
-                  <Link to="/discover-projects" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Discover Projects
-                  </Link>
-                  <Link to="/browse-artists" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Browse Artists
-                  </Link>
-                  <Link to="/artist-feuds" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Artist Feuds
+                  <Link to="/register" onClick={closeMobileMenu}>
+                    <Button variant="default" className="w-full">
+                      Sign Up
+                    </Button>
                   </Link>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-3">Services</h3>
-                <div className="space-y-2">
-                  <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Our Services
-                  </Link>
-                  <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    AI Tools
-                  </Link>
-                  <Link to="/investment-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Investment Tools
-                  </Link>
-                  <Link to="/artist-services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Artist Services
-                  </Link>
+              {/* Navigation Links */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Platform</h3>
+                  <div className="space-y-2">
+                    <Link to="/how-it-works" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      How It Works
+                    </Link>
+                    <Link to="/discover-projects" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Discover Projects
+                    </Link>
+                    <Link to="/browse-artists" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Browse Artists
+                    </Link>
+                    <Link to="/artist-feuds" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Artist Feuds
+                    </Link>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-3">Company</h3>
-                <div className="space-y-2">
-                  <Link to="/about" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    About Us
-                  </Link>
-                  <Link to="/careers" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Careers
-                  </Link>
-                  <Link to="/contact" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Contact
-                  </Link>
-                  <Link to="/blog" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Blog
-                  </Link>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Services</h3>
+                  <div className="space-y-2">
+                    <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Our Services
+                    </Link>
+                    <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      AI Tools
+                    </Link>
+                    <Link to="/investment-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Investment Tools
+                    </Link>
+                    <Link to="/artist-services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Artist Services
+                    </Link>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-200 mb-3">Legal</h3>
-                <div className="space-y-2">
-                  <Link to="/terms" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Terms of Service
-                  </Link>
-                  <Link to="/privacy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Privacy Policy
-                  </Link>
-                  <Link to="/cookie-policy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Cookie Policy
-                  </Link>
-                  <Link to="/security" className="block py-2 text-gray-300 hover:text-blue-400" onClick={() => setIsMobileMenuOpen(false)}>
-                    Security
-                  </Link>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Company</h3>
+                  <div className="space-y-2">
+                    <Link to="/about" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      About Us
+                    </Link>
+                    <Link to="/careers" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Careers
+                    </Link>
+                    <Link to="/contact" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Contact
+                    </Link>
+                    <Link to="/blog" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Blog
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Legal</h3>
+                  <div className="space-y-2">
+                    <Link to="/terms" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Terms of Service
+                    </Link>
+                    <Link to="/privacy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Privacy Policy
+                    </Link>
+                    <Link to="/cookie-policy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Cookie Policy
+                    </Link>
+                    <Link to="/security" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                      Security
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

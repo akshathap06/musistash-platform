@@ -41,12 +41,25 @@ const Navbar = () => {
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
     } else {
-      document.body.style.overflow = 'unset';
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
     };
   }, [isMobileMenuOpen]);
 
@@ -91,6 +104,7 @@ const Navbar = () => {
 
   return (
     <>
+      {/* Main Navbar */}
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
@@ -280,101 +294,85 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Full Screen Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="md:hidden fixed inset-0 z-[99998]"
+          className="md:hidden fixed inset-0 z-[99998] bg-black"
           style={{ 
             zIndex: 99998,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
-            bottom: 0
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.98)'
           }}
         >
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(4px)'
-            }}
-            onClick={closeMobileMenu}
-          />
-          
-          {/* Mobile Menu Content */}
-          <div 
-            className="absolute top-0 left-0 h-full w-full bg-black/95 backdrop-blur-md overflow-y-auto"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              height: '100vh',
-              width: '100%',
-              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-              backdropFilter: 'blur(12px)',
-              zIndex: 99999
-            }}
-          >
-            {/* Close Button */}
-            <div className="sticky top-0 z-10 flex justify-end p-4 bg-black/20 backdrop-blur-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeMobileMenu}
-                className="text-white hover:bg-white/10 rounded-full p-2"
-              >
-                <X className="h-6 w-6" />
-              </Button>
+          {/* Header with Close Button */}
+          <div className="flex justify-between items-center p-4 border-b border-gray-800">
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/lovable-uploads/f3770010-64bf-4539-b28e-1e6985324bf5.png" 
+                alt="MusiStash Logo" 
+                className="h-6 w-auto"
+              />
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+                Musi$tash
+              </span>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeMobileMenu}
+              className="text-white hover:bg-white/10 rounded-full p-2"
+            >
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
 
-            <div className="px-4 py-6 space-y-6 pb-20">
+          {/* Mobile Menu Content */}
+          <div className="flex flex-col h-full overflow-y-auto">
+            <div className="flex-1 px-4 py-6 space-y-8">
               {/* Mobile Auth Section */}
               {isAuthenticated && user ? (
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 px-3 py-2 bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center space-x-3 px-4 py-3 bg-gray-800/50 rounded-lg">
                     <img
-                      className="h-10 w-10 rounded-full object-cover border-2 border-blue-500/50"
+                      className="h-12 w-12 rounded-full object-cover border-2 border-blue-500/50"
                       src={user.avatar || '/placeholder.svg'}
                       alt={user.name}
                     />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-white">{user.name}</span>
-                      <span className="text-xs text-gray-400">{user.email}</span>
+                      <span className="text-lg font-medium text-white">{user.name}</span>
+                      <span className="text-sm text-gray-400">{user.email}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-3">
                     <Link to="/dashboard" onClick={closeMobileMenu}>
-                      <Button variant="ghost" className="w-full text-left justify-start">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <Button variant="ghost" className="w-full text-left justify-start text-lg py-3">
+                        <LayoutDashboard className="mr-3 h-5 w-5" />
                         My Dashboard
                       </Button>
                     </Link>
                     <Button 
                       variant="ghost" 
-                      className="w-full text-left justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      className="w-full text-left justify-start text-lg py-3 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                       onClick={handleLogout}
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="mr-3 h-5 w-5" />
                       Log out
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-3">
+                <div className="flex flex-col space-y-4">
                   <Link to="/login" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                    <Button variant="ghost" className="w-full text-left justify-start text-lg py-3">
                       Log In
                     </Button>
                   </Link>
                   <Link to="/register" onClick={closeMobileMenu}>
-                    <Button variant="default" className="w-full">
+                    <Button variant="default" className="w-full text-lg py-3">
                       Sign Up
                     </Button>
                   </Link>
@@ -382,74 +380,74 @@ const Navbar = () => {
               )}
 
               {/* Mobile Navigation Links */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Platform</h3>
-                  <div className="space-y-2">
-                    <Link to="/how-it-works" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                  <h3 className="text-xl font-bold text-gray-200 mb-4">Platform</h3>
+                  <div className="space-y-3">
+                    <Link to="/how-it-works" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       How It Works
                     </Link>
-                    <Link to="/discover-projects" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/discover-projects" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Discover Projects
                     </Link>
-                    <Link to="/browse-artists" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/browse-artists" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Browse Artists
                     </Link>
-                    <Link to="/artist-feuds" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/artist-feuds" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Artist Feuds
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Services</h3>
-                  <div className="space-y-2">
-                    <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                  <h3 className="text-xl font-bold text-gray-200 mb-4">Services</h3>
+                  <div className="space-y-3">
+                    <Link to="/services" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Our Services
                     </Link>
-                    <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/ai-tools" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       AI Tools
                     </Link>
-                    <Link to="/investment-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/investment-tools" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Investment Tools
                     </Link>
-                    <Link to="/artist-services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/artist-services" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Artist Services
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Company</h3>
-                  <div className="space-y-2">
-                    <Link to="/about" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                  <h3 className="text-xl font-bold text-gray-200 mb-4">Company</h3>
+                  <div className="space-y-3">
+                    <Link to="/about" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       About Us
                     </Link>
-                    <Link to="/careers" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/careers" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Careers
                     </Link>
-                    <Link to="/contact" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/contact" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Contact
                     </Link>
-                    <Link to="/blog" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/blog" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Blog
                     </Link>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Legal</h3>
-                  <div className="space-y-2">
-                    <Link to="/terms" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                  <h3 className="text-xl font-bold text-gray-200 mb-4">Legal</h3>
+                  <div className="space-y-3">
+                    <Link to="/terms" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Terms of Service
                     </Link>
-                    <Link to="/privacy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/privacy" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Privacy Policy
                     </Link>
-                    <Link to="/cookie-policy" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/cookie-policy" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Cookie Policy
                     </Link>
-                    <Link to="/security" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
+                    <Link to="/security" className="block py-3 text-lg text-gray-300 hover:text-blue-400 border-b border-gray-800" onClick={closeMobileMenu}>
                       Security
                     </Link>
                   </div>

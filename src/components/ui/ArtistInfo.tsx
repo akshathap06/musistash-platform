@@ -30,6 +30,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   const { user, isAuthenticated } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [actualFollowers, setActualFollowers] = useState<number | null>(null);
 
   const initials = artist.name
     .split(' ')
@@ -45,7 +46,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   // Use Spotify followers if available, otherwise fallback to artist followers
   const followers = spotifyArtist?.followers?.total || artist.followers;
 
-  // Load following state
+  // Load following state and actual follower count
   useEffect(() => {
     const loadFollowingState = async () => {
       if (!user || !isAuthenticated || !showFollowButton || user.id === artist.id) return;
@@ -58,7 +59,17 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       }
     };
 
+    const loadFollowerCount = async () => {
+      try {
+        const count = await followingService.getFollowerCount(artist.id);
+        setActualFollowers(count);
+      } catch (error) {
+        console.error('Error loading follower count:', error);
+      }
+    };
+
     loadFollowingState();
+    loadFollowerCount();
   }, [user, isAuthenticated, artist.id, showFollowButton]);
 
   const handleFollow = async () => {
@@ -83,6 +94,8 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         
         if (success) {
           setIsFollowing(true);
+          // Update follower count immediately
+          setActualFollowers(prev => (prev || 0) + 1);
           onFollowChange?.(artist.id, true);
         }
       } else {
@@ -90,6 +103,8 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         
         if (success) {
           setIsFollowing(false);
+          // Update follower count immediately
+          setActualFollowers(prev => Math.max(0, (prev || 0) - 1));
           onFollowChange?.(artist.id, false);
         }
       }
@@ -99,6 +114,9 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Use actual follower count if available, otherwise fallback to artist followers
+  const displayFollowers = actualFollowers !== null ? actualFollowers : followers;
 
   return (
     <div className={`flex ${expanded ? 'flex-col items-center text-center' : 'items-center'} animate-fade-in`}>
@@ -137,7 +155,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
-                <div className="text-2xl font-semibold text-white">{followers.toLocaleString()}</div>
+                <div className="text-2xl font-semibold text-white">{displayFollowers.toLocaleString()}</div>
                 <div className="text-gray-400">Followers</div>
               </div>
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700">

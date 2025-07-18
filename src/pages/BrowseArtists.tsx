@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,33 +10,77 @@ import { artists } from '@/lib/mockData';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Filter, Music, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Search, Filter, Music, Loader2, RefreshCw } from 'lucide-react';
 
 const BrowseArtists = () => {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [approvedProfiles, setApprovedProfiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  // Load approved profiles
-  useEffect(() => {
-    const loadProfiles = async () => {
-      try {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+
+  // Load approved profiles with refresh capability
+  const loadProfiles = useCallback(async (showLoading = true, isAutoRefresh = false) => {
+    try {
+      if (showLoading) {
         setIsLoading(true);
-        console.log('Loading approved profiles...');
-        const profiles = await artistProfileService.getApprovedProfiles();
-        console.log('Loaded approved profiles:', profiles);
-        setApprovedProfiles(profiles || []);
-      } catch (error) {
-        console.error('Error loading approved profiles:', error);
-        setApprovedProfiles([]);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setIsRefreshing(true);
       }
-    };
-    
+      console.log('Loading approved profiles...');
+      const profiles = await artistProfileService.getApprovedProfiles();
+      console.log('Loaded approved profiles:', profiles);
+      setApprovedProfiles(profiles || []);
+      setLastRefresh(new Date());
+      
+      // Show toast notification for manual refresh
+      if (!isAutoRefresh && !showLoading) {
+        toast({
+          title: "Data Updated",
+          description: `Refreshed ${profiles?.length || 0} artist profiles`,
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading approved profiles:', error);
+      setApprovedProfiles([]);
+      
+      if (!isAutoRefresh) {
+        toast({
+          title: "Error",
+          description: "Failed to refresh artist data",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [toast]);
+
+  // Initial load
+  useEffect(() => {
     loadProfiles();
-  }, []);
+  }, [loadProfiles]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadProfiles(false, true);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [loadProfiles]);
+
+  // Refresh function for manual refresh
+  const handleRefresh = () => {
+    loadProfiles(false);
+  };
 
   // Combine mock artists with approved profiles
   const allArtists = [
@@ -70,7 +114,13 @@ const BrowseArtists = () => {
     return matchesSearch && artist.genres.includes(selectedGenre);
   });
 
-
+  // Handle follow change to refresh data
+  const handleFollowChange = useCallback((artistId: string, isFollowing: boolean) => {
+    // Refresh profiles after follow/unfollow to get updated follower counts
+    setTimeout(() => {
+      loadProfiles(false);
+    }, 500);
+  }, [loadProfiles]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0f1216]">
@@ -116,6 +166,29 @@ const BrowseArtists = () => {
             </div>
           </div>
 
+          {/* Refresh and Status Section */}
+          <div className="flex justify-between items-center mb-6 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>
+              {isRefreshing && (
+                <span className="flex items-center gap-1 text-blue-400">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  Updating...
+                </span>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="border-white/20 text-gray-300 hover:bg-white/10"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
+
           {/* Artists Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading ? (
@@ -137,6 +210,7 @@ const BrowseArtists = () => {
                     artist={artist} 
                     expanded={true} 
                     showFollowButton={true}
+                    onFollowChange={handleFollowChange}
                   />
                   <div className="mt-4">
                     <Link to={`/artist/${artist.id}`}>

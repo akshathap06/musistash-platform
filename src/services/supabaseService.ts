@@ -716,6 +716,117 @@ export class SupabaseService {
       console.error('SupabaseService: Error checking RLS status:', error);
     }
   }
+
+  // Comprehensive test to check all tables and their access
+  async comprehensiveTableTest(): Promise<void> {
+    try {
+      console.log('=== COMPREHENSIVE TABLE TEST START ===');
+      
+      const tables = ['users', 'artist_profiles', 'projects', 'investments', 'follow_relationships'];
+      
+      for (const tableName of tables) {
+        console.log(`\n--- Testing ${tableName} table ---`);
+        
+        // Test read access
+        const { data: readData, error: readError } = await supabase
+          .from(tableName)
+          .select('*')
+          .limit(1);
+        
+        console.log(`${tableName} READ TEST:`, { 
+          success: !readError, 
+          error: readError?.message,
+          recordCount: readData?.length || 0 
+        });
+        
+        // Test write access with sample data
+        const sampleData = this.getSampleDataForTable(tableName);
+        if (sampleData) {
+          const { data: writeData, error: writeError } = await supabase
+            .from(tableName)
+            .insert(sampleData)
+            .select();
+          
+          console.log(`${tableName} WRITE TEST:`, { 
+            success: !writeError, 
+            error: writeError?.message,
+            insertedData: writeData 
+          });
+          
+          // Clean up if write succeeded
+          if (!writeError && writeData && writeData.length > 0) {
+            const { error: deleteError } = await supabase
+              .from(tableName)
+              .delete()
+              .eq('id', writeData[0].id);
+            
+            console.log(`${tableName} CLEANUP:`, { 
+              success: !deleteError, 
+              error: deleteError?.message 
+            });
+          }
+        }
+      }
+      
+      console.log('=== COMPREHENSIVE TABLE TEST END ===');
+    } catch (error) {
+      console.error('❌ COMPREHENSIVE TEST EXCEPTION:', error);
+    }
+  }
+  
+  // Helper method to get sample data for each table
+  private getSampleDataForTable(tableName: string): any {
+    const baseUserId = '105de9e2-12ff-47e4-8d68-2181f713643c'; // From your users table
+    const baseArtistId = 'a723433a-d545-41d4-a716-446655440000'; // From your users table
+    
+    switch (tableName) {
+      case 'users':
+        return {
+          name: 'Test User',
+          email: 'test@example.com',
+          role: 'listener'
+        };
+      case 'artist_profiles':
+        return {
+          user_id: baseUserId,
+          artist_name: 'Test Artist',
+          email: 'artist@example.com',
+          bio: 'Test bio',
+          genre: ['Test'],
+          location: 'Test Location',
+          is_verified: false,
+          status: 'pending'
+        };
+      case 'projects':
+        return {
+          artist_id: baseArtistId,
+          title: 'Test Project',
+          description: 'Test description',
+          funding_goal: 10000,
+          min_investment: 100,
+          max_investment: 1000,
+          expected_roi: 10,
+          project_duration: '6 months',
+          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'active'
+        };
+      case 'investments':
+        return {
+          user_id: baseUserId,
+          project_id: '550e8400-e29b-41d4-a716-446655440000', // Test UUID
+          amount: 1000,
+          status: 'completed'
+        };
+      case 'follow_relationships':
+        return {
+          follower_id: baseUserId,
+          artist_id: baseArtistId,
+          followed_at: new Date().toISOString()
+        };
+      default:
+        return null;
+    }
+  }
 }
 
 export const supabaseService = new SupabaseService() 

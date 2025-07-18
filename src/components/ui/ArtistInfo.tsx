@@ -117,6 +117,9 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       
       // Run simple test
       await supabaseService.simpleFollowTest();
+      
+      // Run comprehensive test for all tables
+      await supabaseService.comprehensiveTableTest();
     } catch (error) {
       console.error('ArtistInfo: Table access test failed:', error);
     }

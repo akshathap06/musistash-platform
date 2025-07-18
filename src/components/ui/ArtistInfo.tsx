@@ -52,7 +52,9 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       if (!user || !isAuthenticated || !showFollowButton || user.id === artist.id) return;
       
       try {
+        console.log('Loading following state for user:', user.id, 'artist:', artist.id);
         const following = await followingService.isFollowing(user.id, artist.id);
+        console.log('Following state loaded:', following);
         setIsFollowing(following);
       } catch (error) {
         console.error('Error loading following state:', error);
@@ -72,6 +74,12 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
     loadFollowerCount();
   }, [user, isAuthenticated, artist.id, showFollowButton]);
 
+  // Reset following state when artist changes
+  useEffect(() => {
+    setIsFollowing(false);
+    setActualFollowers(null);
+  }, [artist.id]);
+
   const handleFollow = async () => {
     if (!user || !isAuthenticated) {
       window.location.href = '/login';
@@ -80,11 +88,19 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
 
     if (user.id === artist.id) return;
 
+    console.log('Follow button clicked. Current state:', isFollowing);
+    console.log('User ID:', user.id, 'Artist ID:', artist.id);
+
     setIsLoading(true);
+    
+    // Optimistically update the UI state
+    const newFollowingState = !isFollowing;
+    console.log('Setting new following state to:', newFollowingState);
+    setIsFollowing(newFollowingState);
+    
     try {
-      const newFollowingState = !isFollowing;
-      
       if (newFollowingState) {
+        console.log('Attempting to follow artist...');
         const success = await followingService.followArtist(
           user.id,
           { name: user.name, avatar: user.avatar },
@@ -92,24 +108,37 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
           { name: artist.name, avatar: artist.avatar }
         );
         
+        console.log('Follow operation result:', success);
+        
         if (success) {
-          setIsFollowing(true);
           // Update follower count immediately
           setActualFollowers(prev => (prev || 0) + 1);
           onFollowChange?.(artist.id, true);
+        } else {
+          // Revert if the operation failed
+          console.log('Follow operation failed, reverting state');
+          setIsFollowing(false);
         }
       } else {
+        console.log('Attempting to unfollow artist...');
         const success = await followingService.unfollowArtist(user.id, artist.id);
         
+        console.log('Unfollow operation result:', success);
+        
         if (success) {
-          setIsFollowing(false);
           // Update follower count immediately
           setActualFollowers(prev => Math.max(0, (prev || 0) - 1));
           onFollowChange?.(artist.id, false);
+        } else {
+          // Revert if the operation failed
+          console.log('Unfollow operation failed, reverting state');
+          setIsFollowing(true);
         }
       }
     } catch (error) {
       console.error('Error following/unfollowing artist:', error);
+      // Revert on error
+      setIsFollowing(!newFollowingState);
     } finally {
       setIsLoading(false);
     }
@@ -172,11 +201,22 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
             {showFollowButton && (!user || user.id !== artist.id) && (
               <Button 
                 variant={isFollowing ? "outline" : "default"}
-                className={`w-full ${isFollowing ? "text-gray-400" : "bg-green-600 hover:bg-green-700"}`}
+                className={`w-full transition-all duration-200 ${
+                  isFollowing 
+                    ? "border-gray-500 text-gray-400 bg-gray-800/50 hover:bg-gray-700/50" 
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
                 onClick={handleFollow}
                 disabled={isLoading}
               >
-                {isLoading ? "Loading..." : (isFollowing ? "Following" : "Follow")}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    Loading...
+                  </div>
+                ) : (
+                  isFollowing ? "Following" : "Follow"
+                )}
               </Button>
             )}
           </>

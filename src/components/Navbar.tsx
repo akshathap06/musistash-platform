@@ -39,7 +39,7 @@ const Navbar = () => {
                 How It Works
               </Link>
               <Link to="/services" className="text-white hover:text-primary transition-colors">
-                Services
+                Features
               </Link>
               <Link to="/artists" className="text-white hover:text-primary transition-colors">
                 Artists

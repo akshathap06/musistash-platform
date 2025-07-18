@@ -97,7 +97,7 @@ const Services = () => {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 text-transparent bg-clip-text"
             >
-              Our Services
+              Our Features
             </motion.h1>
             
             <motion.p
@@ -106,7 +106,7 @@ const Services = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed"
             >
-              Comprehensive suite of AI-powered tools and services designed specifically for music investment. 
+              Comprehensive suite of AI-powered tools and features designed specifically for music investment. 
               From intelligent analysis to professional portfolio management.
             </motion.p>
             

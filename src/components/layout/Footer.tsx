@@ -47,7 +47,7 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
               </li>
               <li>
                 <Link to="/services" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Services
+                  Features
                 </Link>
               </li>
             </ul>

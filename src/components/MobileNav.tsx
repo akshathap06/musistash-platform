@@ -51,7 +51,7 @@ const MobileNav = () => {
                 className="text-white hover:text-primary transition-colors text-lg"
                 onClick={closeNav}
               >
-                Services
+                Features
               </Link>
               <Link 
                 to="/artists" 

@@ -153,13 +153,13 @@ const Navbar = () => {
                       </NavigationMenuContent>
                     </NavigationMenuItem>
 
-                    {/* Services Menu */}
+                    {/* Features Menu */}
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger>Services</NavigationMenuTrigger>
+                      <NavigationMenuTrigger>Features</NavigationMenuTrigger>
                       <NavigationMenuContent>
                         <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                          <ListItem href="/services" title="Our Services">
-                            Comprehensive services for artists and investors
+                          <ListItem href="/services" title="Our Features">
+                            Comprehensive features for artists and investors
                           </ListItem>
                           <ListItem href="/ai-tools" title="AI Tools">
                             Advanced AI-powered analytics and insights
@@ -396,10 +396,10 @@ const Navbar = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Services</h3>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-3">Features</h3>
                   <div className="space-y-2">
                     <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
-                      Our Services
+                      Our Features
                     </Link>
                     <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
                       AI Tools

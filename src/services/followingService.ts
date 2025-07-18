@@ -1,3 +1,6 @@
+import { supabaseService } from './supabaseService';
+import { artistProfileService } from './artistProfileService';
+
 export interface FollowData {
   userId: string;
   artistId: string;
@@ -14,75 +17,84 @@ export interface FollowerData {
 }
 
 class FollowingService {
-  private followingKey = 'user_following';
-  private followersKey = 'user_followers';
-
   // Get all artists that a user is following
-  getUserFollowing(userId: string): FollowData[] {
-    const stored = localStorage.getItem(this.followingKey);
-    if (!stored) return [];
-    
-    const allFollowing: Record<string, FollowData[]> = JSON.parse(stored);
-    return allFollowing[userId] || [];
+  async getUserFollowing(userId: string): Promise<FollowData[]> {
+    try {
+      const following = await supabaseService.getFollowing(userId);
+      const followData: FollowData[] = [];
+      
+      for (const follow of following) {
+        // Try to get artist profile details
+        let artistName = '';
+        let artistAvatar = '/placeholder.svg';
+        
+        try {
+          const profile = await artistProfileService.getProfileById(follow.artist_id);
+          if (profile) {
+            artistName = profile.artist_name;
+            artistAvatar = profile.profile_photo || '/placeholder.svg';
+          }
+        } catch (error) {
+          console.error('Error fetching artist profile:', error);
+        }
+        
+        followData.push({
+          userId: follow.follower_id,
+          artistId: follow.artist_id,
+          followedAt: follow.followed_at,
+          artistName,
+          artistAvatar
+        });
+      }
+      
+      return followData;
+    } catch (error) {
+      console.error('Error getting user following:', error);
+      return [];
+    }
   }
 
   // Get all users following a specific artist
-  getArtistFollowers(artistId: string): FollowerData[] {
-    const stored = localStorage.getItem(this.followersKey);
-    if (!stored) return [];
-    
-    const allFollowers: Record<string, FollowerData[]> = JSON.parse(stored);
-    return allFollowers[artistId] || [];
+  async getArtistFollowers(artistId: string): Promise<FollowerData[]> {
+    try {
+      const followers = await supabaseService.getFollowers(artistId);
+      const followerData: FollowerData[] = [];
+      
+      for (const follower of followers) {
+        // Try to get user details
+        let followerName = '';
+        let followerAvatar = '/placeholder.svg';
+        
+        try {
+          const user = await supabaseService.getUserById(follower.follower_id);
+          if (user) {
+            followerName = user.name;
+            followerAvatar = user.avatar || '/placeholder.svg';
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+        }
+        
+        followerData.push({
+          followerId: follower.follower_id,
+          followerName,
+          followerAvatar,
+          followedAt: follower.followed_at
+        });
+      }
+      
+      return followerData;
+    } catch (error) {
+      console.error('Error getting artist followers:', error);
+      return [];
+    }
   }
 
   // Follow an artist
-  followArtist(userId: string, userData: { name: string; avatar: string }, artistId: string, artistData: { name: string; avatar: string }): boolean {
+  async followArtist(userId: string, userData: { name: string; avatar: string }, artistId: string, artistData: { name: string; avatar: string }): Promise<boolean> {
     try {
-      // Add to user's following list
-      const following = this.getUserFollowing(userId);
-      const newFollow: FollowData = {
-        userId,
-        artistId,
-        followedAt: new Date().toISOString(),
-        artistName: artistData.name,
-        artistAvatar: artistData.avatar
-      };
-      
-      // Check if already following
-      if (following.some(f => f.artistId === artistId)) {
-        return false; // Already following
-      }
-      
-      following.push(newFollow);
-      
-      const allFollowing: Record<string, FollowData[]> = {};
-      const storedFollowing = localStorage.getItem(this.followingKey);
-      if (storedFollowing) {
-        Object.assign(allFollowing, JSON.parse(storedFollowing));
-      }
-      allFollowing[userId] = following;
-      localStorage.setItem(this.followingKey, JSON.stringify(allFollowing));
-
-      // Add to artist's followers list
-      const followers = this.getArtistFollowers(artistId);
-      const newFollower: FollowerData = {
-        followerId: userId,
-        followerName: userData.name,
-        followerAvatar: userData.avatar,
-        followedAt: new Date().toISOString()
-      };
-      
-      followers.push(newFollower);
-      
-      const allFollowers: Record<string, FollowerData[]> = {};
-      const storedFollowers = localStorage.getItem(this.followersKey);
-      if (storedFollowers) {
-        Object.assign(allFollowers, JSON.parse(storedFollowers));
-      }
-      allFollowers[artistId] = followers;
-      localStorage.setItem(this.followersKey, JSON.stringify(allFollowers));
-
-      return true;
+      const result = await supabaseService.followArtist(userId, artistId);
+      return result;
     } catch (error) {
       console.error('Error following artist:', error);
       return false;
@@ -90,33 +102,10 @@ class FollowingService {
   }
 
   // Unfollow an artist
-  unfollowArtist(userId: string, artistId: string): boolean {
+  async unfollowArtist(userId: string, artistId: string): Promise<boolean> {
     try {
-      // Remove from user's following list
-      const following = this.getUserFollowing(userId);
-      const updatedFollowing = following.filter(f => f.artistId !== artistId);
-      
-      const allFollowing: Record<string, FollowData[]> = {};
-      const storedFollowing = localStorage.getItem(this.followingKey);
-      if (storedFollowing) {
-        Object.assign(allFollowing, JSON.parse(storedFollowing));
-      }
-      allFollowing[userId] = updatedFollowing;
-      localStorage.setItem(this.followingKey, JSON.stringify(allFollowing));
-
-      // Remove from artist's followers list
-      const followers = this.getArtistFollowers(artistId);
-      const updatedFollowers = followers.filter(f => f.followerId !== userId);
-      
-      const allFollowers: Record<string, FollowerData[]> = {};
-      const storedFollowers = localStorage.getItem(this.followersKey);
-      if (storedFollowers) {
-        Object.assign(allFollowers, JSON.parse(storedFollowers));
-      }
-      allFollowers[artistId] = updatedFollowers;
-      localStorage.setItem(this.followersKey, JSON.stringify(allFollowers));
-
-      return true;
+      const result = await supabaseService.unfollowArtist(userId, artistId);
+      return result;
     } catch (error) {
       console.error('Error unfollowing artist:', error);
       return false;
@@ -124,37 +113,62 @@ class FollowingService {
   }
 
   // Check if user is following an artist
-  isFollowing(userId: string, artistId: string): boolean {
-    const following = this.getUserFollowing(userId);
-    return following.some(f => f.artistId === artistId);
+  async isFollowing(userId: string, artistId: string): Promise<boolean> {
+    try {
+      const result = await supabaseService.isFollowing(userId, artistId);
+      return result;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
   }
 
   // Get follower count for an artist
-  getFollowerCount(artistId: string): number {
-    const followers = this.getArtistFollowers(artistId);
-    return followers.length;
+  async getFollowerCount(artistId: string): Promise<number> {
+    try {
+      const count = await supabaseService.getFollowerCount(artistId);
+      return count;
+    } catch (error) {
+      console.error('Error getting follower count:', error);
+      return 0;
+    }
   }
 
   // Get following count for a user
-  getFollowingCount(userId: string): number {
-    const following = this.getUserFollowing(userId);
-    return following.length;
+  async getFollowingCount(userId: string): Promise<number> {
+    try {
+      const count = await supabaseService.getFollowingCount(userId);
+      return count;
+    } catch (error) {
+      console.error('Error getting following count:', error);
+      return 0;
+    }
   }
 
   // Get recent followers for an artist (last 5)
-  getRecentFollowers(artistId: string): FollowerData[] {
-    const followers = this.getArtistFollowers(artistId);
-    return followers
-      .sort((a, b) => new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime())
-      .slice(0, 5);
+  async getRecentFollowers(artistId: string): Promise<FollowerData[]> {
+    try {
+      const followers = await this.getArtistFollowers(artistId);
+      return followers
+        .sort((a, b) => new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime())
+        .slice(0, 5);
+    } catch (error) {
+      console.error('Error getting recent followers:', error);
+      return [];
+    }
   }
 
   // Get recent following for a user (last 5)
-  getRecentFollowing(userId: string): FollowData[] {
-    const following = this.getUserFollowing(userId);
-    return following
-      .sort((a, b) => new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime())
-      .slice(0, 5);
+  async getRecentFollowing(userId: string): Promise<FollowData[]> {
+    try {
+      const following = await this.getUserFollowing(userId);
+      return following
+        .sort((a, b) => new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime())
+        .slice(0, 5);
+    } catch (error) {
+      console.error('Error getting recent following:', error);
+      return [];
+    }
   }
 }
 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test User Creation</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <h1>Test User Creation</h1>
+    <button onclick="testUserCreation()">Test User Creation</button>
+    <div id="result"></div>
+
+    <script>
+      // Initialize Supabase client
+      const supabaseUrl = "https://dwbetxanfumneukrqodd.supabase.co";
+      const supabaseKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3YmV0eGFuZnVtbmV1a3Jxb2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4MDI2MzYsImV4cCI6MjA2ODM3ODYzNn0.CO3oIID2omAwuex2qE_dXbOYbtA_v9bC38VQizuXVJc";
+
+      const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+      async function testUserCreation() {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "Testing user creation...";
+
+        try {
+          // Test creating a user without specifying ID (should auto-generate UUID)
+          const { data, error } = await supabase
+            .from("users")
+            .insert({
+              name: "Test User",
+              email: "test@example.com",
+              role: "listener",
+            })
+            .select()
+            .single();
+
+          if (error) {
+            resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            console.error("Error:", error);
+          } else {
+            resultDiv.innerHTML = `
+                        <p style="color: green;">Success!</p>
+                        <p>User ID: ${data.id}</p>
+                        <p>Name: ${data.name}</p>
+                        <p>Email: ${data.email}</p>
+                        <p>Is UUID: ${isValidUUID(data.id)}</p>
+                    `;
+            console.log("Success:", data);
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<p style="color: red;">Exception: ${error.message}</p>`;
+          console.error("Exception:", error);
+        }
+      }
+
+      function isValidUUID(str) {
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+      }
+    </script>
+  </body>
+</html>

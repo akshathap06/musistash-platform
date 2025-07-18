@@ -1,25 +1,36 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Artist } from '@/lib/mockData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
+import { followingService } from '@/services/followingService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ArtistInfoProps {
   artist: Artist;
   spotifyArtist?: SpotifyArtist | null;
   expanded?: boolean;
   spotifyImage?: string;
+  showFollowButton?: boolean;
+  onFollowChange?: (artistId: string, isFollowing: boolean) => void;
 }
 
 const ArtistInfo: React.FC<ArtistInfoProps> = ({ 
   artist, 
   spotifyArtist,
   expanded = false,
-  spotifyImage
+  spotifyImage,
+  showFollowButton = false,
+  onFollowChange
 }) => {
+  const { user, isAuthenticated } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const initials = artist.name
     .split(' ')
     .map(n => n[0])
@@ -33,6 +44,61 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
 
   // Use Spotify followers if available, otherwise fallback to artist followers
   const followers = spotifyArtist?.followers?.total || artist.followers;
+
+  // Load following state
+  useEffect(() => {
+    const loadFollowingState = async () => {
+      if (!user || !isAuthenticated || !showFollowButton || user.id === artist.id) return;
+      
+      try {
+        const following = await followingService.isFollowing(user.id, artist.id);
+        setIsFollowing(following);
+      } catch (error) {
+        console.error('Error loading following state:', error);
+      }
+    };
+
+    loadFollowingState();
+  }, [user, isAuthenticated, artist.id, showFollowButton]);
+
+  const handleFollow = async () => {
+    if (!user || !isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+
+    if (user.id === artist.id) return;
+
+    setIsLoading(true);
+    try {
+      const newFollowingState = !isFollowing;
+      
+      if (newFollowingState) {
+        const success = await followingService.followArtist(
+          user.id,
+          { name: user.name, avatar: user.avatar },
+          artist.id,
+          { name: artist.name, avatar: artist.avatar }
+        );
+        
+        if (success) {
+          setIsFollowing(true);
+          onFollowChange?.(artist.id, true);
+        }
+      } else {
+        const success = await followingService.unfollowArtist(user.id, artist.id);
+        
+        if (success) {
+          setIsFollowing(false);
+          onFollowChange?.(artist.id, false);
+        }
+      }
+    } catch (error) {
+      console.error('Error following/unfollowing artist:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={`flex ${expanded ? 'flex-col items-center text-center' : 'items-center'} animate-fade-in`}>
@@ -55,7 +121,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
         
         {expanded && (
           <>
-            <p className="text-gray-400">{artist.bio}</p>
+            <p className="text-gray-400 break-words overflow-hidden">{artist.bio}</p>
             
             <div className="flex flex-wrap gap-2 justify-center">
               {genres.slice(0, 4).map((genre, index) => (
@@ -83,6 +149,18 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Follow Button */}
+            {showFollowButton && (!user || user.id !== artist.id) && (
+              <Button 
+                variant={isFollowing ? "outline" : "default"}
+                className={`w-full ${isFollowing ? "text-gray-400" : "bg-green-600 hover:bg-green-700"}`}
+                onClick={handleFollow}
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : (isFollowing ? "Following" : "Follow")}
+              </Button>
+            )}
           </>
         )}
         

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,17 +8,34 @@ import Footer from '@/components/layout/Footer';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { artists } from '@/lib/mockData';
 import { artistProfileService } from '@/services/artistProfileService';
-import { Search, Filter, Music } from 'lucide-react';
+import { followingService } from '@/services/followingService';
+import { useAuth } from '@/hooks/useAuth';
+import { Search, Filter, Music, Loader2 } from 'lucide-react';
 
 const BrowseArtists = () => {
+  const { user, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [approvedProfiles, setApprovedProfiles] = useState<any[]>([]);
-
+  const [isLoading, setIsLoading] = useState(true);
   // Load approved profiles
-  React.useEffect(() => {
-    const profiles = artistProfileService.getApprovedProfiles();
-    setApprovedProfiles(profiles);
+  useEffect(() => {
+    const loadProfiles = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Loading approved profiles...');
+        const profiles = await artistProfileService.getApprovedProfiles();
+        console.log('Loaded approved profiles:', profiles);
+        setApprovedProfiles(profiles || []);
+      } catch (error) {
+        console.error('Error loading approved profiles:', error);
+        setApprovedProfiles([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProfiles();
   }, []);
 
   // Combine mock artists with approved profiles
@@ -26,15 +43,19 @@ const BrowseArtists = () => {
     ...artists,
     ...approvedProfiles.map(profile => ({
       id: profile.id,
-      name: profile.artistName,
-      avatar: profile.profilePhoto,
+      name: profile.artist_name,
+      avatar: profile.profile_photo,
       bio: profile.bio,
       genres: profile.genre,
       followers: 0, // Default for new profiles
-      verified: profile.isVerified,
+      verified: profile.is_verified,
       successRate: 75 // Default for new profiles
     }))
   ];
+
+  console.log('All artists:', allArtists);
+  console.log('Mock artists:', artists);
+  console.log('Approved profiles:', approvedProfiles);
 
   // Get all unique genres
   const allGenres = ['all', ...new Set(allArtists.flatMap(artist => artist.genres))];
@@ -48,6 +69,8 @@ const BrowseArtists = () => {
     
     return matchesSearch && artist.genres.includes(selectedGenre);
   });
+
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0f1216]">
@@ -95,27 +118,37 @@ const BrowseArtists = () => {
 
           {/* Artists Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredArtists.map((artist) => (
-              <div key={artist.id} className="bg-gray-900/80 backdrop-blur-xl rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
-                <ArtistInfo artist={artist} expanded={true} />
-                <div className="mt-4">
-                  <Link to={`/artist/${artist.id}`}>
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      View Profile
-                    </Button>
-                  </Link>
-                </div>
+            {isLoading ? (
+              <div className="col-span-full text-center py-16">
+                <Loader2 className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-spin" />
+                <h3 className="text-xl font-semibold text-white mb-2">Loading artists...</h3>
+                <p className="text-gray-400">Please wait while we fetch the latest artist profiles.</p>
               </div>
-            ))}
+            ) : filteredArtists.length === 0 ? (
+              <div className="col-span-full text-center py-16">
+                <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No artists found</h3>
+                <p className="text-gray-400">Try adjusting your search or filter criteria.</p>
+              </div>
+            ) : (
+              filteredArtists.map((artist) => (
+                <div key={artist.id} className="bg-gray-900/80 backdrop-blur-xl rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
+                  <ArtistInfo 
+                    artist={artist} 
+                    expanded={true} 
+                    showFollowButton={true}
+                  />
+                  <div className="mt-4">
+                    <Link to={`/artist/${artist.id}`}>
+                      <Button variant="outline" className="w-full border-blue-500 text-blue-300 hover:bg-blue-500/20">
+                        View Profile
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-
-          {filteredArtists.length === 0 && (
-            <div className="text-center py-16">
-              <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No artists found</h3>
-              <p className="text-gray-400">Try adjusting your search or filter criteria.</p>
-            </div>
-          )}
         </section>
       </main>
 

@@ -1,6 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/lib/mockData';
+import { supabase } from '@/lib/supabase';
+import { supabaseService } from '@/services/supabaseService';
+import type { Database } from '@/lib/supabase';
+
+type User = Database['public']['Tables']['users']['Row'];
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: 'artist' | 'listener' | 'developer') => Promise<void>;
   logout: () => void;
-  loginWithGoogle: (googleUser: User, accessToken: string) => Promise<void>;
+  loginWithGoogle: (googleUser: any, accessToken: string) => Promise<void>;
   getAuthHeaders: () => Record<string, string>;
 }
 
@@ -20,11 +24,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check for saved user in localStorage
+    // Check for saved user in localStorage (for backward compatibility)
     const savedUser = localStorage.getItem('musistash_user');
     
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('musistash_user');
+      }
     }
     
     setIsLoading(false);
@@ -48,52 +58,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      // Traditional email/password login (mock for demo)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check for admin account
+      // Check for admin account first
       if (email === 'akshathapliyal27@gmail.com' && password === 'admin123') {
-        const adminUser: User = {
-          id: 'admin001',
-          name: 'Akshat Thapliyal',
-          email: email,
-          avatar: '/placeholder.svg',
-          role: 'admin',
-          createdAt: new Date().toISOString()
-        };
-        
-        setUser(adminUser);
-        localStorage.setItem('musistash_user', JSON.stringify(adminUser));
-        return;
+        const adminUser = await supabaseService.getUserByEmail(email);
+        if (adminUser) {
+          setUser(adminUser);
+          localStorage.setItem('musistash_user', JSON.stringify(adminUser));
+          return;
+        }
       }
       
       // Check for demo accounts
       if (email === 'demo@musistash.com' && password === 'demo123') {
-        const demoUser: User = {
-          id: 'demo001',
-          name: 'Demo User',
-          email: email,
-          avatar: '/placeholder.svg',
-          role: 'listener',
-          createdAt: new Date().toISOString()
-        };
-        
-        setUser(demoUser);
-        localStorage.setItem('musistash_user', JSON.stringify(demoUser));
+        let demoUser = await supabaseService.getUserByEmail(email);
+        if (!demoUser) {
+          // Create demo user if it doesn't exist
+          demoUser = await supabaseService.createUser({
+            name: 'Demo User',
+            email: email,
+            role: 'listener'
+          });
+        }
+        if (demoUser) {
+          setUser(demoUser);
+          localStorage.setItem('musistash_user', JSON.stringify(demoUser));
+          return;
+        }
+      }
+      
+      // Try to find existing user
+      const existingUser = await supabaseService.getUserByEmail(email);
+      if (existingUser) {
+        setUser(existingUser);
+        localStorage.setItem('musistash_user', JSON.stringify(existingUser));
         return;
       }
       
-      const mockUser: User = {
-        id: 'user123',
+      // Create new user for demo purposes
+      const newUser = await supabaseService.createUser({
         name: 'Demo User',
         email: email,
-        avatar: '/placeholder.svg',
-        role: 'listener',
-        createdAt: new Date().toISOString()
-      };
+        role: 'listener'
+      });
       
-      setUser(mockUser);
-      localStorage.setItem('musistash_user', JSON.stringify(mockUser));
+      if (newUser) {
+        setUser(newUser);
+        localStorage.setItem('musistash_user', JSON.stringify(newUser));
+      } else {
+        throw new Error('Failed to create user');
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -106,21 +119,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if user already exists
+      const existingUser = await supabaseService.getUserByEmail(email);
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
       
-      // Mock registration for demo purposes
-      const mockUser: User = {
-        id: `user_${Date.now()}`,
-        name: name,
-        email: email,
-        avatar: '/placeholder.svg',
-        role: role,
-        createdAt: new Date().toISOString()
-      };
+      // Create new user
+      const newUser = await supabaseService.createUser({
+        name,
+        email,
+        role
+      });
       
-      setUser(mockUser);
-      localStorage.setItem('musistash_user', JSON.stringify(mockUser));
+      if (newUser) {
+        setUser(newUser);
+        localStorage.setItem('musistash_user', JSON.stringify(newUser));
+      } else {
+        throw new Error('Failed to create user');
+      }
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -135,14 +152,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('access_token');
   };
 
-  const loginWithGoogle = async (googleUser: User, accessToken: string) => {
+  const loginWithGoogle = async (googleUser: any, accessToken: string) => {
     setIsLoading(true);
     try {
-      setUser(googleUser);
-      localStorage.setItem('musistash_user', JSON.stringify(googleUser));
-      localStorage.setItem('access_token', accessToken);
+      console.log('🔍 Attempting Google login with user:', googleUser);
+      
+      // For now, use the simplified approach that stores user in localStorage
+      const user = {
+        ...googleUser,
+        accessToken
+      };
+      
+      setUser(user);
+      localStorage.setItem('musistash_user', JSON.stringify(user));
+      localStorage.setItem('musistash_token', accessToken);
+      
+      console.log('🔍 User logged in successfully:', user);
+      
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error('🔍 Google login error:', error);
+      setUser(null);
       throw error;
     } finally {
       setIsLoading(false);

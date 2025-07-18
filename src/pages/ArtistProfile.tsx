@@ -32,65 +32,68 @@ const ArtistProfile = () => {
   useEffect(() => {
     // Simulate API fetch for artist data
     const fetchData = async () => {
-      // First try to get from approved profiles
-      let foundProfile = artistProfileService.getProfileById(id!);
-      let foundArtist: any;
-      
-      if (foundProfile && foundProfile.status === 'approved') {
-        // Convert profile to artist format
-        foundArtist = {
-          id: foundProfile.id,
-          name: foundProfile.artistName,
-          avatar: foundProfile.profilePhoto,
-          bio: foundProfile.bio,
-          genres: foundProfile.genre,
-          followers: 0, // Default for new profiles
-          verified: foundProfile.isVerified,
-          successRate: 75 // Default for new profiles
-        };
-        setArtist(foundArtist);
-        setFollowersCount(0); // Start with 0 followers for new profiles
+      try {
+        // First try to get from approved profiles
+        let foundProfile = await artistProfileService.getProfileById(id!);
+        let foundArtist: any;
         
-        // Check if current user is following this artist
-        if (user && isAuthenticated) {
-          const isUserFollowing = followingService.isFollowing(user.id, foundProfile.id);
-          setIsFollowing(isUserFollowing);
-        }
-      } else {
-        // Only show mock data if no approved profile exists
-        const mockArtist = artists.find(a => a.id === id);
-        if (mockArtist) {
-          foundArtist = mockArtist;
+        if (foundProfile && foundProfile.status === 'approved') {
+          // Convert profile to artist format
+          foundArtist = {
+            id: foundProfile.id,
+            name: foundProfile.artist_name,
+            avatar: foundProfile.profile_photo,
+            bio: foundProfile.bio,
+            genres: foundProfile.genre,
+            followers: 0, // Default for new profiles
+            verified: foundProfile.is_verified,
+            successRate: 75 // Default for new profiles
+          };
           setArtist(foundArtist);
-          setFollowersCount(foundArtist.followers || 0);
           
-          // Check if current user is following this mock artist
+          // Get follower count
+          const count = await followingService.getFollowerCount(foundProfile.id);
+          setFollowersCount(count);
+          
+          // Check if current user is following this artist
           if (user && isAuthenticated) {
-            const isUserFollowing = followingService.isFollowing(user.id, mockArtist.id);
+            const isUserFollowing = await followingService.isFollowing(user.id, foundProfile.id);
             setIsFollowing(isUserFollowing);
           }
         } else {
-          // No profile found at all
-          setArtist(null);
-          setIsLoading(false);
-          return;
+          // Only show mock data if no approved profile exists
+          const mockArtist = artists.find(a => a.id === id);
+          if (mockArtist) {
+            foundArtist = mockArtist;
+            setArtist(foundArtist);
+            setFollowersCount(foundArtist.followers || 0);
+            
+            // Check if current user is following this mock artist
+            if (user && isAuthenticated) {
+              const isUserFollowing = await followingService.isFollowing(user.id, mockArtist.id);
+              setIsFollowing(isUserFollowing);
+            }
+          } else {
+            // No profile found at all
+            setArtist(null);
+            setIsLoading(false);
+            return;
+          }
         }
-      }
-      
-      // Only show projects if they exist for this specific artist
-      const foundProjects = projects.filter(p => p.artistId === foundArtist.id);
-      setArtistProjects(foundProjects);
-      
-      // Only show similarity data for mock artists
-      if (foundProfile && foundProfile.status === 'approved') {
-        setSimilarityInfo(null); // No mock similarity data for real profiles
-      } else {
-        const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
-        setSimilarityInfo(foundSimilarity);
-      }
-      
-      // Then fetch real Spotify data for the artist
-      try {
+        
+        // Only show projects if they exist for this specific artist
+        const foundProjects = projects.filter(p => p.artistId === foundArtist.id);
+        setArtistProjects(foundProjects);
+        
+        // Only show similarity data for mock artists
+        if (foundProfile && foundProfile.status === 'approved') {
+          setSimilarityInfo(null); // No mock similarity data for real profiles
+        } else {
+          const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
+          setSimilarityInfo(foundSimilarity);
+        }
+        
+        // Then fetch real Spotify data for the artist
         if (foundArtist && foundArtist.name) {
           const spotifyData = await spotifyService.searchArtist(foundArtist.name);
           if (spotifyData) {
@@ -101,7 +104,7 @@ const ArtistProfile = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching Spotify artist data:', error);
+        console.error('Error fetching artist data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -110,7 +113,7 @@ const ArtistProfile = () => {
     fetchData();
   }, [id, user, isAuthenticated]);
   
-  const handleFollow = () => {
+  const handleFollow = async () => {
     if (!user || !isAuthenticated) {
       // Redirect to login if not authenticated
       window.location.href = '/login';
@@ -126,7 +129,7 @@ const ArtistProfile = () => {
     
     if (newFollowingState) {
       // Follow the artist
-      const success = followingService.followArtist(
+      const success = await followingService.followArtist(
         user.id,
         { name: user.name, avatar: user.avatar },
         artist.id,
@@ -139,7 +142,7 @@ const ArtistProfile = () => {
       }
     } else {
       // Unfollow the artist
-      const success = followingService.unfollowArtist(user.id, artist.id);
+      const success = await followingService.unfollowArtist(user.id, artist.id);
       
       if (success) {
         setIsFollowing(false);
@@ -206,7 +209,7 @@ const ArtistProfile = () => {
                     <span className="font-semibold">
                       {spotifyArtist && spotifyArtist.followers ? 
                         `${spotifyArtist.followers.total.toLocaleString()} Followers` : 
-                        `${followingService.getFollowerCount(artist.id)} Followers`}
+                        `${followersCount} Followers`}
                     </span>
                   </div>
                   <div className="flex items-center">

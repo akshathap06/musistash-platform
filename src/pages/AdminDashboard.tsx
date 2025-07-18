@@ -6,7 +6,10 @@ import { Trash2, Eye, User, Music, CheckCircle, XCircle } from "lucide-react";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
-import { artistProfileService, ArtistProfile } from '@/services/artistProfileService';
+import { artistProfileService } from '@/services/artistProfileService';
+import type { Database } from '@/lib/supabase';
+
+type ArtistProfile = Database['public']['Tables']['artist_profiles']['Row'];
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,12 +34,11 @@ const AdminDashboard = () => {
     loadProfiles();
   }, [user, isAuthenticated, isLoading, navigate]);
 
-  const loadProfiles = () => {
+  const loadProfiles = async () => {
     setIsLoadingProfiles(true);
     try {
-      const allProfiles = artistProfileService.getAllProfiles();
-      const profilesArray = Object.values(allProfiles);
-      setProfiles(profilesArray);
+      const allProfiles = await artistProfileService.getAllProfiles();
+      setProfiles(allProfiles);
     } catch (error) {
       console.error('Error loading profiles:', error);
       toast({
@@ -55,7 +57,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const success = artistProfileService.deleteProfile(profileId);
+      const success = await artistProfileService.deleteProfile(profileId);
       
       if (success) {
         // Reload profiles
@@ -84,7 +86,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const approvedProfile = artistProfileService.approveProfile(profileId, user!.id);
+      const approvedProfile = await artistProfileService.approveProfile(profileId, user!.id);
       
       if (approvedProfile) {
         // Reload profiles
@@ -113,7 +115,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const rejectedProfile = artistProfileService.rejectProfile(profileId, user!.id);
+      const rejectedProfile = await artistProfileService.rejectProfile(profileId, user!.id);
       
       if (rejectedProfile) {
         // Reload profiles
@@ -213,7 +215,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
-                    {profiles.filter(p => p.isVerified).length}
+                    {profiles.filter(p => p.is_verified).length}
                   </div>
                   <p className="text-xs text-gray-400 mt-1">Verified artist accounts</p>
                 </CardContent>
@@ -233,7 +235,7 @@ const AdminDashboard = () => {
                 <CardContent>
                   <div className="text-2xl font-bold text-white">
                     {profiles.filter(p => {
-                      const createdAt = new Date(p.createdAt);
+                      const createdAt = new Date(p.created_at);
                       const weekAgo = new Date();
                       weekAgo.setDate(weekAgo.getDate() - 7);
                       return createdAt > weekAgo;
@@ -279,12 +281,12 @@ const AdminDashboard = () => {
                             <td className="py-3 px-4">
                               <div className="flex items-center space-x-3">
                                 <img
-                                  src={profile.profilePhoto}
-                                  alt={profile.artistName}
+                                  src={profile.profile_photo}
+                                  alt={profile.artist_name}
                                   className="w-10 h-10 rounded-full object-cover"
                                 />
                                 <div>
-                                  <div className="font-medium text-white">{profile.artistName}</div>
+                                  <div className="font-medium text-white">{profile.artist_name}</div>
                                   <div className="text-sm text-gray-400">{profile.email}</div>
                                 </div>
                               </div>
@@ -316,7 +318,7 @@ const AdminDashboard = () => {
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-gray-300">
-                              {new Date(profile.createdAt).toLocaleDateString()}
+                              {new Date(profile.created_at).toLocaleDateString()}
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex space-x-2">
@@ -334,7 +336,7 @@ const AdminDashboard = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleApproveProfile(profile.id, profile.artistName)}
+                                      onClick={() => handleApproveProfile(profile.id, profile.artist_name)}
                                       className="h-8 w-8 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/20"
                                     >
                                       <CheckCircle className="h-4 w-4" />
@@ -342,7 +344,7 @@ const AdminDashboard = () => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleRejectProfile(profile.id, profile.artistName)}
+                                      onClick={() => handleRejectProfile(profile.id, profile.artist_name)}
                                       className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
                                     >
                                       <XCircle className="h-4 w-4" />
@@ -353,7 +355,7 @@ const AdminDashboard = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleDeleteProfile(profile.id, profile.artistName)}
+                                  onClick={() => handleDeleteProfile(profile.id, profile.artist_name)}
                                   className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
                                 >
                                   <Trash2 className="h-4 w-4" />

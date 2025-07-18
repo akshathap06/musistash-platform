@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -79,9 +79,30 @@ const Login = () => {
               {!showEmailForm ? (
                 <div className="space-y-4">
                   <div className="w-full">
-                    <GoogleSignIn 
-                      onSuccess={handleGoogleSuccess}
-                      onError={handleGoogleError}
+                    <GoogleSignIn
+                      onSuccess={async (user) => {
+                        console.log('Google Sign-In successful:', user);
+                        try {
+                          console.log('🔍 Updating auth state...');
+                          // Update the auth context with the user data
+                          await loginWithGoogle(user, 'google_auth_token');
+                          console.log('🔍 Auth state updated, waiting a moment...');
+                          
+                          // Add a small delay to ensure state is properly updated
+                          await new Promise(resolve => setTimeout(resolve, 100));
+                          
+                          console.log('🔍 Navigating to dashboard...');
+                          navigate('/dashboard');
+                          console.log('🔍 Navigation triggered');
+                        } catch (error) {
+                          console.error('Error updating auth state:', error);
+                          setError('Failed to complete sign-in. Please try again.');
+                        }
+                      }}
+                      onError={(error) => {
+                        setError(error);
+                        console.error('Google Sign-In error:', error);
+                      }}
                       className="w-full"
                     />
                   </div>

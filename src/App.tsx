@@ -37,6 +37,7 @@ import ViewArtistProfile from "./pages/ViewArtistProfile";
 import CreateProject from "./pages/CreateProject";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminViewProfile from "./pages/AdminViewProfile";
+import SupabaseTest from "./components/SupabaseTest";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -82,10 +83,12 @@ const AppContent = () => {
               <Route path="/investor-services" element={<InvestorServices />} />
               <Route path="/legal" element={<Legal />} />
               <Route path="/artist-profile" element={<ArtistProfileManager />} />
+              <Route path="/create-artist-profile" element={<ArtistProfileManager />} />
               <Route path="/view-artist-profile" element={<ViewArtistProfile />} />
               <Route path="/create-project" element={<CreateProject />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/profile/:profileId" element={<AdminViewProfile />} />
+              <Route path="/supabase-test" element={<SupabaseTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

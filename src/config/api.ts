@@ -13,7 +13,7 @@ export const API_ENDPOINTS = {
 
 // Google OAuth configuration
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 
-  "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com";
+  "763571700636-o25hjvv8fmqkrdbse471e82g02q4f1t2.apps.googleusercontent.com";
 
 // Debug logging for development
 if (import.meta.env.MODE === 'development') {

@@ -7,7 +7,10 @@ import { Edit, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
-import { artistProfileService, ArtistProfile } from '@/services/artistProfileService';
+import { artistProfileService } from '@/services/artistProfileService';
+import type { Database } from '@/lib/supabase';
+
+type ArtistProfile = Database['public']['Tables']['artist_profiles']['Row'];
 import { useToast } from '@/hooks/use-toast';
 
 const ViewArtistProfile = () => {
@@ -28,11 +31,21 @@ const ViewArtistProfile = () => {
     }
   }, [user, isAuthenticated, isLoading, navigate]);
 
-  const loadProfile = () => {
+  const loadProfile = async () => {
     setIsLoadingProfile(true);
     try {
-      const userProfile = artistProfileService.getProfileByUserId(user!.id);
-      setProfile(userProfile);
+      const userProfile = await artistProfileService.getProfileByUserId(user!.id);
+      console.log('Loaded profile data:', userProfile);
+      if (userProfile) {
+        // Ensure genre is always an array
+        const safeProfile = {
+          ...userProfile,
+          genre: Array.isArray(userProfile.genre) ? userProfile.genre : []
+        };
+        setProfile(safeProfile);
+      } else {
+        setProfile(null);
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       toast({
@@ -40,6 +53,7 @@ const ViewArtistProfile = () => {
         description: "Failed to load profile",
         variant: "destructive"
       });
+      setProfile(null);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -162,9 +176,9 @@ const ViewArtistProfile = () => {
                   <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5" />
                   <p className="text-gray-300">{getStatusMessage(profile.status)}</p>
                 </div>
-                {profile.status === 'approved' && profile.approvedAt && (
+                {profile.status === 'approved' && profile.approved_at && (
                   <div className="mt-4 text-sm text-gray-400">
-                    Approved on: {new Date(profile.approvedAt).toLocaleDateString()}
+                    Approved on: {new Date(profile.approved_at).toLocaleDateString()}
                   </div>
                 )}
               </CardContent>
@@ -180,17 +194,21 @@ const ViewArtistProfile = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-300">Artist Name</label>
-                    <p className="text-white">{profile.artistName}</p>
+                    <p className="text-white">{profile.artist_name}</p>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-gray-300">Genre</label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {profile.genre.map((g, index) => (
+                      {Array.isArray(profile.genre) ? profile.genre.map((g, index) => (
                         <Badge key={index} variant="secondary" className="text-xs">
                           {g}
                         </Badge>
-                      ))}
+                      )) : (
+                        <Badge variant="secondary" className="text-xs">
+                          {profile.genre || 'Not specified'}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   
@@ -214,8 +232,8 @@ const ViewArtistProfile = () => {
                 <CardContent>
                   <div className="flex justify-center">
                     <img
-                      src={profile.profilePhoto}
-                      alt={profile.artistName}
+                      src={profile.profile_photo}
+                      alt={profile.artist_name}
                       className="w-32 h-32 object-cover rounded-full"
                     />
                   </div>
@@ -229,38 +247,38 @@ const ViewArtistProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2">
-                    {profile.socialLinks.spotify && (
+                    {profile.social_links.spotify && (
                       <div>
                         <label className="text-sm font-medium text-gray-300">Spotify</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.spotify}</p>
+                        <p className="text-blue-400 break-all">{profile.social_links.spotify}</p>
                       </div>
                     )}
                     
-                    {profile.socialLinks.instagram && (
+                    {profile.social_links.instagram && (
                       <div>
                         <label className="text-sm font-medium text-gray-300">Instagram</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.instagram}</p>
+                        <p className="text-blue-400 break-all">{profile.social_links.instagram}</p>
                       </div>
                     )}
                     
-                    {profile.socialLinks.twitter && (
+                    {profile.social_links.twitter && (
                       <div>
                         <label className="text-sm font-medium text-gray-300">Twitter/X</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.twitter}</p>
+                        <p className="text-blue-400 break-all">{profile.social_links.twitter}</p>
                       </div>
                     )}
                     
-                    {profile.socialLinks.youtube && (
+                    {profile.social_links.youtube && (
                       <div>
                         <label className="text-sm font-medium text-gray-300">YouTube</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.youtube}</p>
+                        <p className="text-blue-400 break-all">{profile.social_links.youtube}</p>
                       </div>
                     )}
                     
-                    {profile.socialLinks.website && (
+                    {profile.social_links.website && (
                       <div className="md:col-span-2">
                         <label className="text-sm font-medium text-gray-300">Website</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.website}</p>
+                        <p className="text-blue-400 break-all">{profile.social_links.website}</p>
                       </div>
                     )}
                   </div>

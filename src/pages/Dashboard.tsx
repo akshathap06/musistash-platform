@@ -19,12 +19,32 @@ import ThemeSelector from '@/components/ui/ThemeSelector';
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
   }, [isLoading, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (user) {
+        try {
+          const profile = await artistProfileService.getProfileByUserId(user.id);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          setUserProfile(null);
+        } finally {
+          setProfileLoading(false);
+        }
+      }
+    };
+    
+    loadUserProfile();
+  }, [user]);
 
   const handleInvestmentComplete = () => {
     // This will trigger re-renders in child components
@@ -92,14 +112,23 @@ const Dashboard = () => {
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <ThemeSelector />
                 
-                {(user.role === 'artist' || user.role === 'listener') && (
+                {(user.role === 'artist' || user.role === 'listener') && !profileLoading && (
                   <>
-                    <Link to="/view-artist-profile" className="w-full sm:w-auto">
-                      <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
-                        <User className="mr-2 h-4 w-4" />
-                        View Artist Profile
-                      </Button>
-                    </Link>
+                    {userProfile ? (
+                      <Link to="/view-artist-profile" className="w-full sm:w-auto">
+                        <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
+                          <User className="mr-2 h-4 w-4" />
+                          View Artist Profile
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link to="/create-artist-profile" className="w-full sm:w-auto">
+                        <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
+                          <User className="mr-2 h-4 w-4" />
+                          Create Artist Profile
+                        </Button>
+                      </Link>
+                    )}
                     <Link to="/create-project" className="w-full sm:w-auto">
                       <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -152,12 +181,40 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
     averageROI: 0,
     investments: [] as UserInvestment[]
   });
+  const [followingCount, setFollowingCount] = useState(0);
+  const [recentFollowing, setRecentFollowing] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [recentFollowers, setRecentFollowers] = useState<any[]>([]);
 
   useEffect(() => {
-    if (user) {
-      const stats = InvestmentService.getUserInvestmentStats(user.id);
-      setInvestmentStats(stats);
-    }
+    const loadData = async () => {
+      if (user) {
+        const stats = InvestmentService.getUserInvestmentStats(user.id);
+        setInvestmentStats(stats);
+        
+        // Load following data
+        const count = await followingService.getFollowingCount(user.id);
+        setFollowingCount(count);
+        
+        const following = await followingService.getRecentFollowing(user.id);
+        setRecentFollowing(following);
+        
+        // Load user profile and followers data
+        const profile = await artistProfileService.getProfileByUserId(user.id);
+        setUserProfile(profile);
+        
+        if (profile && profile.status === 'approved') {
+          const followersCount = await followingService.getFollowerCount(profile.id);
+          setFollowersCount(followersCount);
+          
+          const followers = await followingService.getRecentFollowers(profile.id);
+          setRecentFollowers(followers);
+        }
+      }
+    };
+    
+    loadData();
   }, [user]);
 
   const handleInvestmentComplete = () => {
@@ -249,49 +306,47 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
               <div className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-red-400" />
                 <span className="text-sm text-gray-300">
-                  {followingService.getFollowingCount(user?.id || '')} Artists
+                  {followingCount} Artists
                 </span>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {(() => {
-              const following = followingService.getRecentFollowing(user?.id || '');
-              return following.length > 0 ? (
-                <div className="space-y-3">
-                  {following.map((follow) => (
-                    <div key={follow.artistId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={follow.artistAvatar}
-                          alt={follow.artistName}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-white">{follow.artistName}</p>
-                          <p className="text-xs text-gray-400">
-                            Followed {new Date(follow.followedAt).toLocaleDateString()}
-                          </p>
-                        </div>
+            {recentFollowing.length > 0 ? (
+              <div className="space-y-3">
+                {recentFollowing.map((follow) => (
+                  <div key={follow.artistId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={follow.artistAvatar}
+                        alt={follow.artistName}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-white">{follow.artistName}</p>
+                        <p className="text-xs text-gray-400">
+                          Followed {new Date(follow.followedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <Link to={`/artist/${follow.artistId}`}>
-                        <Button variant="outline" size="sm" className="text-xs">
-                          View Profile
-                        </Button>
-                      </Link>
                     </div>
-                  ))}
-                  {following.length >= 5 && (
-                    <div className="text-center pt-2">
-                      <Link to="/browse-artists">
-                        <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                          View All Following
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              ) : (
+                    <Link to={`/artist/${follow.artistId}`}>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        View Profile
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+                {recentFollowing.length >= 5 && (
+                  <div className="text-center pt-2">
+                    <Link to="/browse-artists">
+                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                        View All Following
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                   <p className="text-gray-400 mb-2">Not following any artists yet</p>
@@ -301,70 +356,62 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
                     </Button>
                   </Link>
                 </div>
-              );
-            })()}
+              )}
           </CardContent>
         </Card>
 
         {/* Followers Section (if user has an artist profile) */}
-        {(() => {
-          const userProfile = artistProfileService.getProfileByUserId(user?.id || '');
-          if (userProfile && userProfile.status === 'approved') {
-            const followers = followingService.getRecentFollowers(userProfile.id);
-            return (
-              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold text-white">Your Followers</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-400" />
-                      <span className="text-sm text-gray-300">
-                        {followingService.getFollowerCount(userProfile.id)} Followers
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {followers.length > 0 ? (
-                    <div className="space-y-3">
-                      {followers.map((follower) => (
-                        <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={follower.followerAvatar}
-                              alt={follower.followerName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <div>
-                              <p className="font-medium text-white">{follower.followerName}</p>
-                              <p className="text-xs text-gray-400">
-                                Followed you {new Date(follower.followedAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
+        {userProfile && userProfile.status === 'approved' && (
+          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-white">Your Followers</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span className="text-sm text-gray-300">
+                    {followersCount} Followers
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {recentFollowers.length > 0 ? (
+                <div className="space-y-3">
+                  {recentFollowers.map((follower) => (
+                    <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={follower.followerAvatar}
+                          alt={follower.followerName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{follower.followerName}</p>
+                          <p className="text-xs text-gray-400">
+                            Followed you {new Date(follower.followedAt).toLocaleDateString()}
+                          </p>
                         </div>
-                      ))}
-                      {followers.length >= 5 && (
-                        <div className="text-center pt-2">
-                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                            View All Followers
-                          </Button>
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                      <p className="text-gray-400">No followers yet</p>
-                      <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
+                  ))}
+                  {recentFollowers.length >= 5 && (
+                    <div className="text-center pt-2">
+                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                        View All Followers
+                      </Button>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            );
-          }
-          return null;
-        })()}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-400">No followers yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Content Tabs */}
@@ -449,17 +496,30 @@ const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => 
   const { user } = useAuth();
   const [artistProjects, setArtistProjects] = useState([]);
   const [artistProfile, setArtistProfile] = useState(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [recentFollowers, setRecentFollowers] = useState([]);
 
   useEffect(() => {
-    if (user) {
-      const profile = artistProfileService.getProfileByUserId(user.id);
-      setArtistProfile(profile);
-      
-      if (profile) {
-        const userProjects = artistProfileService.getProjectsByArtistId(profile.id);
-        setArtistProjects(userProjects);
+    const loadData = async () => {
+      if (user) {
+        const profile = await artistProfileService.getProfileByUserId(user.id);
+        setArtistProfile(profile);
+        
+        if (profile) {
+          const userProjects = await artistProfileService.getProjectsByArtistId(profile.id);
+          setArtistProjects(userProjects);
+          
+          // Load followers data
+          const count = await followingService.getFollowerCount(profile.id);
+          setFollowersCount(count);
+          
+          const followers = await followingService.getRecentFollowers(profile.id);
+          setRecentFollowers(followers);
+        }
       }
-    }
+    };
+    
+    loadData();
   }, [user]);
   
   const totalFundingGoal = artistProjects.reduce((sum, project) => sum + project.fundingGoal, 0);
@@ -540,49 +600,46 @@ const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => 
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-400" />
                 <span className="text-sm text-gray-300">
-                  {followingService.getFollowerCount(artistProfile.id)} Followers
+                  {followersCount} Followers
                 </span>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {(() => {
-              const followers = followingService.getRecentFollowers(artistProfile.id);
-              return followers.length > 0 ? (
-                <div className="space-y-3">
-                  {followers.map((follower) => (
-                    <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={follower.followerAvatar}
-                          alt={follower.followerName}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-white">{follower.followerName}</p>
-                          <p className="text-xs text-gray-400">
-                            Followed you {new Date(follower.followedAt).toLocaleDateString()}
-                          </p>
-                        </div>
+            {recentFollowers.length > 0 ? (
+              <div className="space-y-3">
+                {recentFollowers.map((follower) => (
+                  <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={follower.followerAvatar}
+                        alt={follower.followerName}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-white">{follower.followerName}</p>
+                        <p className="text-xs text-gray-400">
+                          Followed you {new Date(follower.followedAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                  {followers.length >= 5 && (
-                    <div className="text-center pt-2">
-                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                        View All Followers
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : (
+                  </div>
+                ))}
+                {recentFollowers.length >= 5 && (
+                  <div className="text-center pt-2">
+                    <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                      View All Followers
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                   <p className="text-gray-400">No followers yet</p>
                   <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
                 </div>
-              );
-            })()}
+              )}
           </CardContent>
         </Card>
       )}

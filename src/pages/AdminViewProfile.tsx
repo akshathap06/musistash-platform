@@ -7,8 +7,11 @@ import { ArrowLeft, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-reac
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
-import { artistProfileService, ArtistProfile } from '@/services/artistProfileService';
+import { artistProfileService } from '@/services/artistProfileService';
+import type { Database } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+
+type ArtistProfile = Database['public']['Tables']['artist_profiles']['Row'];
 
 const AdminViewProfile = () => {
   const { profileId } = useParams<{ profileId: string }>();
@@ -34,10 +37,10 @@ const AdminViewProfile = () => {
     }
   }, [profileId, user, isAuthenticated, isLoading, navigate]);
 
-  const loadProfile = () => {
+  const loadProfile = async () => {
     setIsLoadingProfile(true);
     try {
-      const profileData = artistProfileService.getProfileById(profileId!);
+      const profileData = await artistProfileService.getProfileById(profileId!);
       setProfile(profileData);
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -54,18 +57,18 @@ const AdminViewProfile = () => {
   const handleApprove = async () => {
     if (!profile || !user) return;
 
-    if (!confirm(`Are you sure you want to approve the profile for "${profile.artistName}"?`)) {
+    if (!confirm(`Are you sure you want to approve the profile for "${profile.artist_name}"?`)) {
       return;
     }
 
     try {
-      const approvedProfile = artistProfileService.approveProfile(profile.id, user.id);
+      const approvedProfile = await artistProfileService.approveProfile(profile.id, user.id);
       
       if (approvedProfile) {
         setProfile(approvedProfile);
         toast({
           title: "Success",
-          description: `Profile for "${profile.artistName}" has been approved`,
+          description: `Profile for "${profile.artist_name}" has been approved`,
         });
       } else {
         throw new Error('Profile not found');
@@ -83,18 +86,18 @@ const AdminViewProfile = () => {
   const handleReject = async () => {
     if (!profile || !user) return;
 
-    if (!confirm(`Are you sure you want to reject the profile for "${profile.artistName}"?`)) {
+    if (!confirm(`Are you sure you want to reject the profile for "${profile.artist_name}"?`)) {
       return;
     }
 
     try {
-      const rejectedProfile = artistProfileService.rejectProfile(profile.id, user.id);
+      const rejectedProfile = await artistProfileService.rejectProfile(profile.id, user.id);
       
       if (rejectedProfile) {
         setProfile(rejectedProfile);
         toast({
           title: "Success",
-          description: `Profile for "${profile.artistName}" has been rejected`,
+          description: `Profile for "${profile.artist_name}" has been rejected`,
         });
       } else {
         throw new Error('Profile not found');
@@ -199,158 +202,169 @@ const AdminViewProfile = () => {
                     <p className="text-muted-foreground">Review and approve/reject artist profile submission</p>
                   </div>
                 </div>
-                {getStatusBadge(profile.status)}
-              </div>
-            </div>
-
-            {/* Profile Details */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Artist Name</label>
-                    <p className="text-white">{profile.artistName}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Email</label>
-                    <p className="text-white">{profile.email}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Genre</label>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {profile.genre.map((g, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {g}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Location</label>
-                    <p className="text-white">{profile.location}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Biography</label>
-                    <p className="text-white">{profile.bio || 'No biography provided'}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Profile Image */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Image</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <img
-                      src={profile.profilePhoto}
-                      alt={profile.artistName}
-                      className="w-32 h-32 object-cover rounded-full mx-auto"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Social Media Links */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Social Media Links</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {profile.socialLinks.spotify && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Spotify</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.spotify}</p>
-                      </div>
-                    )}
-                    
-                    {profile.socialLinks.instagram && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Instagram</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.instagram}</p>
-                      </div>
-                    )}
-                    
-                    {profile.socialLinks.twitter && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Twitter/X</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.twitter}</p>
-                      </div>
-                    )}
-                    
-                    {profile.socialLinks.youtube && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">YouTube</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.youtube}</p>
-                      </div>
-                    )}
-                    
-                    {profile.socialLinks.website && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-300">Website</label>
-                        <p className="text-blue-400 break-all">{profile.socialLinks.website}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Action Buttons */}
-            {profile.status === 'pending' && (
-              <div className="flex gap-4 mt-8 justify-center">
-                <Button 
-                  onClick={handleReject}
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Reject Profile
-                </Button>
-                <Button 
-                  onClick={handleApprove}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Approve Profile
-                </Button>
-              </div>
-            )}
-
-            {/* Profile Metadata */}
-            <Card className="mt-8 bg-white/10 border-gray-600/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Profile Metadata</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3 text-sm">
-                  <div>
-                    <label className="text-gray-300 font-medium">Created</label>
-                    <p className="text-white mt-1">{new Date(profile.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <label className="text-gray-300 font-medium">Last Updated</label>
-                    <p className="text-white mt-1">{new Date(profile.updatedAt).toLocaleDateString()}</p>
-                  </div>
-                  {profile.approvedAt && (
-                    <div>
-                      <label className="text-gray-300 font-medium">Approved</label>
-                      <p className="text-white mt-1">{new Date(profile.approvedAt).toLocaleDateString()}</p>
+                <div className="flex items-center space-x-4">
+                  {getStatusBadge(profile.status)}
+                  {profile.status === 'pending' && (
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={handleApprove}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={handleReject}
+                        variant="destructive"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject
+                      </Button>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
+            {/* Profile Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Profile Info */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Basic Info */}
+                <Card className="bg-gray-800/50 border-gray-700/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-4">
+                      <img
+                        src={profile.profile_photo}
+                        alt={profile.artist_name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="text-2xl font-bold">{profile.artist_name}</div>
+                        <div className="text-gray-400">{profile.email}</div>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <h3 className="font-semibold mb-3 text-white text-lg">Bio</h3>
+                      <p className="text-white leading-relaxed break-words overflow-hidden">{profile.bio || 'No bio provided'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-3 text-white text-lg">Genre</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.genre.map((g, index) => (
+                          <Badge key={index} variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
+                            {g}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-3 text-white text-lg">Location</h3>
+                      <p className="text-white">{profile.location || 'No location provided'}</p>
+                    </div>
+
+                    {profile.musical_style && (
+                      <div>
+                        <h3 className="font-semibold mb-3 text-white text-lg">Musical Style</h3>
+                        <p className="text-white">{profile.musical_style}</p>
+                      </div>
+                    )}
+
+                    {profile.influences && (
+                      <div>
+                        <h3 className="font-semibold mb-3 text-white text-lg">Influences</h3>
+                        <p className="text-white">{profile.influences}</p>
+                      </div>
+                    )}
+
+                    {profile.social_links && Object.keys(profile.social_links).length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-3 text-white text-lg">Social Links</h3>
+                        <div className="space-y-3">
+                          {Object.entries(profile.social_links).map(([platform, url]) => (
+                            <div key={platform} className="flex items-center space-x-3 p-3 bg-gray-700/30 rounded-lg">
+                              <span className="text-blue-300 capitalize font-medium min-w-[80px]">{platform}:</span>
+                              <a 
+                                href={url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline break-all"
+                              >
+                                {url}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Profile Stats */}
+                <Card className="bg-gray-800/50 border-gray-700/50">
+                                     <CardHeader>
+                     <CardTitle className="text-white">Profile Information</CardTitle>
+                   </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <div className="text-sm text-blue-300 font-medium mb-1">Created</div>
+                      <div className="font-medium text-white text-lg">
+                        {new Date(profile.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm text-blue-300 font-medium mb-1">Last Updated</div>
+                      <div className="font-medium text-white text-lg">
+                        {new Date(profile.updated_at).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    {profile.approved_at && (
+                      <div>
+                        <div className="text-sm text-blue-300 font-medium mb-1">Approved</div>
+                        <div className="font-medium text-white text-lg">
+                          {new Date(profile.approved_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    )}
+
+                    {profile.approved_by && (
+                      <div>
+                        <div className="text-sm text-blue-300 font-medium mb-1">Approved By</div>
+                        <div className="font-medium text-white text-lg">{profile.approved_by}</div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                                 {/* Career Highlights */}
+                 {profile.career_highlights && profile.career_highlights.length > 0 && (
+                   <Card className="bg-gray-800/50 border-gray-700/50">
+                     <CardHeader>
+                       <CardTitle className="text-white">Career Highlights</CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                       <div className="space-y-3">
+                         {profile.career_highlights.map((highlight, index) => (
+                           <div key={index} className="text-white p-3 bg-gray-700/30 rounded-lg">
+                             <span className="text-blue-400 mr-2">•</span>
+                             {highlight}
+                           </div>
+                         ))}
+                       </div>
+                     </CardContent>
+                   </Card>
+                 )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

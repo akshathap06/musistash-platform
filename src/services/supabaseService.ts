@@ -624,6 +624,67 @@ export class SupabaseService {
     }
   }
 
+  // Simple direct test to write to follow_relationships table
+  async simpleFollowTest(): Promise<void> {
+    try {
+      console.log('=== SIMPLE FOLLOW TEST START ===');
+      
+      // Test data with simple UUIDs
+      const testData = {
+        follower_id: '550e8400-e29b-41d4-a716-446655440000', // Test UUID
+        artist_id: '550e8400-e29b-41d4-a716-446655440001',   // Test UUID
+        followed_at: new Date().toISOString()
+      };
+      
+      console.log('Attempting to insert test data:', testData);
+      
+      // Try direct insert
+      const { data, error } = await supabase
+        .from('follow_relationships')
+        .insert(testData);
+      
+      if (error) {
+        console.error('❌ SIMPLE TEST FAILED:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+      } else {
+        console.log('✅ SIMPLE TEST SUCCESS:', data);
+        
+        // Try to read it back
+        const { data: readData, error: readError } = await supabase
+          .from('follow_relationships')
+          .select('*')
+          .eq('follower_id', testData.follower_id)
+          .eq('artist_id', testData.artist_id);
+        
+        if (readError) {
+          console.error('❌ READ TEST FAILED:', readError);
+        } else {
+          console.log('✅ READ TEST SUCCESS:', readData);
+        }
+        
+        // Clean up
+        const { error: deleteError } = await supabase
+          .from('follow_relationships')
+          .delete()
+          .eq('follower_id', testData.follower_id)
+          .eq('artist_id', testData.artist_id);
+        
+        if (deleteError) {
+          console.error('❌ CLEANUP FAILED:', deleteError);
+        } else {
+          console.log('✅ CLEANUP SUCCESS');
+        }
+      }
+      
+      console.log('=== SIMPLE FOLLOW TEST END ===');
+    } catch (error) {
+      console.error('❌ SIMPLE TEST EXCEPTION:', error);
+    }
+  }
+
   // Check RLS status and policies for follow_relationships table
   async checkRLSStatus(): Promise<void> {
     try {

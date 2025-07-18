@@ -97,6 +97,13 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
     console.log('User ID:', user.id, 'Artist ID:', artist.id);
     console.log('User object:', user);
     console.log('Artist object:', artist);
+    
+    // Test UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    console.log('User ID is valid UUID:', uuidRegex.test(user.id));
+    console.log('Artist ID is valid UUID:', uuidRegex.test(artist.id));
+    console.log('User ID length:', user.id.length);
+    console.log('Artist ID length:', artist.id.length);
 
     setIsLoading(true);
     
@@ -107,6 +114,9 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       
       // Also check RLS status
       await supabaseService.checkRLSStatus();
+      
+      // Run simple test
+      await supabaseService.simpleFollowTest();
     } catch (error) {
       console.error('ArtistInfo: Table access test failed:', error);
     }

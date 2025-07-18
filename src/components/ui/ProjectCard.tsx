@@ -11,6 +11,7 @@ import InvestmentModal from './InvestmentModal';
 import WithdrawalModal from './WithdrawalModal';
 import { useAuth } from '@/hooks/useAuth';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
+import { ProjectFundingService } from '@/services/projectFundingService';
 
 interface ProjectCardProps {
   project: Project | ArtistProject;
@@ -22,13 +23,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
   const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
   const [userInvestment, setUserInvestment] = useState<UserInvestment | null>(null);
+  const [updatedFunding, setUpdatedFunding] = useState(project.currentFunding);
   
   // Handle different project types
   const isArtistProject = 'bannerImage' in project;
   const projectImage = isArtistProject ? (project as ArtistProject).bannerImage : (project as Project).image;
   const projectROI = isArtistProject ? (project as ArtistProject).expectedROI : (project as Project).roi;
   
-  const fundingPercentage = Math.min(100, Math.round((project.currentFunding / project.fundingGoal) * 100));
+  const fundingPercentage = Math.min(100, Math.round((updatedFunding / project.fundingGoal) * 100));
   const timeLeft = () => {
     const deadlineDate = new Date(project.deadline);
     const today = new Date();
@@ -45,9 +47,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
     setIsInvestmentModalOpen(true);
   };
 
-  const handleInvestmentComplete = () => {
+  const handleInvestmentComplete = async () => {
     if (onInvestmentComplete) {
       onInvestmentComplete();
+    }
+    // Refresh funding data
+    try {
+      const projectFunding = await ProjectFundingService.getProjectFundingById(project.id);
+      if (projectFunding) {
+        setUpdatedFunding(projectFunding.totalInvested);
+      }
+    } catch (error) {
+      console.error('Error refreshing funding data:', error);
     }
   };
 
@@ -73,6 +84,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
     
     checkUserInvestment();
   }, [user, project.id]);
+
+  // Fetch updated project funding
+  React.useEffect(() => {
+    const fetchUpdatedFunding = async () => {
+      try {
+        const projectFunding = await ProjectFundingService.getProjectFundingById(project.id);
+        if (projectFunding) {
+          setUpdatedFunding(projectFunding.totalInvested);
+          console.log('ProjectCard: Updated funding for project:', project.id, 'amount:', projectFunding.totalInvested);
+        }
+      } catch (error) {
+        console.error('Error fetching updated funding:', error);
+      }
+    };
+    
+    fetchUpdatedFunding();
+  }, [project.id]);
 
   const handleWithdrawClick = () => {
     if (!isAuthenticated || !userInvestment) {
@@ -142,7 +170,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
         <div className="space-y-4">
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-white">${project.currentFunding.toLocaleString()}</span>
+              <span className="text-white">${updatedFunding.toLocaleString()}</span>
               <span className="text-gray-400">${project.fundingGoal.toLocaleString()}</span>
             </div>
             <Progress 

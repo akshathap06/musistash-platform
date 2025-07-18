@@ -1,6 +1,7 @@
 import { Investment } from '@/lib/mockData';
 import { supabaseService } from './supabaseService';
 import { artistProfileService } from './artistProfileService';
+import { ProjectFundingService } from './projectFundingService';
 
 export interface UserInvestment extends Investment {
   projectTitle: string;
@@ -124,6 +125,9 @@ export class InvestmentService {
         allInvestments.push(newInvestment);
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
         
+        // Update project funding
+        await ProjectFundingService.updateProjectFunding(investment.projectId, investment.amount);
+        
         console.log('InvestmentService: Mock project investment saved to localStorage', newInvestment);
         return newInvestment;
       }
@@ -158,6 +162,9 @@ export class InvestmentService {
           allInvestments.push(newInvestment);
           localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
           
+          // Update project funding
+          await ProjectFundingService.updateProjectFunding(investment.projectId, investment.amount);
+          
           return newInvestment;
         }
       } catch (dbError) {
@@ -178,6 +185,9 @@ export class InvestmentService {
       
       allInvestments.push(newInvestment);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+      
+      // Update project funding
+      await ProjectFundingService.updateProjectFunding(investment.projectId, investment.amount);
       
       console.log('InvestmentService: Investment saved to localStorage as fallback', newInvestment);
       return newInvestment;

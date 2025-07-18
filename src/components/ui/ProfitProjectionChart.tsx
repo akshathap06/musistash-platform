@@ -29,14 +29,16 @@ const ProfitProjectionChart: React.FC<ProfitProjectionChartProps> = ({
 }) => {
   const [timeframe, setTimeframe] = useState<'6m' | '1y' | '2y'>('1y');
 
-  // Generate projection data based on investments and ROI
+  // Generate projection data based on investments and ROI with dramatic exponential growth
   const projectionData = useMemo(() => {
     const data = [];
     const months = timeframe === '6m' ? 6 : timeframe === '1y' ? 12 : 24;
     
     for (let i = 0; i <= months; i++) {
       const month = i;
-      const projectedValue = totalInvested * Math.pow(1 + (averageROI / 100), month / 12);
+      // Use more dramatic exponential growth with compound interest effect
+      const monthlyRate = Math.pow(1 + (averageROI / 100), 1/12) - 1;
+      const projectedValue = totalInvested * Math.pow(1 + monthlyRate, month);
       const profit = projectedValue - totalInvested;
       
       data.push({
@@ -118,12 +120,24 @@ const ProfitProjectionChart: React.FC<ProfitProjectionChartProps> = ({
             <AreaChart data={projectionData}>
               <defs>
                 <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.6}/>
+                  <stop offset="50%" stopColor="#10b981" stopOpacity={0.4}/>
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                 </linearGradient>
                 <linearGradient id="investedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.5}/>
+                  <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="profitStroke" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#10b981"/>
+                  <stop offset="50%" stopColor="#22c55e"/>
+                  <stop offset="100%" stopColor="#16a34a"/>
+                </linearGradient>
+                <linearGradient id="investedStroke" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#3b82f6"/>
+                  <stop offset="50%" stopColor="#6366f1"/>
+                  <stop offset="100%" stopColor="#8b5cf6"/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -142,18 +156,20 @@ const ProfitProjectionChart: React.FC<ProfitProjectionChartProps> = ({
               <Area
                 type="monotone"
                 dataKey="invested"
-                stroke="#3b82f6"
+                stroke="url(#investedStroke)"
                 fill="url(#investedGradient)"
-                strokeWidth={2}
+                strokeWidth={3}
                 name="Invested"
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="projected"
-                stroke="#10b981"
+                stroke="url(#profitStroke)"
                 fill="url(#profitGradient)"
-                strokeWidth={2}
+                strokeWidth={3}
                 name="Projected"
+                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
               />
             </AreaChart>
           </ResponsiveContainer>

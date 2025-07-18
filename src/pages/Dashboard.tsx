@@ -12,7 +12,7 @@ import { projects } from '@/lib/mockData';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
-import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X, RefreshCw } from 'lucide-react';
+import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
 import ProfitProjectionChart from '@/components/ui/ProfitProjectionChart';
@@ -276,20 +276,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
     onInvestmentComplete();
   };
 
-  // Test functions for debugging
-  const clearAllInvestments = () => {
-    if (user) {
-      InvestmentService.clearUserInvestments(user.id);
-      handleInvestmentComplete();
-    }
-  };
 
-  const addTestInvestment = () => {
-    if (user) {
-      InvestmentService.addTestInvestment(user.id, '1', 3000); // Project ID '1' is Lunar Echoes
-      handleInvestmentComplete();
-    }
-  };
 
   // Get projects that the user has invested in
   const investedProjectIds = investmentStats.investments.map(inv => inv.projectId);
@@ -392,29 +379,9 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
         <TabsContent value="portfolio" className="space-y-6 mt-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Your Investments</h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
-                {investmentStats.totalProjects} Active
-              </Badge>
-              {/* Debug buttons - remove in production */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearAllInvestments}
-                className="border-red-500 text-red-300 hover:bg-red-500/20"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Clear All
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={addTestInvestment}
-                className="border-green-500 text-green-300 hover:bg-green-500/20"
-              >
-                Add Test $3k
-              </Button>
-            </div>
+            <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
+              {investmentStats.totalProjects} Active
+            </Badge>
           </div>
           
           {investedProjects.length > 0 ? (

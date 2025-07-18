@@ -134,10 +134,8 @@ class ArtistProfileService {
 
   async deleteProfile(profileId: string): Promise<boolean> {
     try {
-      // Note: We'll need to add a delete method to supabaseService
-      // For now, we'll mark it as rejected
-      const result = await supabaseService.rejectArtistProfile(profileId, 'system');
-      return !!result;
+      const result = await supabaseService.deleteArtistProfile(profileId);
+      return result;
     } catch (error) {
       console.error('Error deleting artist profile:', error);
       return false;

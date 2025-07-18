@@ -285,6 +285,21 @@ export class SupabaseService {
     }
   }
 
+  async deleteArtistProfile(profileId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('artist_profiles')
+        .delete()
+        .eq('id', profileId)
+
+      if (error) throw error
+      return true
+    } catch (error) {
+      console.error('Error deleting artist profile:', error)
+      return false
+    }
+  }
+
   // Follow Relationship Management
   async followArtist(followerId: string, artistId: string): Promise<boolean> {
     try {

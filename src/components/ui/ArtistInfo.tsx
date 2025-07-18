@@ -53,6 +53,10 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       
       try {
         console.log('Loading following state for user:', user.id, 'artist:', artist.id);
+        
+        // First sync localStorage with Supabase
+        await followingService.syncWithSupabase(user.id);
+        
         const following = await followingService.isFollowing(user.id, artist.id);
         console.log('Following state loaded:', following);
         setIsFollowing(following);

@@ -16,6 +16,9 @@ export interface ArtistProfile {
     website?: string;
   };
   isVerified: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  approvedAt?: string;
+  approvedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,6 +104,7 @@ class ArtistProfileService {
       location: profileData.location || '',
       socialLinks: profileData.socialLinks || {},
       isVerified: false,
+      status: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -140,6 +144,64 @@ class ArtistProfileService {
   getAllProfiles(): Record<string, ArtistProfile> {
     const stored = localStorage.getItem(this.storageKey);
     return stored ? JSON.parse(stored) : {};
+  }
+
+  deleteProfile(profileId: string): boolean {
+    const profiles = this.getAllProfiles();
+    if (!profiles[profileId]) {
+      return false;
+    }
+    
+    delete profiles[profileId];
+    localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+    return true;
+  }
+
+  approveProfile(profileId: string, approvedBy: string): ArtistProfile | null {
+    const profiles = this.getAllProfiles();
+    const profile = profiles[profileId];
+    
+    if (!profile) return null;
+
+    const updatedProfile = {
+      ...profile,
+      status: 'approved' as const,
+      isVerified: true,
+      approvedAt: new Date().toISOString(),
+      approvedBy,
+      updatedAt: new Date().toISOString(),
+    };
+
+    profiles[profileId] = updatedProfile;
+    localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+    return updatedProfile;
+  }
+
+  rejectProfile(profileId: string, rejectedBy: string): ArtistProfile | null {
+    const profiles = this.getAllProfiles();
+    const profile = profiles[profileId];
+    
+    if (!profile) return null;
+
+    const updatedProfile = {
+      ...profile,
+      status: 'rejected' as const,
+      updatedAt: new Date().toISOString(),
+    };
+
+    profiles[profileId] = updatedProfile;
+    localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+    return updatedProfile;
+  }
+
+  getApprovedProfiles(): ArtistProfile[] {
+    const profiles = this.getAllProfiles();
+    return Object.values(profiles).filter(profile => profile.status === 'approved');
+  }
+
+  getPendingProfiles(): ArtistProfile[] {
+    const profiles = this.getAllProfiles();
+    return Object.values(profiles).filter(profile => profile.status === 'pending');
   }
 
   // Project Management

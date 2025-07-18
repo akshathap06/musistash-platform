@@ -70,7 +70,33 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
     try {
       console.log("Google credential response:", response);
       
-      // Send the credential to your backend using centralized config
+      // For local development, create a mock user instead of calling backend
+      if (import.meta.env.MODE === 'development') {
+        console.log('🔧 Development mode: Using mock authentication');
+        
+        // Decode the JWT token to get user info
+        const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        console.log('Decoded JWT payload:', payload);
+        
+        const mockUser = {
+          id: `user_${Date.now()}`,
+          name: payload.name || 'Demo User',
+          email: payload.email || 'demo@example.com',
+          avatar: payload.picture || '/placeholder.svg',
+          role: 'listener' as const,
+          createdAt: new Date().toISOString()
+        };
+        
+        // Update the auth context with the mock user data
+        await loginWithGoogle(mockUser, 'mock_access_token');
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+        return;
+      }
+      
+      // Production flow - send the credential to your backend
       const backendResponse = await fetch(API_ENDPOINTS.googleAuth(), {
         method: 'POST',
         headers: {

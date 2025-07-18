@@ -7,17 +7,40 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { artists } from '@/lib/mockData';
+import { artistProfileService } from '@/services/artistProfileService';
 import { Search, Filter, Music } from 'lucide-react';
 
 const BrowseArtists = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
+  const [approvedProfiles, setApprovedProfiles] = useState<any[]>([]);
+
+  // Load approved profiles
+  React.useEffect(() => {
+    const profiles = artistProfileService.getApprovedProfiles();
+    setApprovedProfiles(profiles);
+  }, []);
+
+  // Combine mock artists with approved profiles
+  const allArtists = [
+    ...artists,
+    ...approvedProfiles.map(profile => ({
+      id: profile.id,
+      name: profile.artistName,
+      avatar: profile.profilePhoto,
+      bio: profile.bio,
+      genres: profile.genre,
+      followers: 0, // Default for new profiles
+      verified: profile.isVerified,
+      successRate: 75 // Default for new profiles
+    }))
+  ];
 
   // Get all unique genres
-  const allGenres = ['all', ...new Set(artists.flatMap(artist => artist.genres))];
+  const allGenres = ['all', ...new Set(allArtists.flatMap(artist => artist.genres))];
 
   // Filter artists based on search and genre
-  const filteredArtists = artists.filter(artist => {
+  const filteredArtists = allArtists.filter(artist => {
     const matchesSearch = artist.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          artist.bio.toLowerCase().includes(searchTerm.toLowerCase());
     

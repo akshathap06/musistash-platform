@@ -47,7 +47,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
-  role: 'artist' | 'listener' | 'developer';
+  role: 'artist' | 'listener' | 'developer' | 'admin';
   bio?: string;
   createdAt: string;
 }

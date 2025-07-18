@@ -10,31 +10,84 @@ import Footer from '@/components/layout/Footer';
 import ProjectCard from '@/components/ui/ProjectCard';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
+import { artistProfileService } from '@/services/artistProfileService';
+import { followingService } from '@/services/followingService';
+import { useAuth } from '@/hooks/useAuth';
 import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
 import spotifyService from '@/services/spotify';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 
 const ArtistProfile = () => {
   const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuth();
   const [artist, setArtist] = useState(null);
   const [artistProjects, setArtistProjects] = useState([]);
   const [similarityInfo, setSimilarityInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [spotifyArtist, setSpotifyArtist] = useState<SpotifyArtist | null>(null);
   const [spotifyImage, setSpotifyImage] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
   
   useEffect(() => {
     // Simulate API fetch for artist data
     const fetchData = async () => {
-      // First get the mock artist data
-      const foundArtist = artists.find(a => a.id === id) || artists[0];
-      setArtist(foundArtist);
+      // First try to get from approved profiles
+      let foundProfile = artistProfileService.getProfileById(id!);
+      let foundArtist: any;
       
+      if (foundProfile && foundProfile.status === 'approved') {
+        // Convert profile to artist format
+        foundArtist = {
+          id: foundProfile.id,
+          name: foundProfile.artistName,
+          avatar: foundProfile.profilePhoto,
+          bio: foundProfile.bio,
+          genres: foundProfile.genre,
+          followers: 0, // Default for new profiles
+          verified: foundProfile.isVerified,
+          successRate: 75 // Default for new profiles
+        };
+        setArtist(foundArtist);
+        setFollowersCount(0); // Start with 0 followers for new profiles
+        
+        // Check if current user is following this artist
+        if (user && isAuthenticated) {
+          const isUserFollowing = followingService.isFollowing(user.id, foundProfile.id);
+          setIsFollowing(isUserFollowing);
+        }
+      } else {
+        // Only show mock data if no approved profile exists
+        const mockArtist = artists.find(a => a.id === id);
+        if (mockArtist) {
+          foundArtist = mockArtist;
+          setArtist(foundArtist);
+          setFollowersCount(foundArtist.followers || 0);
+          
+          // Check if current user is following this mock artist
+          if (user && isAuthenticated) {
+            const isUserFollowing = followingService.isFollowing(user.id, mockArtist.id);
+            setIsFollowing(isUserFollowing);
+          }
+        } else {
+          // No profile found at all
+          setArtist(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // Only show projects if they exist for this specific artist
       const foundProjects = projects.filter(p => p.artistId === foundArtist.id);
       setArtistProjects(foundProjects);
       
-      const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
-      setSimilarityInfo(foundSimilarity);
+      // Only show similarity data for mock artists
+      if (foundProfile && foundProfile.status === 'approved') {
+        setSimilarityInfo(null); // No mock similarity data for real profiles
+      } else {
+        const foundSimilarity = similarityData.find(s => s.artist === foundArtist.name);
+        setSimilarityInfo(foundSimilarity);
+      }
       
       // Then fetch real Spotify data for the artist
       try {
@@ -55,8 +108,46 @@ const ArtistProfile = () => {
     };
     
     fetchData();
-  }, [id]);
+  }, [id, user, isAuthenticated]);
   
+  const handleFollow = () => {
+    if (!user || !isAuthenticated) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
+    }
+    
+    // Don't allow following own profile
+    if (user.id === artist.id) {
+      return;
+    }
+    
+    const newFollowingState = !isFollowing;
+    
+    if (newFollowingState) {
+      // Follow the artist
+      const success = followingService.followArtist(
+        user.id,
+        { name: user.name, avatar: user.avatar },
+        artist.id,
+        { name: artist.name, avatar: artist.avatar }
+      );
+      
+      if (success) {
+        setIsFollowing(true);
+        setFollowersCount(prev => prev + 1);
+      }
+    } else {
+      // Unfollow the artist
+      const success = followingService.unfollowArtist(user.id, artist.id);
+      
+      if (success) {
+        setIsFollowing(false);
+        setFollowersCount(prev => Math.max(0, prev - 1));
+      }
+    }
+  };
+
   if (isLoading || !artist) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -115,7 +206,7 @@ const ArtistProfile = () => {
                     <span className="font-semibold">
                       {spotifyArtist && spotifyArtist.followers ? 
                         `${spotifyArtist.followers.total.toLocaleString()} Followers` : 
-                        `${artist.followers.toLocaleString()} Followers`}
+                        `${followingService.getFollowerCount(artist.id)} Followers`}
                     </span>
                   </div>
                   <div className="flex items-center">
@@ -134,7 +225,16 @@ const ArtistProfile = () => {
               </div>
               
               <div className="flex gap-3 mt-4 md:mt-0">
-                <Button variant="outline" className="text-foreground">Follow</Button>
+                {/* Only show follow button if not viewing own profile */}
+                {(!user || user.id !== artist.id) && (
+                  <Button 
+                    variant={isFollowing ? "outline" : "default"}
+                    className={isFollowing ? "text-gray-400" : "bg-green-600 hover:bg-green-700"}
+                    onClick={handleFollow}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                )}
                 <Link to={artistProjects.length > 0 ? `/project/${artistProjects[0].id}` : '#'}>
                   <Button>
                     View Latest Project
@@ -380,32 +480,38 @@ const ArtistProfile = () => {
                       <CardTitle>Genre Trends</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        {(spotifyArtist ? spotifyArtist.genres : artist.genres).slice(0, 3).map((genre, index) => (
-                          <div key={index} className="space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-sm capitalize">{genre}</span>
-                              <span className="text-sm font-medium">
-                                {index === 0 ? '+12%' : index === 1 ? '+8%' : '+5%'}
-                              </span>
+                      {similarityInfo ? (
+                        <div className="space-y-3">
+                          {(spotifyArtist ? spotifyArtist.genres : artist.genres).slice(0, 3).map((genre, index) => (
+                            <div key={index} className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm capitalize">{genre}</span>
+                                <span className="text-sm font-medium">
+                                  {index === 0 ? '+12%' : index === 1 ? '+8%' : '+5%'}
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full" 
+                                  style={{ width: index === 0 ? '82%' : index === 1 ? '76%' : '65%' }}
+                                ></div>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {index === 0 ? 
+                                  'Strong growth trend in streaming platforms' : 
+                                  index === 1 ? 
+                                  'Moderate but stable audience growth' :
+                                  'Emerging interest from new markets'
+                                }
+                              </p>
                             </div>
-                            <div className="h-2 rounded-full bg-muted overflow-hidden">
-                              <div 
-                                className="h-full bg-primary rounded-full" 
-                                style={{ width: index === 0 ? '82%' : index === 1 ? '76%' : '65%' }}
-                              ></div>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {index === 0 ? 
-                                'Strong growth trend in streaming platforms' : 
-                                index === 1 ? 
-                                'Moderate but stable audience growth' :
-                                'Emerging interest from new markets'
-                              }
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No trend data available</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   
@@ -414,45 +520,51 @@ const ArtistProfile = () => {
                       <CardTitle>Audience Demographics</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm font-medium mb-1">Age Groups</div>
-                          <div className="grid grid-cols-4 gap-1 mb-1">
-                            <div className="bg-primary h-16 rounded-md" style={{opacity: 0.4}}></div>
-                            <div className="bg-primary h-24 rounded-md" style={{opacity: 0.6}}></div>
-                            <div className="bg-primary h-28 rounded-md" style={{opacity: 0.8}}></div>
-                            <div className="bg-primary h-12 rounded-md" style={{opacity: 0.3}}></div>
+                      {similarityInfo ? (
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-sm font-medium mb-1">Age Groups</div>
+                            <div className="grid grid-cols-4 gap-1 mb-1">
+                              <div className="bg-primary h-16 rounded-md" style={{opacity: 0.4}}></div>
+                              <div className="bg-primary h-24 rounded-md" style={{opacity: 0.6}}></div>
+                              <div className="bg-primary h-28 rounded-md" style={{opacity: 0.8}}></div>
+                              <div className="bg-primary h-12 rounded-md" style={{opacity: 0.3}}></div>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground">
+                              <div>18-24</div>
+                              <div>25-34</div>
+                              <div>35-44</div>
+                              <div>45+</div>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground">
-                            <div>18-24</div>
-                            <div>25-34</div>
-                            <div>35-44</div>
-                            <div>45+</div>
+                          
+                          <div>
+                            <div className="text-sm font-medium mb-2">Top Regions</div>
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span>United States</span>
+                                <span>42%</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>United Kingdom</span>
+                                <span>15%</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>Germany</span>
+                                <span>12%</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>Canada</span>
+                                <span>8%</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div>
-                          <div className="text-sm font-medium mb-2">Top Regions</div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>United States</span>
-                              <span>42%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>United Kingdom</span>
-                              <span>15%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Germany</span>
-                              <span>12%</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Canada</span>
-                              <span>8%</span>
-                            </div>
-                          </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No demographic data available</p>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>

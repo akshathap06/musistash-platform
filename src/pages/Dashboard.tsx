@@ -11,7 +11,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { projects } from '@/lib/mockData';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
 import { artistProfileService } from '@/services/artistProfileService';
-import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User } from 'lucide-react';
+import { followingService } from '@/services/followingService';
+import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
 
@@ -93,12 +94,12 @@ const Dashboard = () => {
                 
                 {(user.role === 'artist' || user.role === 'listener') && (
                   <>
-                                      <Link to="/artist-profile" className="w-full sm:w-auto">
-                    <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
-                      <User className="mr-2 h-4 w-4" />
-                      {user.role === 'artist' ? 'Manage Profile' : 'Create Artist Profile'}
-                    </Button>
-                  </Link>
+                    <Link to="/view-artist-profile" className="w-full sm:w-auto">
+                      <Button variant="outline" className="w-full sm:w-auto border-blue-500 text-blue-300 hover:bg-blue-500/20 bg-gray-800/50 backdrop-blur-sm">
+                        <User className="mr-2 h-4 w-4" />
+                        View Artist Profile
+                      </Button>
+                    </Link>
                     <Link to="/create-project" className="w-full sm:w-auto">
                       <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -114,6 +115,15 @@ const Dashboard = () => {
                   <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add New Service
+                  </Button>
+                </Link>
+              )}
+              
+              {user.role === 'admin' && (
+                <Link to="/admin">
+                  <Button className="bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <User className="mr-2 h-4 w-4" />
+                    Admin Dashboard
                   </Button>
                 </Link>
               )}
@@ -227,6 +237,134 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Followers & Following Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Following Section */}
+        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-white">Following</CardTitle>
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-400" />
+                <span className="text-sm text-gray-300">
+                  {followingService.getFollowingCount(user?.id || '')} Artists
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const following = followingService.getRecentFollowing(user?.id || '');
+              return following.length > 0 ? (
+                <div className="space-y-3">
+                  {following.map((follow) => (
+                    <div key={follow.artistId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={follow.artistAvatar}
+                          alt={follow.artistName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{follow.artistName}</p>
+                          <p className="text-xs text-gray-400">
+                            Followed {new Date(follow.followedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Link to={`/artist/${follow.artistId}`}>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          View Profile
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                  {following.length >= 5 && (
+                    <div className="text-center pt-2">
+                      <Link to="/browse-artists">
+                        <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                          View All Following
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-400 mb-2">Not following any artists yet</p>
+                  <Link to="/browse-artists">
+                    <Button variant="outline" size="sm">
+                      Discover Artists
+                    </Button>
+                  </Link>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
+        {/* Followers Section (if user has an artist profile) */}
+        {(() => {
+          const userProfile = artistProfileService.getProfileByUserId(user?.id || '');
+          if (userProfile && userProfile.status === 'approved') {
+            const followers = followingService.getRecentFollowers(userProfile.id);
+            return (
+              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-white">Your Followers</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-blue-400" />
+                      <span className="text-sm text-gray-300">
+                        {followingService.getFollowerCount(userProfile.id)} Followers
+                      </span>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {followers.length > 0 ? (
+                    <div className="space-y-3">
+                      {followers.map((follower) => (
+                        <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={follower.followerAvatar}
+                              alt={follower.followerName}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="font-medium text-white">{follower.followerName}</p>
+                              <p className="text-xs text-gray-400">
+                                Followed you {new Date(follower.followedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {followers.length >= 5 && (
+                        <div className="text-center pt-2">
+                          <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                            View All Followers
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                      <p className="text-gray-400">No followers yet</p>
+                      <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* Content Tabs */}
@@ -392,6 +530,62 @@ const ArtistDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => 
           </CardContent>
         </Card>
       </div>
+
+      {/* Followers Section for Artists */}
+      {artistProfile && artistProfile.status === 'approved' && (
+        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-white">Your Followers</CardTitle>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                <span className="text-sm text-gray-300">
+                  {followingService.getFollowerCount(artistProfile.id)} Followers
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const followers = followingService.getRecentFollowers(artistProfile.id);
+              return followers.length > 0 ? (
+                <div className="space-y-3">
+                  {followers.map((follower) => (
+                    <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={follower.followerAvatar}
+                          alt={follower.followerName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{follower.followerName}</p>
+                          <p className="text-xs text-gray-400">
+                            Followed you {new Date(follower.followedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {followers.length >= 5 && (
+                    <div className="text-center pt-2">
+                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                        View All Followers
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-400">No followers yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
       
       <Tabs defaultValue="projects" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-gray-800/50 border border-gray-700/50">

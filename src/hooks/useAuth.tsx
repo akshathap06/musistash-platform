@@ -51,6 +51,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Traditional email/password login (mock for demo)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Check for admin account
+      if (email === 'akshathapliyal27@gmail.com' && password === 'admin123') {
+        const adminUser: User = {
+          id: 'admin001',
+          name: 'Akshat Thapliyal',
+          email: email,
+          avatar: '/placeholder.svg',
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        };
+        
+        setUser(adminUser);
+        localStorage.setItem('musistash_user', JSON.stringify(adminUser));
+        return;
+      }
+      
+      // Check for demo accounts
+      if (email === 'demo@musistash.com' && password === 'demo123') {
+        const demoUser: User = {
+          id: 'demo001',
+          name: 'Demo User',
+          email: email,
+          avatar: '/placeholder.svg',
+          role: 'listener',
+          createdAt: new Date().toISOString()
+        };
+        
+        setUser(demoUser);
+        localStorage.setItem('musistash_user', JSON.stringify(demoUser));
+        return;
+      }
+      
       const mockUser: User = {
         id: 'user123',
         name: 'Demo User',
@@ -70,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: 'artist' | 'listener' | 'developer') => {
+  const register = async (name: string, email: string, password: string, role: 'artist' | 'listener' | 'developer' | 'admin') => {
     setIsLoading(true);
     
     try {

@@ -6,10 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import InvestmentModal from '@/components/ui/InvestmentModal';
+import { useAuth } from '@/hooks/useAuth';
 
 const ProjectDetail = () => {
   const { projectId } = useParams();
+  const { isAuthenticated } = useAuth();
   const [investmentAmount, setInvestmentAmount] = useState(500);
+  const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
 
   // Mock data - in real app, fetch this based on projectId
   const projectData = {
@@ -33,6 +37,44 @@ const ProjectDetail = () => {
 
   const calculateEstimatedEarnings = (amount: number) => {
     return (amount * projectData.roi / 100).toFixed(2);
+  };
+
+  const handleInvestClick = () => {
+    if (!isAuthenticated) {
+      // Could redirect to login or show login modal
+      return;
+    }
+    setIsInvestmentModalOpen(true);
+  };
+
+  const handleInvestmentComplete = () => {
+    // Refresh project data or show success message
+    console.log('Investment completed successfully!');
+  };
+
+  // Create a compatible project object for the investment modal
+  const compatibleProject = {
+    id: projectId || '1',
+    title: projectData.title,
+    description: projectData.description,
+    image: projectData.coverImage,
+    currentFunding: projectData.raised,
+    fundingGoal: projectData.goal,
+    roi: projectData.roi,
+    status: 'active' as 'active' | 'funded' | 'completed',
+    deadline: new Date(Date.now() + projectData.daysLeft * 24 * 60 * 60 * 1000).toISOString(),
+    packages: [
+      {
+        id: '1',
+        title: 'Basic Investment',
+        description: 'Support the project with a basic investment',
+        cost: projectData.minInvestment,
+        provider: 'Artist',
+        type: 'other' as 'producer' | 'studio' | 'marketing' | 'other'
+      }
+    ],
+    artistId: '1',
+    createdAt: new Date().toISOString()
   };
 
   return (
@@ -192,7 +234,11 @@ const ProjectDetail = () => {
                   </p>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleInvestClick}
+                  disabled={!isAuthenticated}
+                >
                   Invest Now
                 </Button>
 
@@ -222,6 +268,14 @@ const ProjectDetail = () => {
           </div>
         </div>
       </main>
+
+      {/* Investment Modal */}
+      <InvestmentModal
+        isOpen={isInvestmentModalOpen}
+        onClose={() => setIsInvestmentModalOpen(false)}
+        project={compatibleProject}
+        onInvestmentComplete={handleInvestmentComplete}
+      />
 
       <Footer />
     </div>

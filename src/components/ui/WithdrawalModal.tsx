@@ -111,7 +111,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 text-white sm:max-w-[500px] max-h-[90vh] overflow-y-auto relative z-50">
+      <DialogContent className="bg-gray-900 border-gray-700 text-white w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto z-50">
         {/* Mobile swipe indicator */}
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gray-600 rounded-full opacity-50 sm:hidden"></div>
         {/* Mobile-friendly close button */}

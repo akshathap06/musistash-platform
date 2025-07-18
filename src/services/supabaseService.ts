@@ -623,6 +623,38 @@ export class SupabaseService {
       return false;
     }
   }
+
+  // Check RLS status and policies for follow_relationships table
+  async checkRLSStatus(): Promise<void> {
+    try {
+      console.log('SupabaseService: Checking RLS status...');
+      
+      // Try to get table info
+      const { data: tableInfo, error: tableError } = await supabase
+        .from('follow_relationships')
+        .select('*')
+        .limit(1);
+      
+      console.log('SupabaseService: Table access test result:', { data: tableInfo, error: tableError });
+      
+      // Try to get RLS policies (this might not work with anon key)
+      let policies = null;
+      let policyError = null;
+      try {
+        const result = await supabase
+          .rpc('get_rls_policies', { table_name: 'follow_relationships' });
+        policies = result.data;
+        policyError = result.error;
+      } catch (rpcError) {
+        policyError = 'RPC not available';
+      }
+      
+      console.log('SupabaseService: RLS policies:', { data: policies, error: policyError });
+      
+    } catch (error) {
+      console.error('SupabaseService: Error checking RLS status:', error);
+    }
+  }
 }
 
 export const supabaseService = new SupabaseService() 

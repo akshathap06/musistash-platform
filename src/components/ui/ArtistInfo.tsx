@@ -95,6 +95,8 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
 
     console.log('Follow button clicked. Current state:', isFollowing);
     console.log('User ID:', user.id, 'Artist ID:', artist.id);
+    console.log('User object:', user);
+    console.log('Artist object:', artist);
 
     setIsLoading(true);
     
@@ -102,6 +104,9 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
     try {
       const tableAccess = await supabaseService.testFollowTableAccess();
       console.log('ArtistInfo: Supabase table access test result:', tableAccess);
+      
+      // Also check RLS status
+      await supabaseService.checkRLSStatus();
     } catch (error) {
       console.error('ArtistInfo: Table access test failed:', error);
     }

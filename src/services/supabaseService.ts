@@ -303,9 +303,16 @@ export class SupabaseService {
   // Follow Relationship Management
   async followArtist(followerId: string, artistId: string): Promise<boolean> {
     try {
+      console.log('SupabaseService: followArtist called with', { followerId, artistId });
+      
       // Check if already following
       const existing = await this.isFollowing(followerId, artistId)
-      if (existing) return false
+      console.log('SupabaseService: isFollowing check result:', existing);
+      
+      if (existing) {
+        console.log('SupabaseService: Already following, returning false');
+        return false;
+      }
 
       const { error } = await supabase
         .from('follow_relationships')
@@ -315,7 +322,12 @@ export class SupabaseService {
           followed_at: new Date().toISOString(),
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('SupabaseService: Error inserting follow relationship:', error);
+        throw error;
+      }
+      
+      console.log('SupabaseService: Follow relationship inserted successfully');
       return true
     } catch (error) {
       console.error('Error following artist:', error)
@@ -325,13 +337,20 @@ export class SupabaseService {
 
   async unfollowArtist(followerId: string, artistId: string): Promise<boolean> {
     try {
+      console.log('SupabaseService: unfollowArtist called with', { followerId, artistId });
+      
       const { error } = await supabase
         .from('follow_relationships')
         .delete()
         .eq('follower_id', followerId)
         .eq('artist_id', artistId)
 
-      if (error) throw error
+      if (error) {
+        console.error('SupabaseService: Error deleting follow relationship:', error);
+        throw error;
+      }
+      
+      console.log('SupabaseService: Follow relationship deleted successfully');
       return true
     } catch (error) {
       console.error('Error unfollowing artist:', error)
@@ -341,6 +360,8 @@ export class SupabaseService {
 
   async isFollowing(followerId: string, artistId: string): Promise<boolean> {
     try {
+      console.log('SupabaseService: isFollowing called with', { followerId, artistId });
+      
       const { data, error } = await supabase
         .from('follow_relationships')
         .select('id')
@@ -348,8 +369,14 @@ export class SupabaseService {
         .eq('artist_id', artistId)
         .single()
 
-      if (error && error.code !== 'PGRST116') throw error
-      return !!data
+      if (error && error.code !== 'PGRST116') {
+        console.error('SupabaseService: Error checking follow status:', error);
+        throw error;
+      }
+      
+      const result = !!data;
+      console.log('SupabaseService: isFollowing result:', result, 'data:', data);
+      return result;
     } catch (error) {
       console.error('Error checking follow status:', error)
       return false

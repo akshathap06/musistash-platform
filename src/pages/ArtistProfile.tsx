@@ -144,29 +144,54 @@ const ArtistProfile = () => {
       return;
     }
     
-    const newFollowingState = !isFollowing;
+    console.log('Follow button clicked. Current state:', isFollowing);
+    console.log('User ID:', user.id, 'Artist ID:', artist.id);
     
-    if (newFollowingState) {
-      // Follow the artist
-      const success = await followingService.followArtist(
-        user.id,
-        { name: user.name, avatar: user.avatar },
-        artist.id,
-        { name: artist.name, avatar: artist.avatar }
-      );
-      
-      if (success) {
-        setIsFollowing(true);
-        setFollowersCount(prev => prev + 1);
+    const newFollowingState = !isFollowing;
+    console.log('Setting new following state to:', newFollowingState);
+    
+    // Optimistically update the UI
+    setIsFollowing(newFollowingState);
+    
+    try {
+      if (newFollowingState) {
+        // Follow the artist
+        console.log('Attempting to follow artist...');
+        const success = await followingService.followArtist(
+          user.id,
+          { name: user.name, avatar: user.avatar },
+          artist.id,
+          { name: artist.name, avatar: artist.avatar }
+        );
+        
+        console.log('Follow operation result:', success);
+        
+        if (success) {
+          setFollowersCount(prev => prev + 1);
+        } else {
+          // Revert if the operation failed
+          console.log('Follow operation failed, reverting state');
+          setIsFollowing(false);
+        }
+      } else {
+        // Unfollow the artist
+        console.log('Attempting to unfollow artist...');
+        const success = await followingService.unfollowArtist(user.id, artist.id);
+        
+        console.log('Unfollow operation result:', success);
+        
+        if (success) {
+          setFollowersCount(prev => Math.max(0, prev - 1));
+        } else {
+          // Revert if the operation failed
+          console.log('Unfollow operation failed, reverting state');
+          setIsFollowing(true);
+        }
       }
-    } else {
-      // Unfollow the artist
-      const success = await followingService.unfollowArtist(user.id, artist.id);
-      
-      if (success) {
-        setIsFollowing(false);
-        setFollowersCount(prev => Math.max(0, prev - 1));
-      }
+    } catch (error) {
+      console.error('Error following/unfollowing artist:', error);
+      // Revert on error
+      setIsFollowing(!newFollowingState);
     }
   };
 
@@ -251,7 +276,11 @@ const ArtistProfile = () => {
                 {(!user || user.id !== artist.id) && (
                   <Button 
                     variant={isFollowing ? "outline" : "default"}
-                    className={isFollowing ? "text-gray-400" : "bg-green-600 hover:bg-green-700"}
+                    className={`transition-all duration-200 ${
+                      isFollowing 
+                        ? "border-gray-500 text-gray-400 bg-gray-800/50 hover:bg-gray-700/50" 
+                        : "bg-green-600 hover:bg-green-700 text-white"
+                    }`}
                     onClick={handleFollow}
                   >
                     {isFollowing ? "Following" : "Follow"}

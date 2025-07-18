@@ -239,20 +239,24 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     const loadData = async () => {
       if (user) {
-        const stats = InvestmentService.getUserInvestmentStats(user.id);
-        setInvestmentStats(stats);
-        
-        // Load following data
-        const following = await followingService.getRecentFollowing(user.id);
-        setRecentFollowing(following);
-        
-        // Load user profile and followers data
-        const profile = await artistProfileService.getProfileByUserId(user.id);
-        setUserProfile(profile);
-        
-        if (profile && profile.status === 'approved') {
-          const followers = await followingService.getRecentFollowers(profile.id);
-          setRecentFollowers(followers);
+        try {
+          const stats = await InvestmentService.getUserInvestmentStats(user.id);
+          setInvestmentStats(stats);
+          
+          // Load following data
+          const following = await followingService.getRecentFollowing(user.id);
+          setRecentFollowing(following);
+          
+          // Load user profile and followers data
+          const profile = await artistProfileService.getProfileByUserId(user.id);
+          setUserProfile(profile);
+          
+          if (profile && profile.status === 'approved') {
+            const followers = await followingService.getRecentFollowers(profile.id);
+            setRecentFollowers(followers);
+          }
+        } catch (error) {
+          console.error('Error loading dashboard data:', error);
         }
       }
     };
@@ -260,10 +264,14 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
     loadData();
   }, [user]);
 
-  const handleInvestmentComplete = () => {
+  const handleInvestmentComplete = async () => {
     if (user) {
-      const stats = InvestmentService.getUserInvestmentStats(user.id);
-      setInvestmentStats(stats);
+      try {
+        const stats = await InvestmentService.getUserInvestmentStats(user.id);
+        setInvestmentStats(stats);
+      } catch (error) {
+        console.error('Error refreshing investment stats:', error);
+      }
     }
     onInvestmentComplete();
   };

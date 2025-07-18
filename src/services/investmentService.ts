@@ -1,4 +1,6 @@
 import { Investment } from '@/lib/mockData';
+import { supabaseService } from './supabaseService';
+import { artistProfileService } from './artistProfileService';
 
 export interface UserInvestment extends Investment {
   projectTitle: string;
@@ -20,16 +22,58 @@ export class InvestmentService {
   private static STORAGE_KEY = 'musistash_user_investments';
 
   // Get all investments for a specific user
-  static getUserInvestments(userId: string): UserInvestment[] {
+  static async getUserInvestments(userId: string): Promise<UserInvestment[]> {
     try {
-      const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
-      if (!storedInvestments) return [];
+      // First try to get from database
+      const dbInvestments = await supabaseService.getUserInvestments(userId);
       
-      const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
-      return allInvestments.filter(investment => investment.userId === userId);
+      // Convert database investments to UserInvestment format
+      const userInvestments: UserInvestment[] = await Promise.all(
+        dbInvestments.map(async (dbInv) => {
+          // Get project details to include project title and ROI
+          let projectTitle = 'Unknown Project';
+          let projectROI = 0;
+          
+          try {
+            // Try to get project details from artistProfileService
+            const project = await artistProfileService.getProjectById(dbInv.project_id);
+            if (project) {
+              projectTitle = project.title;
+              projectROI = project.expectedROI || 0;
+            }
+          } catch (error) {
+            console.error('Error fetching project details:', error);
+          }
+          
+          return {
+            id: dbInv.id,
+            userId: dbInv.user_id,
+            projectId: dbInv.project_id,
+            amount: dbInv.amount,
+            date: dbInv.date,
+            status: dbInv.status === 'cancelled' ? 'canceled' : dbInv.status,
+            projectTitle,
+            projectROI,
+            investmentDate: dbInv.investment_date || dbInv.created_at
+          };
+        })
+      );
+      
+      return userInvestments;
     } catch (error) {
-      console.error('Error retrieving user investments:', error);
-      return [];
+      console.error('Error retrieving user investments from database:', error);
+      
+      // Fallback to localStorage if database fails
+      try {
+        const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+        if (!storedInvestments) return [];
+        
+        const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
+        return allInvestments.filter(investment => investment.userId === userId);
+      } catch (localError) {
+        console.error('Error retrieving user investments from localStorage:', localError);
+        return [];
+      }
     }
   }
 
@@ -58,8 +102,8 @@ export class InvestmentService {
   }
 
   // Get investment statistics for a user
-  static getUserInvestmentStats(userId: string) {
-    const userInvestments = this.getUserInvestments(userId);
+  static async getUserInvestmentStats(userId: string) {
+    const userInvestments = await this.getUserInvestments(userId);
     
     if (userInvestments.length === 0) {
       return {
@@ -121,6 +165,7 @@ export class InvestmentService {
   // Withdraw from an investment
   static async withdrawInvestment(withdrawal: WithdrawalRequest): Promise<boolean> {
     try {
+      // For now, use localStorage as the primary method since database methods are limited
       const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
       if (!storedInvestments) throw new Error('No investments found');
       
@@ -154,7 +199,7 @@ export class InvestmentService {
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
       
-      // Store withdrawal history (optional - for tracking purposes)
+      // Store withdrawal history for tracking
       const withdrawalHistory = JSON.parse(localStorage.getItem('musistash_withdrawals') || '[]');
       withdrawalHistory.push({
         ...withdrawal,

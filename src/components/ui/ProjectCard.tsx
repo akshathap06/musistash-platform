@@ -53,11 +53,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
 
   // Check if user has invested in this project
   React.useEffect(() => {
-    if (user) {
-      const userInvestments = InvestmentService.getUserInvestments(user.id);
-      const investment = userInvestments.find(inv => inv.projectId === project.id);
-      setUserInvestment(investment || null);
-    }
+    const checkUserInvestment = async () => {
+      if (user) {
+        try {
+          const userInvestments = await InvestmentService.getUserInvestments(user.id);
+          const investment = userInvestments.find(inv => inv.projectId === project.id);
+          setUserInvestment(investment || null);
+        } catch (error) {
+          console.error('Error checking user investment:', error);
+          setUserInvestment(null);
+        }
+      }
+    };
+    
+    checkUserInvestment();
   }, [user, project.id]);
 
   const handleWithdrawClick = () => {
@@ -67,15 +76,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
     setIsWithdrawalModalOpen(true);
   };
 
-  const handleWithdrawalComplete = () => {
+  const handleWithdrawalComplete = async () => {
     if (onInvestmentComplete) {
       onInvestmentComplete();
     }
     // Refresh user investment data
     if (user) {
-      const userInvestments = InvestmentService.getUserInvestments(user.id);
-      const investment = userInvestments.find(inv => inv.projectId === project.id);
-      setUserInvestment(investment || null);
+      try {
+        const userInvestments = await InvestmentService.getUserInvestments(user.id);
+        const investment = userInvestments.find(inv => inv.projectId === project.id);
+        setUserInvestment(investment || null);
+      } catch (error) {
+        console.error('Error refreshing user investment:', error);
+        setUserInvestment(null);
+      }
     }
   };
 

@@ -314,23 +314,31 @@ export class SupabaseService {
         return false;
       }
 
-      const { error } = await supabase
+      console.log('SupabaseService: Attempting to insert follow relationship...');
+      const { data, error } = await supabase
         .from('follow_relationships')
         .insert({
           follower_id: followerId,
           artist_id: artistId,
           followed_at: new Date().toISOString(),
         })
+        .select()
 
       if (error) {
         console.error('SupabaseService: Error inserting follow relationship:', error);
+        console.error('SupabaseService: Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
       
-      console.log('SupabaseService: Follow relationship inserted successfully');
+      console.log('SupabaseService: Follow relationship inserted successfully:', data);
       return true
     } catch (error) {
-      console.error('Error following artist:', error)
+      console.error('SupabaseService: Error following artist:', error)
       return false
     }
   }
@@ -339,21 +347,29 @@ export class SupabaseService {
     try {
       console.log('SupabaseService: unfollowArtist called with', { followerId, artistId });
       
-      const { error } = await supabase
+      console.log('SupabaseService: Attempting to delete follow relationship...');
+      const { data, error } = await supabase
         .from('follow_relationships')
         .delete()
         .eq('follower_id', followerId)
         .eq('artist_id', artistId)
+        .select()
 
       if (error) {
         console.error('SupabaseService: Error deleting follow relationship:', error);
+        console.error('SupabaseService: Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
       
-      console.log('SupabaseService: Follow relationship deleted successfully');
+      console.log('SupabaseService: Follow relationship deleted successfully:', data);
       return true
     } catch (error) {
-      console.error('Error unfollowing artist:', error)
+      console.error('SupabaseService: Error unfollowing artist:', error)
       return false
     }
   }
@@ -362,6 +378,7 @@ export class SupabaseService {
     try {
       console.log('SupabaseService: isFollowing called with', { followerId, artistId });
       
+      console.log('SupabaseService: Attempting to check follow status...');
       const { data, error } = await supabase
         .from('follow_relationships')
         .select('id')
@@ -371,6 +388,12 @@ export class SupabaseService {
 
       if (error && error.code !== 'PGRST116') {
         console.error('SupabaseService: Error checking follow status:', error);
+        console.error('SupabaseService: Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
       
@@ -378,7 +401,7 @@ export class SupabaseService {
       console.log('SupabaseService: isFollowing result:', result, 'data:', data);
       return result;
     } catch (error) {
-      console.error('Error checking follow status:', error)
+      console.error('SupabaseService: Error checking follow status:', error)
       return false
     }
   }
@@ -552,6 +575,52 @@ export class SupabaseService {
     } catch (error) {
       console.error('Error getting all projects:', error)
       return []
+    }
+  }
+
+  // Test method to check if we can write to follow_relationships table
+  async testFollowTableAccess(): Promise<boolean> {
+    try {
+      console.log('SupabaseService: Testing follow table access...');
+      
+      // Try to insert a test record
+      const testData = {
+        follower_id: 'test-follower-id',
+        artist_id: 'test-artist-id',
+        followed_at: new Date().toISOString(),
+      };
+      
+      console.log('SupabaseService: Test data:', testData);
+      
+      const { data, error } = await supabase
+        .from('follow_relationships')
+        .insert(testData)
+        .select();
+      
+      if (error) {
+        console.error('SupabaseService: Test insert failed:', error);
+        return false;
+      }
+      
+      console.log('SupabaseService: Test insert successful:', data);
+      
+      // Clean up test data
+      const { error: deleteError } = await supabase
+        .from('follow_relationships')
+        .delete()
+        .eq('follower_id', 'test-follower-id')
+        .eq('artist_id', 'test-artist-id');
+      
+      if (deleteError) {
+        console.error('SupabaseService: Test cleanup failed:', deleteError);
+      } else {
+        console.log('SupabaseService: Test cleanup successful');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('SupabaseService: Test failed:', error);
+      return false;
     }
   }
 }

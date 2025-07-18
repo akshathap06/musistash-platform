@@ -9,6 +9,7 @@ import { CheckCircle } from 'lucide-react';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 import { followingService } from '@/services/followingService';
 import { useAuth } from '@/hooks/useAuth';
+import { supabaseService } from '@/services/supabaseService';
 
 interface ArtistInfoProps {
   artist: Artist;
@@ -96,6 +97,14 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
     console.log('User ID:', user.id, 'Artist ID:', artist.id);
 
     setIsLoading(true);
+    
+    // Test Supabase table access first
+    try {
+      const tableAccess = await supabaseService.testFollowTableAccess();
+      console.log('ArtistInfo: Supabase table access test result:', tableAccess);
+    } catch (error) {
+      console.error('ArtistInfo: Table access test failed:', error);
+    }
     
     // Optimistically update the UI state
     const newFollowingState = !isFollowing;

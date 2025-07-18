@@ -17,10 +17,25 @@ import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
 import spotifyService from '@/services/spotify';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 
+interface ArtistData {
+  id: string;
+  name: string;
+  avatar: string;
+  bio: string;
+  biography?: string;
+  genres: string[];
+  followers: number;
+  verified: boolean;
+  successRate: number;
+  musical_style?: string;
+  influences?: string;
+  career_highlights?: any[];
+}
+
 const ArtistProfile = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated } = useAuth();
-  const [artist, setArtist] = useState(null);
+  const [artist, setArtist] = useState<ArtistData | null>(null);
   const [artistProjects, setArtistProjects] = useState([]);
   const [similarityInfo, setSimilarityInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,10 +59,14 @@ const ArtistProfile = () => {
             name: foundProfile.artist_name,
             avatar: foundProfile.profile_photo,
             bio: foundProfile.bio,
+            biography: foundProfile.biography || foundProfile.bio,
             genres: foundProfile.genre,
             followers: 0, // Default for new profiles
             verified: foundProfile.is_verified,
-            successRate: 75 // Default for new profiles
+            successRate: 75, // Default for new profiles
+            musical_style: foundProfile.musical_style || '',
+            influences: foundProfile.influences || '',
+            career_highlights: foundProfile.career_highlights || []
           };
           setArtist(foundArtist);
           
@@ -294,19 +313,15 @@ const ArtistProfile = () => {
                       <CardTitle>Artist Biography</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-muted-foreground">
-                        {artist.bio}
-                      </p>
-                      <p className="text-muted-foreground">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-                        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-                        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                      </p>
-                      <p className="text-muted-foreground">
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-                        fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in 
-                        culpa qui officia deserunt mollit anim id est laborum.
-                      </p>
+                      {artist.biography ? (
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {artist.biography}
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          {artist.bio || "No biography available yet."}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                   
@@ -315,23 +330,32 @@ const ArtistProfile = () => {
                       <CardTitle>Musical Style & Influences</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-muted-foreground">
-                        {artist.name}'s music blends traditional elements of {
-                          spotifyArtist && spotifyArtist.genres ? 
-                            spotifyArtist.genres.slice(0, 2).join(' and ') : 
-                            artist.genres.join(' and ')
-                        } with innovative production techniques. Their sound is characterized by emotional depth
-                        and meticulous attention to sonic detail.
-                      </p>
-                      <p className="text-muted-foreground">
-                        Key influences include pioneering artists in the {
-                          spotifyArtist && spotifyArtist.genres ? 
-                            spotifyArtist.genres[0] : 
-                            artist.genres[0]
-                        } scene, as well as
-                        classic songwriters from various eras. This combination creates a fresh yet familiar
-                        sound that resonates with diverse audiences.
-                      </p>
+                      {artist.musical_style ? (
+                        <div>
+                          <h4 className="font-medium mb-2">Musical Style</h4>
+                          <p className="text-muted-foreground mb-4">
+                            {artist.musical_style}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground">
+                          {artist.name}'s music blends traditional elements of {
+                            spotifyArtist && spotifyArtist.genres ? 
+                              spotifyArtist.genres.slice(0, 2).join(' and ') : 
+                              artist.genres.join(' and ')
+                          } with innovative production techniques. Their sound is characterized by emotional depth
+                          and meticulous attention to sonic detail.
+                        </p>
+                      )}
+                      
+                      {artist.influences && (
+                        <div>
+                          <h4 className="font-medium mb-2">Influences</h4>
+                          <p className="text-muted-foreground">
+                            {artist.influences}
+                          </p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -342,37 +366,55 @@ const ArtistProfile = () => {
                       <CardTitle>Career Highlights</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2023</div>
-                          <div>
-                            <div className="font-medium">Released 'Reflections' EP</div>
-                            <p className="text-sm text-muted-foreground">
-                              Reached top 50 on streaming charts
-                            </p>
+                      {artist.career_highlights && artist.career_highlights.length > 0 ? (
+                        <div className="space-y-4">
+                          {artist.career_highlights.map((highlight: any, index: number) => (
+                            <div key={index} className="flex gap-3">
+                              <div className="text-sm font-medium text-primary">
+                                {highlight.year || 'N/A'}
+                              </div>
+                              <div>
+                                <div className="font-medium">{highlight.title || highlight.achievement}</div>
+                                <p className="text-sm text-muted-foreground">
+                                  {highlight.description || highlight.details}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex gap-3">
+                            <div className="text-sm font-medium text-primary">2023</div>
+                            <div>
+                              <div className="font-medium">Released 'Reflections' EP</div>
+                              <p className="text-sm text-muted-foreground">
+                                Reached top 50 on streaming charts
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-3">
+                            <div className="text-sm font-medium text-primary">2022</div>
+                            <div>
+                              <div className="font-medium">Collaborated with top producers</div>
+                              <p className="text-sm text-muted-foreground">
+                                Worked with industry veterans
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-3">
+                            <div className="text-sm font-medium text-primary">2021</div>
+                            <div>
+                              <div className="font-medium">Debut single release</div>
+                              <p className="text-sm text-muted-foreground">
+                                First major industry recognition
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2022</div>
-                          <div>
-                            <div className="font-medium">Collaborated with top producers</div>
-                            <p className="text-sm text-muted-foreground">
-                              Worked with industry veterans
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2021</div>
-                          <div>
-                            <div className="font-medium">Debut single release</div>
-                            <p className="text-sm text-muted-foreground">
-                              First major industry recognition
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                   

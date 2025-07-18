@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ArtistProfile {
   name: string;
   bio: string;
+  biography: string;
   genre: string[];
   location: string;
   profileImage: string;
@@ -45,6 +46,7 @@ const ArtistProfileManager = () => {
   const [profile, setProfile] = useState<ArtistProfile>({
     name: '',
     bio: '',
+    biography: '',
     genre: [],
     location: '',
     profileImage: '',
@@ -131,6 +133,7 @@ const ArtistProfileManager = () => {
             setProfile({
               name: existing.artist_name,
               bio: existing.bio,
+              biography: (existing as any).biography || existing.bio || '',
               genre: Array.isArray(existing.genre) ? existing.genre : [],
               location: existing.location,
               profileImage: existing.profile_photo,
@@ -261,6 +264,7 @@ const ArtistProfileManager = () => {
         artist_name: profile.name,
         email: user.email,
         bio: profile.bio,
+        biography: profile.biography,
         genre: profile.genre,
         location: profile.location,
         profile_photo: profile.profileImage || imagePreview || '/placeholder.svg',
@@ -333,6 +337,7 @@ const ArtistProfileManager = () => {
           artist_name: profile.name,
           email: user.email,
           bio: profile.bio,
+          biography: profile.biography,
           genre: profile.genre,
           location: profile.location,
           profile_photo: profile.profileImage || '/placeholder.svg',
@@ -492,18 +497,34 @@ const ArtistProfileManager = () => {
                   
                   <div>
                     <Label htmlFor="bio" className={`${validationErrors.bio ? 'text-red-500' : ''}`}>
-                      Biography <span className="text-red-500">*</span>
+                      Short Bio <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="bio"
                       value={profile.bio}
                       onChange={(e) => handleInputChange('bio', e.target.value)}
-                      placeholder="Tell your story..."
-                      rows={4}
+                      placeholder="A brief introduction (50+ characters)..."
+                      rows={3}
                     />
                     {validationErrors.bio && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.bio}</p>
                     )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="biography">
+                      Detailed Biography
+                    </Label>
+                    <Textarea
+                      id="biography"
+                      value={profile.biography}
+                      onChange={(e) => handleInputChange('biography', e.target.value)}
+                      placeholder="Tell your complete story, musical journey, and background..."
+                      rows={6}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      This will be displayed in the "About" section of your profile
+                    </p>
                   </div>
                 </CardContent>
               </Card>

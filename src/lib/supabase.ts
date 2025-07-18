@@ -52,6 +52,7 @@ export interface Database {
           profile_photo: string
           banner_photo: string
           bio: string
+          biography: string
           genre: string[]
           location: string
           social_links: Record<string, string>
@@ -73,6 +74,7 @@ export interface Database {
           profile_photo?: string
           banner_photo?: string
           bio?: string
+          biography?: string
           genre?: string[]
           location?: string
           social_links?: Record<string, string>
@@ -94,6 +96,7 @@ export interface Database {
           profile_photo?: string
           banner_photo?: string
           bio?: string
+          biography?: string
           genre?: string[]
           location?: string
           social_links?: Record<string, string>

@@ -12,7 +12,7 @@ import { projects } from '@/lib/mockData';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
-import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart } from 'lucide-react';
+import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
 
@@ -21,6 +21,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
   
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -34,6 +38,16 @@ const Dashboard = () => {
         try {
           const profile = await artistProfileService.getProfileByUserId(user.id);
           setUserProfile(profile);
+          
+          // Load following count
+          const followingCount = await followingService.getFollowingCount(user.id);
+          setFollowingCount(followingCount);
+          
+          // Load followers count if user has an approved artist profile
+          if (profile && profile.status === 'approved') {
+            const followersCount = await followingService.getFollowerCount(profile.id);
+            setFollowersCount(followersCount);
+          }
         } catch (error) {
           console.error('Error loading user profile:', error);
           setUserProfile(null);
@@ -72,7 +86,15 @@ const Dashboard = () => {
       case 'developer':
         return <DeveloperDashboard onInvestmentComplete={handleInvestmentComplete} />;
       default:
-        return <ListenerDashboard onInvestmentComplete={handleInvestmentComplete} />;
+        return (
+          <ListenerDashboard 
+            onInvestmentComplete={handleInvestmentComplete}
+            showFollowingModal={showFollowingModal}
+            setShowFollowingModal={setShowFollowingModal}
+            showFollowersModal={showFollowersModal}
+            setShowFollowersModal={setShowFollowersModal}
+          />
+        );
     }
   };
   
@@ -103,9 +125,27 @@ const Dashboard = () => {
                      user.role === 'developer' ? 'Build the future of music technology' :
                      'Discover and invest in the next big hits, or create your own artist profile'}
                   </p>
-                  <Badge variant="outline" className="mt-2 bg-blue-500/20 text-blue-300 border-blue-500/50 capitalize">
-                    {user.role}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50 capitalize">
+                      {user.role}
+                    </Badge>
+                    <button
+                      onClick={() => setShowFollowingModal(true)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/20 text-red-300 border border-red-500/50 rounded-full hover:bg-red-500/30 transition-colors"
+                    >
+                      <Heart className="w-3 h-3" />
+                      {followingCount} Following
+                    </button>
+                    {userProfile && userProfile.status === 'approved' && (
+                      <button
+                        onClick={() => setShowFollowersModal(true)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/20 text-green-300 border border-green-500/50 rounded-full hover:bg-green-500/30 transition-colors"
+                      >
+                        <Users className="w-3 h-3" />
+                        {followersCount} Followers
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -170,9 +210,19 @@ const Dashboard = () => {
 
 interface DashboardProps {
   onInvestmentComplete: () => void;
+  showFollowingModal?: boolean;
+  setShowFollowingModal?: (show: boolean) => void;
+  showFollowersModal?: boolean;
+  setShowFollowersModal?: (show: boolean) => void;
 }
 
-const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) => {
+const ListenerDashboard: React.FC<DashboardProps> = ({ 
+  onInvestmentComplete, 
+  showFollowingModal, 
+  setShowFollowingModal, 
+  showFollowersModal, 
+  setShowFollowersModal 
+}) => {
   const { user } = useAuth();
   const [investmentStats, setInvestmentStats] = useState({
     totalInvested: 0,
@@ -181,10 +231,8 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
     averageROI: 0,
     investments: [] as UserInvestment[]
   });
-  const [followingCount, setFollowingCount] = useState(0);
   const [recentFollowing, setRecentFollowing] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [followersCount, setFollowersCount] = useState(0);
   const [recentFollowers, setRecentFollowers] = useState<any[]>([]);
 
   useEffect(() => {
@@ -194,9 +242,6 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
         setInvestmentStats(stats);
         
         // Load following data
-        const count = await followingService.getFollowingCount(user.id);
-        setFollowingCount(count);
-        
         const following = await followingService.getRecentFollowing(user.id);
         setRecentFollowing(following);
         
@@ -205,9 +250,6 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
         setUserProfile(profile);
         
         if (profile && profile.status === 'approved') {
-          const followersCount = await followingService.getFollowerCount(profile.id);
-          setFollowersCount(followersCount);
-          
           const followers = await followingService.getRecentFollowers(profile.id);
           setRecentFollowers(followers);
         }
@@ -296,123 +338,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
         </Card>
       </div>
 
-      {/* Followers & Following Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Following Section */}
-        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-white">Following</CardTitle>
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-400" />
-                <span className="text-sm text-gray-300">
-                  {followingCount} Artists
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {recentFollowing.length > 0 ? (
-              <div className="space-y-3">
-                {recentFollowing.map((follow) => (
-                  <div key={follow.artistId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={follow.artistAvatar}
-                        alt={follow.artistName}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-medium text-white">{follow.artistName}</p>
-                        <p className="text-xs text-gray-400">
-                          Followed {new Date(follow.followedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <Link to={`/artist/${follow.artistId}`}>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
-                {recentFollowing.length >= 5 && (
-                  <div className="text-center pt-2">
-                    <Link to="/browse-artists">
-                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                        View All Following
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                  <p className="text-gray-400 mb-2">Not following any artists yet</p>
-                  <Link to="/browse-artists">
-                    <Button variant="outline" size="sm">
-                      Discover Artists
-                    </Button>
-                  </Link>
-                </div>
-              )}
-          </CardContent>
-        </Card>
 
-        {/* Followers Section (if user has an artist profile) */}
-        {userProfile && userProfile.status === 'approved' && (
-          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Your Followers</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-400" />
-                  <span className="text-sm text-gray-300">
-                    {followersCount} Followers
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {recentFollowers.length > 0 ? (
-                <div className="space-y-3">
-                  {recentFollowers.map((follower) => (
-                    <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={follower.followerAvatar}
-                          alt={follower.followerName}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-white">{follower.followerName}</p>
-                          <p className="text-xs text-gray-400">
-                            Followed you {new Date(follower.followedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {recentFollowers.length >= 5 && (
-                    <div className="text-center pt-2">
-                      <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                        View All Followers
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                  <p className="text-gray-400">No followers yet</p>
-                  <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
 
       {/* Content Tabs */}
       <Tabs defaultValue="portfolio" className="w-full">
@@ -488,6 +414,113 @@ const ListenerDashboard: React.FC<DashboardProps> = ({ onInvestmentComplete }) =
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Following Modal */}
+      {showFollowingModal && setShowFollowingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-400" />
+                Following ({recentFollowing.length})
+              </h3>
+              <button
+                onClick={() => setShowFollowingModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto">
+              {recentFollowing.length > 0 ? (
+                <div className="space-y-3">
+                  {recentFollowing.map((follow) => (
+                    <div key={follow.artistId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={follow.artistAvatar}
+                          alt={follow.artistName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{follow.artistName}</p>
+                          <p className="text-xs text-gray-400">
+                            Followed {new Date(follow.followedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Link to={`/artist/${follow.artistId}`}>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          View Profile
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-400 mb-2">Not following any artists yet</p>
+                  <Link to="/browse-artists">
+                    <Button variant="outline" size="sm">
+                      Discover Artists
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Followers Modal */}
+      {showFollowersModal && setShowFollowersModal && userProfile && userProfile.status === 'approved' && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                Followers ({recentFollowers.length})
+              </h3>
+              <button
+                onClick={() => setShowFollowersModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto">
+              {recentFollowers.length > 0 ? (
+                <div className="space-y-3">
+                  {recentFollowers.map((follower) => (
+                    <div key={follower.followerId} className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={follower.followerAvatar}
+                          alt={follower.followerName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-medium text-white">{follower.followerName}</p>
+                          <p className="text-xs text-gray-400">
+                            Followed you {new Date(follower.followedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-400">No followers yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Share your artist profile to get followers</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

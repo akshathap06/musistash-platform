@@ -35,9 +35,15 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('WithdrawalModal: Received investment data:', investment);
+  console.log('WithdrawalModal: Investment amount:', investment.amount);
+  console.log('WithdrawalModal: Project ROI:', investment.projectROI);
+
   const currentValue = investment.amount * (1 + investment.projectROI / 100);
   const potentialProfit = currentValue - investment.amount;
   const maxWithdrawal = currentValue;
+
+  console.log('WithdrawalModal: Calculated values - currentValue:', currentValue, 'potentialProfit:', potentialProfit, 'maxWithdrawal:', maxWithdrawal);
 
   const handleWithdrawal = async () => {
     if (!user) {
@@ -91,7 +97,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
   const calculateWithdrawalValue = () => {
     const withdrawalAmount = parseFloat(amount);
-    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) return 0;
+    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) return null;
     
     const percentage = (withdrawalAmount / currentValue) * 100;
     return {
@@ -200,7 +206,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
           </div>
 
           {/* Withdrawal Preview */}
-          {amount && parseFloat(amount) > 0 && (
+          {amount && parseFloat(amount) > 0 && withdrawalValue && (
             <div className="p-4 bg-gradient-to-r from-red-900/20 to-orange-900/20 rounded-lg border border-red-700/30">
               <div className="flex items-center space-x-2 mb-2">
                 <TrendingDown className="h-5 w-5 text-red-400" />

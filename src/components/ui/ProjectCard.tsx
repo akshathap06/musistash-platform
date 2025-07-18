@@ -56,8 +56,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
     const checkUserInvestment = async () => {
       if (user) {
         try {
+          console.log('ProjectCard: Checking investment for project:', project.id, 'user:', user.id);
           const userInvestments = await InvestmentService.getUserInvestments(user.id);
+          console.log('ProjectCard: All user investments:', userInvestments);
+          
           const investment = userInvestments.find(inv => inv.projectId === project.id);
+          console.log('ProjectCard: Found investment for this project:', investment);
+          
           setUserInvestment(investment || null);
         } catch (error) {
           console.error('Error checking user investment:', error);

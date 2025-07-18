@@ -236,15 +236,52 @@ export class InvestmentService {
   // Clear all investments for a user (for testing purposes)
   static clearUserInvestments(userId: string): void {
     try {
+      console.log('InvestmentService: Clearing all investments for user:', userId);
+      
       const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
-      if (!storedInvestments) return;
+      if (!storedInvestments) {
+        console.log('InvestmentService: No investments found in localStorage');
+        return;
+      }
       
       const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
       const otherInvestments = allInvestments.filter(inv => inv.userId !== userId);
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(otherInvestments));
+      console.log('InvestmentService: Cleared investments. Remaining investments:', otherInvestments.length);
     } catch (error) {
       console.error('Error clearing user investments:', error);
+    }
+  }
+
+  // Add a test investment for debugging
+  static addTestInvestment(userId: string, projectId: string, amount: number): UserInvestment {
+    try {
+      console.log('InvestmentService: Adding test investment:', { userId, projectId, amount });
+      
+      const testInvestment: UserInvestment = {
+        id: `test_inv_${Date.now()}`,
+        userId: userId,
+        projectId: projectId,
+        amount: amount,
+        date: new Date().toISOString().split('T')[0],
+        status: 'completed',
+        projectTitle: 'Test Project',
+        projectROI: 7.5,
+        investmentDate: new Date().toISOString()
+      };
+
+      const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+      const allInvestments: UserInvestment[] = storedInvestments ? JSON.parse(storedInvestments) : [];
+      
+      allInvestments.push(testInvestment);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+      
+      console.log('InvestmentService: Test investment added successfully:', testInvestment);
+      return testInvestment;
+    } catch (error) {
+      console.error('Error adding test investment:', error);
+      throw new Error('Failed to add test investment');
     }
   }
 

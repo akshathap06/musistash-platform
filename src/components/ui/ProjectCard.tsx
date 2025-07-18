@@ -104,8 +104,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
 
   const handleWithdrawClick = () => {
     if (!isAuthenticated || !userInvestment) {
+      console.log('ProjectCard: Cannot withdraw - authenticated:', isAuthenticated, 'userInvestment:', userInvestment);
       return;
     }
+    console.log('ProjectCard: Opening withdrawal modal with investment:', userInvestment);
     setIsWithdrawalModalOpen(true);
   };
 

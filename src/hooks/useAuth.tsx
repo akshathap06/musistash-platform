@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { supabaseService } from '@/services/supabaseService';
 import type { Database } from '@/lib/supabase';
 
@@ -30,7 +29,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
-        setUser(userData);
+        
+        // Validate that the user has a proper UUID
+        if (userData.id && typeof userData.id === 'string' && userData.id.length > 20) {
+          // This looks like a proper UUID, use it
+          setUser(userData);
+        } else {
+          // Invalid user ID format, clear it and force re-authentication
+          console.warn('Invalid user ID format found, clearing authentication');
+          localStorage.removeItem('musistash_user');
+          setUser(null);
+        }
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('musistash_user');
@@ -51,8 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const savedUser = localStorage.getItem('musistash_user');
         if (savedUser) {
           const userData = JSON.parse(savedUser);
-          setUser(userData);
-          return;
+          
+          // Validate UUID format
+          if (userData.id && typeof userData.id === 'string' && userData.id.length > 20) {
+            setUser(userData);
+            return;
+          } else {
+            throw new Error('Invalid user ID format');
+          }
         } else {
           throw new Error('Google authentication data not found');
         }
@@ -157,17 +172,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Attempting Google login with user:', googleUser);
       
-      // For now, use the simplified approach that stores user in localStorage
-      const user = {
-        ...googleUser,
+      // Always create or get user from Supabase to ensure proper UUID
+      let user = await supabaseService.getUserByEmail(googleUser.email);
+      
+      if (!user) {
+        // Create new user in Supabase
+        user = await supabaseService.createUser({
+          name: googleUser.name || 'Google User',
+          email: googleUser.email,
+          avatar: googleUser.picture || null,
+          role: 'listener'
+        });
+      }
+      
+      if (!user) {
+        throw new Error('Failed to create or retrieve user from Supabase');
+      }
+      
+      // Ensure we have a proper UUID
+      if (!user.id || typeof user.id !== 'string' || user.id.length <= 20) {
+        throw new Error('Invalid user ID format from Supabase');
+      }
+      
+      const userWithToken = {
+        ...user,
         accessToken
       };
       
-      setUser(user);
-      localStorage.setItem('musistash_user', JSON.stringify(user));
+      setUser(userWithToken);
+      localStorage.setItem('musistash_user', JSON.stringify(userWithToken));
       localStorage.setItem('musistash_token', accessToken);
       
-      console.log('🔍 User logged in successfully:', user);
+      console.log('🔍 User logged in successfully with proper UUID:', userWithToken);
       
     } catch (error) {
       console.error('🔍 Google login error:', error);

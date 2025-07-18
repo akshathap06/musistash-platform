@@ -76,44 +76,31 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
     try {
       console.log("Google credential response:", response);
       
-      // For now, use a simple approach that works around RLS issues
-      console.log('🔧 Using simplified authentication approach');
-      
       // Decode the JWT token to get user info
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('Decoded JWT payload:', payload);
       
-      // Create user in Supabase with proper UUID
-      let user = await supabaseService.getUserByEmail(payload.email);
+      // Use the proper authentication flow that ensures UUIDs
+      await loginWithGoogle(payload, response.credential);
       
-      if (!user) {
-        // Create new user in Supabase
-        user = await supabaseService.createUser({
-          name: payload.name || 'Demo User',
-          email: payload.email || 'demo@example.com',
-          avatar: payload.picture || null,
-          role: 'listener'
-        });
-      }
-      
-      if (!user) {
-        throw new Error('Failed to create or retrieve user');
-      }
-      
-      const mockUser = {
-        ...user,
-        accessToken: 'google_token_' + Date.now()
-      };
-
-      console.log('Created mock user:', mockUser);
-      
-      // Store user in localStorage for now
-      localStorage.setItem('musistash_user', JSON.stringify(mockUser));
-      localStorage.setItem('musistash_token', 'mock_token_' + Date.now());
-      
-      // Call the success callback
-      if (onSuccess) {
-        onSuccess(mockUser);
+      // Get the user from localStorage (now with proper UUID)
+      const savedUser = localStorage.getItem('musistash_user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        
+        // Validate UUID format
+        if (user.id && typeof user.id === 'string' && user.id.length > 20) {
+          console.log('✅ User authenticated with proper UUID:', user);
+          
+          // Call the success callback
+          if (onSuccess) {
+            onSuccess(user);
+          }
+        } else {
+          throw new Error('Invalid user ID format after authentication');
+        }
+      } else {
+        throw new Error('User data not found after authentication');
       }
       
     } catch (error) {
@@ -133,6 +120,11 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
         console.error('🔍 Google OAuth origin issue detected');
         if (onError) {
           onError('Google Sign-In configuration issue. Please check your Google OAuth settings.');
+        }
+      } else if (error instanceof Error && error.message.includes('Invalid user ID format')) {
+        console.error('🔍 UUID format issue detected');
+        if (onError) {
+          onError('Authentication failed due to user ID format issue. Please try again.');
         }
       } else {
         if (onError) {

@@ -56,7 +56,9 @@ const InvestmentModal: React.FC<InvestmentModalProps> = ({
     setError('');
 
     try {
-      await InvestmentService.addInvestment({
+      console.log('InvestmentModal: Creating investment for user:', user.id, 'project:', project.id, 'amount:', investmentAmount);
+      
+      const newInvestment = await InvestmentService.addInvestment({
         userId: user.id,
         projectId: project.id,
         amount: investmentAmount,
@@ -65,10 +67,13 @@ const InvestmentModal: React.FC<InvestmentModalProps> = ({
         projectROI: project.roi
       });
 
+      console.log('InvestmentModal: Investment created successfully:', newInvestment);
+      
       onInvestmentComplete();
       onClose();
       setAmount('');
     } catch (err) {
+      console.error('InvestmentModal: Error creating investment:', err);
       setError('Failed to process investment. Please try again.');
     } finally {
       setIsLoading(false);

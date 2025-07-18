@@ -24,11 +24,14 @@ export class InvestmentService {
   // Get all investments for a specific user
   static async getUserInvestments(userId: string): Promise<UserInvestment[]> {
     try {
+      console.log('InvestmentService: getUserInvestments called for user:', userId);
+      
       // First try to get from database
       const dbInvestments = await supabaseService.getUserInvestments(userId);
+      console.log('InvestmentService: Database investments found:', dbInvestments.length);
       
       // Convert database investments to UserInvestment format
-      const userInvestments: UserInvestment[] = await Promise.all(
+      const dbUserInvestments: UserInvestment[] = await Promise.all(
         dbInvestments.map(async (dbInv) => {
           // Get project details to include project title and ROI
           let projectTitle = 'Unknown Project';
@@ -59,7 +62,24 @@ export class InvestmentService {
         })
       );
       
-      return userInvestments;
+      // Also get localStorage investments (for mock projects)
+      let localStorageInvestments: UserInvestment[] = [];
+      try {
+        const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+        if (storedInvestments) {
+          const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
+          localStorageInvestments = allInvestments.filter(investment => investment.userId === userId);
+          console.log('InvestmentService: localStorage investments found:', localStorageInvestments.length);
+        }
+      } catch (localError) {
+        console.error('Error retrieving user investments from localStorage:', localError);
+      }
+      
+      // Combine both sources, prioritizing database investments
+      const combinedInvestments = [...dbUserInvestments, ...localStorageInvestments];
+      console.log('InvestmentService: Total investments found:', combinedInvestments.length);
+      
+      return combinedInvestments;
     } catch (error) {
       console.error('Error retrieving user investments from database:', error);
       
@@ -69,7 +89,9 @@ export class InvestmentService {
         if (!storedInvestments) return [];
         
         const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
-        return allInvestments.filter(investment => investment.userId === userId);
+        const userInvestments = allInvestments.filter(investment => investment.userId === userId);
+        console.log('InvestmentService: Fallback to localStorage, found:', userInvestments.length, 'investments');
+        return userInvestments;
       } catch (localError) {
         console.error('Error retrieving user investments from localStorage:', localError);
         return [];
@@ -78,8 +100,71 @@ export class InvestmentService {
   }
 
   // Add a new investment
-  static addInvestment(investment: Omit<UserInvestment, 'id' | 'date' | 'investmentDate'>): UserInvestment {
+  static async addInvestment(investment: Omit<UserInvestment, 'id' | 'date' | 'investmentDate'>): Promise<UserInvestment> {
     try {
+      console.log('InvestmentService: addInvestment called with', investment);
+      
+      // Check if this is a mock project (simple ID like '1', '2', '3')
+      const isMockProject = /^\d+$/.test(investment.projectId);
+      
+      if (isMockProject) {
+        console.log('InvestmentService: Detected mock project, using localStorage only');
+        // For mock projects, use localStorage only
+        const newInvestment: UserInvestment = {
+          ...investment,
+          id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          date: new Date().toISOString().split('T')[0],
+          investmentDate: new Date().toISOString(),
+          status: 'completed'
+        };
+
+        const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+        const allInvestments: UserInvestment[] = storedInvestments ? JSON.parse(storedInvestments) : [];
+        
+        allInvestments.push(newInvestment);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+        
+        console.log('InvestmentService: Mock project investment saved to localStorage', newInvestment);
+        return newInvestment;
+      }
+      
+      // For real projects, try database first
+      try {
+        const dbInvestment = await supabaseService.createInvestment({
+          user_id: investment.userId,
+          project_id: investment.projectId,
+          amount: investment.amount
+        });
+        
+        if (dbInvestment) {
+          console.log('InvestmentService: Investment saved to database successfully', dbInvestment);
+          
+          // Create UserInvestment object from database result
+          const newInvestment: UserInvestment = {
+            id: dbInvestment.id,
+            userId: dbInvestment.user_id,
+            projectId: dbInvestment.project_id,
+            amount: dbInvestment.amount,
+            date: dbInvestment.date,
+            status: dbInvestment.status === 'cancelled' ? 'canceled' : dbInvestment.status,
+            projectTitle: investment.projectTitle,
+            projectROI: investment.projectROI,
+            investmentDate: dbInvestment.investment_date || dbInvestment.created_at
+          };
+          
+          // Also save to localStorage as backup
+          const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+          const allInvestments: UserInvestment[] = storedInvestments ? JSON.parse(storedInvestments) : [];
+          allInvestments.push(newInvestment);
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+          
+          return newInvestment;
+        }
+      } catch (dbError) {
+        console.error('InvestmentService: Error saving to database, falling back to localStorage:', dbError);
+      }
+      
+      // Fallback to localStorage if database fails
       const newInvestment: UserInvestment = {
         ...investment,
         id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -94,6 +179,7 @@ export class InvestmentService {
       allInvestments.push(newInvestment);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
       
+      console.log('InvestmentService: Investment saved to localStorage as fallback', newInvestment);
       return newInvestment;
     } catch (error) {
       console.error('Error adding investment:', error);

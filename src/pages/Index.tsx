@@ -420,7 +420,7 @@ const Index = () => {
             </div>
 
             <div className="mt-12 text-center">
-              <Link to="/projects">
+              <Link to="/discover-projects">
                 <Button 
                   size="lg"
                   className="bg-transparent border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 px-8 py-6 text-lg transition-all duration-300 transform hover:scale-105"

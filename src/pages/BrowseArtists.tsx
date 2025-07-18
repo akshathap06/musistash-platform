@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ArtistInfo from '@/components/ui/ArtistInfo';
-import { artists } from '@/lib/mockData';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
 import { useAuth } from '@/hooks/useAuth';
@@ -83,22 +82,18 @@ const BrowseArtists = () => {
   };
 
   // Combine mock artists with approved profiles
-  const allArtists = [
-    ...artists,
-    ...approvedProfiles.map(profile => ({
-      id: profile.id,
-      name: profile.artist_name,
-      avatar: profile.profile_photo,
-      bio: profile.bio,
-      genres: profile.genre,
-      followers: 0, // Default for new profiles
-      verified: profile.is_verified,
-      successRate: 75 // Default for new profiles
-    }))
-  ];
+  const allArtists = approvedProfiles.map(profile => ({
+    id: profile.id,
+    name: profile.artist_name,
+    avatar: profile.profile_photo,
+    bio: profile.bio,
+    genres: profile.genre || [],
+    followers: 0, // Default for new profiles
+    verified: profile.is_verified,
+    successRate: 75 // Default for new profiles
+  }));
 
-  console.log('All artists:', allArtists);
-  console.log('Mock artists:', artists);
+  console.log('All artists (approved profiles only):', allArtists);
   console.log('Approved profiles:', approvedProfiles);
 
   // Get all unique genres

@@ -93,64 +93,13 @@ class FollowingService {
   // Follow an artist
   async followArtist(userId: string, userData: { name: string; avatar: string }, artistId: string, artistData: { name: string; avatar: string }): Promise<boolean> {
     try {
-      console.log('FollowingService: Attempting to follow artist via Supabase');
+      console.log('FollowingService: Following artist via Supabase directly');
       const result = await supabaseService.followArtist(userId, artistId);
       
       console.log('FollowingService: Supabase follow result:', result);
-      
-      // Only use localStorage if Supabase explicitly returns false (indicating failure)
-      if (result === false) {
-        console.log('FollowingService: Supabase returned false, using localStorage fallback');
-        return this.followArtistLocal(userId, artistId);
-      }
-      
-      // If result is true, Supabase succeeded
-      if (result === true) {
-        console.log('FollowingService: Supabase follow successful');
-        // Also save to localStorage as backup
-        this.followArtistLocal(userId, artistId);
-        return true;
-      }
-      
-      // If we get here, something unexpected happened
-      console.log('FollowingService: Unexpected result from Supabase, using localStorage fallback');
-      return this.followArtistLocal(userId, artistId);
+      return result;
     } catch (error) {
       console.error('Error following artist:', error);
-      // Only use localStorage if there's a real error
-      return this.followArtistLocal(userId, artistId);
-    }
-  }
-
-  // LocalStorage fallback for following
-  private followArtistLocal(userId: string, artistId: string): boolean {
-    try {
-      const storageKey = 'musistash_follow_relationships';
-      const existing = localStorage.getItem(storageKey);
-      const relationships = existing ? JSON.parse(existing) : [];
-      
-      // Check if already following
-      const alreadyFollowing = relationships.some((rel: any) => 
-        rel.follower_id === userId && rel.artist_id === artistId
-      );
-      
-      if (alreadyFollowing) {
-        console.log('FollowingService: Already following in localStorage');
-        return false;
-      }
-      
-      // Add new relationship
-      relationships.push({
-        follower_id: userId,
-        artist_id: artistId,
-        followed_at: new Date().toISOString()
-      });
-      
-      localStorage.setItem(storageKey, JSON.stringify(relationships));
-      console.log('FollowingService: Follow relationship saved to localStorage');
-      return true;
-    } catch (error) {
-      console.error('Error in localStorage follow:', error);
       return false;
     }
   }
@@ -158,52 +107,13 @@ class FollowingService {
   // Unfollow an artist
   async unfollowArtist(userId: string, artistId: string): Promise<boolean> {
     try {
-      console.log('FollowingService: Attempting to unfollow artist via Supabase');
+      console.log('FollowingService: Unfollowing artist via Supabase directly');
       const result = await supabaseService.unfollowArtist(userId, artistId);
       
       console.log('FollowingService: Supabase unfollow result:', result);
-      
-      // Only use localStorage if Supabase explicitly returns false (indicating failure)
-      if (result === false) {
-        console.log('FollowingService: Supabase returned false, using localStorage fallback');
-        return this.unfollowArtistLocal(userId, artistId);
-      }
-      
-      // If result is true, Supabase succeeded
-      if (result === true) {
-        console.log('FollowingService: Supabase unfollow successful');
-        // Also remove from localStorage
-        this.unfollowArtistLocal(userId, artistId);
-        return true;
-      }
-      
-      // If we get here, something unexpected happened
-      console.log('FollowingService: Unexpected result from Supabase, using localStorage fallback');
-      return this.unfollowArtistLocal(userId, artistId);
+      return result;
     } catch (error) {
       console.error('Error unfollowing artist:', error);
-      // Only use localStorage if there's a real error
-      return this.unfollowArtistLocal(userId, artistId);
-    }
-  }
-
-  // LocalStorage fallback for unfollowing
-  private unfollowArtistLocal(userId: string, artistId: string): boolean {
-    try {
-      const storageKey = 'musistash_follow_relationships';
-      const existing = localStorage.getItem(storageKey);
-      const relationships = existing ? JSON.parse(existing) : [];
-      
-      // Remove relationship
-      const updatedRelationships = relationships.filter((rel: any) => 
-        !(rel.follower_id === userId && rel.artist_id === artistId)
-      );
-      
-      localStorage.setItem(storageKey, JSON.stringify(updatedRelationships));
-      console.log('FollowingService: Unfollow relationship saved to localStorage');
-      return true;
-    } catch (error) {
-      console.error('Error in localStorage unfollow:', error);
       return false;
     }
   }
@@ -211,24 +121,14 @@ class FollowingService {
   // Check if user is following an artist
   async isFollowing(userId: string, artistId: string): Promise<boolean> {
     try {
-      console.log('FollowingService: Checking follow status via Supabase');
+      console.log('FollowingService: Checking follow status via Supabase directly');
       const result = await supabaseService.isFollowing(userId, artistId);
       
       console.log('FollowingService: Supabase follow check result:', result);
-      
-      // If Supabase returns a boolean, use it
-      if (typeof result === 'boolean') {
-        console.log('FollowingService: Supabase follow check successful:', result);
-        return result;
-      }
-      
-      // Fallback to localStorage if Supabase fails
-      console.log('FollowingService: Supabase failed, using localStorage fallback');
-      return this.isFollowingLocal(userId, artistId);
+      return result;
     } catch (error) {
       console.error('Error checking follow status:', error);
-      // Fallback to localStorage
-      return this.isFollowingLocal(userId, artistId);
+      return false;
     }
   }
 
@@ -296,45 +196,6 @@ class FollowingService {
     } catch (error) {
       console.error('Error getting recent following:', error);
       return [];
-    }
-  }
-
-  // Sync localStorage with Supabase for a user
-  async syncWithSupabase(userId: string): Promise<void> {
-    try {
-      console.log('FollowingService: Syncing localStorage with Supabase for user:', userId);
-      
-      // Get Supabase following data
-      const supabaseFollowing = await supabaseService.getFollowing(userId);
-      const supabaseArtistIds = supabaseFollowing.map(f => f.artist_id);
-      
-      // Get localStorage following data
-      const storageKey = 'musistash_follow_relationships';
-      const existing = localStorage.getItem(storageKey);
-      const localStorageRelationships = existing ? JSON.parse(existing) : [];
-      const localStorageArtistIds = localStorageRelationships
-        .filter((rel: any) => rel.follower_id === userId)
-        .map((rel: any) => rel.artist_id);
-      
-      console.log('FollowingService: Supabase artist IDs:', supabaseArtistIds);
-      console.log('FollowingService: localStorage artist IDs:', localStorageArtistIds);
-      
-      // Update localStorage to match Supabase
-      const updatedRelationships = localStorageRelationships.filter((rel: any) => rel.follower_id !== userId);
-      
-      // Add Supabase relationships to localStorage
-      supabaseFollowing.forEach(follow => {
-        updatedRelationships.push({
-          follower_id: follow.follower_id,
-          artist_id: follow.artist_id,
-          followed_at: follow.followed_at
-        });
-      });
-      
-      localStorage.setItem(storageKey, JSON.stringify(updatedRelationships));
-      console.log('FollowingService: Synced localStorage with Supabase');
-    } catch (error) {
-      console.error('Error syncing with Supabase:', error);
     }
   }
 }

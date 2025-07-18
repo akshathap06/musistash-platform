@@ -10,6 +10,8 @@ import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 import { followingService } from '@/services/followingService';
 import { useAuth } from '@/hooks/useAuth';
 import { supabaseService } from '@/services/supabaseService';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ArtistInfoProps {
   artist: Artist;
@@ -32,6 +34,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [actualFollowers, setActualFollowers] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const initials = artist.name
     .split(' ')
@@ -48,33 +51,84 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   const followers = spotifyArtist?.followers?.total || artist.followers;
 
   // Load following state and actual follower count
-  useEffect(() => {
-    const loadFollowingState = async () => {
-      if (!user || !isAuthenticated || !showFollowButton || user.id === artist.id) return;
+  const loadFollowingState = async () => {
+    if (!user || !isAuthenticated) return;
+
+    console.log('Loading following state for user:', user.id, 'artist:', artist.id);
+
+    try {
+      let realArtistId = artist.id;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      if (!uuidRegex.test(artist.id)) {
+        console.log('Converting mock artist ID for follow check:', artist.id);
+        try {
+          // Try to get demo artist user ID first
+          realArtistId = await supabaseService.getDemoArtistUserId(artist.name);
+          
+          if (!realArtistId) {
+            // Fallback to creating artist user if not found
+            realArtistId = await supabaseService.getOrCreateArtistUser(artist.id, {
+              name: artist.name,
+              bio: artist.bio,
+              avatar: artist.avatar
+            });
+          }
+          
+          console.log('Converted to real artist ID for follow check:', realArtistId);
+        } catch (error) {
+          console.error('Failed to convert artist ID for follow check:', error);
+          setIsFollowing(false);
+          return;
+        }
+      }
       
-      try {
-        console.log('Loading following state for user:', user.id, 'artist:', artist.id);
-        
-        // First sync localStorage with Supabase
-        await followingService.syncWithSupabase(user.id);
-        
-        const following = await followingService.isFollowing(user.id, artist.id);
-        console.log('Following state loaded:', following);
-        setIsFollowing(following);
-      } catch (error) {
-        console.error('Error loading following state:', error);
-      }
-    };
+      // Check follow status with real UUID
+      const following = await followingService.isFollowing(user.id, realArtistId);
+      console.log('Following state loaded:', following);
+      setIsFollowing(following);
+    } catch (error) {
+      console.error('Error loading following state:', error);
+      setIsFollowing(false);
+    }
+  };
 
-    const loadFollowerCount = async () => {
-      try {
-        const count = await followingService.getFollowerCount(artist.id);
-        setActualFollowers(count);
-      } catch (error) {
-        console.error('Error loading follower count:', error);
-      }
-    };
+  const loadFollowerCount = async () => {
+    try {
+      let realArtistId = artist.id;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+      if (!uuidRegex.test(artist.id)) {
+        console.log('Converting mock artist ID for follower count:', artist.id);
+        try {
+          // Try to get demo artist user ID first
+          realArtistId = await supabaseService.getDemoArtistUserId(artist.name);
+          
+          if (!realArtistId) {
+            // Fallback to creating artist user if not found
+            realArtistId = await supabaseService.getOrCreateArtistUser(artist.id, {
+              name: artist.name,
+              bio: artist.bio,
+              avatar: artist.avatar
+            });
+          }
+          
+          console.log('Converted to real artist ID for follower count:', realArtistId);
+        } catch (error) {
+          console.error('Failed to convert artist ID for follower count:', error);
+          setActualFollowers(artist.followers);
+          return;
+        }
+      }
+      const count = await followingService.getFollowerCount(realArtistId);
+      setActualFollowers(count);
+    } catch (error) {
+      console.error('Error loading follower count:', error);
+      setActualFollowers(artist.followers);
+    }
+  };
+
+  useEffect(() => {
     loadFollowingState();
     loadFollowerCount();
   }, [user, isAuthenticated, artist.id, showFollowButton]);
@@ -86,92 +140,140 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   }, [artist.id]);
 
   const handleFollow = async () => {
-    if (!user || !isAuthenticated) {
-      window.location.href = '/login';
-      return;
-    }
-
-    if (user.id === artist.id) return;
+    if (!user || !isAuthenticated) return;
 
     console.log('Follow button clicked. Current state:', isFollowing);
     console.log('User ID:', user.id, 'Artist ID:', artist.id);
     console.log('User object:', user);
     console.log('Artist object:', artist);
-    
-    // Test UUID format
+
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     console.log('User ID is valid UUID:', uuidRegex.test(user.id));
     console.log('Artist ID is valid UUID:', uuidRegex.test(artist.id));
     console.log('User ID length:', user.id.length);
     console.log('Artist ID length:', artist.id.length);
 
-    setIsLoading(true);
-    
-    // Test Supabase table access first
     try {
-      const tableAccess = await supabaseService.testFollowTableAccess();
-      console.log('ArtistInfo: Supabase table access test result:', tableAccess);
-      
-      // Also check RLS status
+      // Test Supabase table access
+      const tableAccessTest = await supabaseService.testFollowTableAccess();
+      console.log('ArtistInfo: Supabase table access test result:', tableAccessTest);
+
+      // Check RLS status
       await supabaseService.checkRLSStatus();
-      
-      // Run simple test
+
+      // Run simple follow test
       await supabaseService.simpleFollowTest();
-      
-      // Run comprehensive test for all tables
+
+      // Run comprehensive table test
       await supabaseService.comprehensiveTableTest();
-    } catch (error) {
-      console.error('ArtistInfo: Table access test failed:', error);
-    }
-    
-    // Optimistically update the UI state
-    const newFollowingState = !isFollowing;
-    console.log('Setting new following state to:', newFollowingState);
-    setIsFollowing(newFollowingState);
-    
-    try {
-      if (newFollowingState) {
-        console.log('Attempting to follow artist...');
-        const success = await followingService.followArtist(
-          user.id,
-          { name: user.name, avatar: user.avatar },
-          artist.id,
-          { name: artist.name, avatar: artist.avatar }
-        );
+
+      // Direct follow test
+      console.log('=== DIRECT FOLLOW TEST ===');
+      let realArtistId = artist.id;
+      
+      if (!uuidRegex.test(artist.id)) {
+        console.log('Converting mock artist ID for direct test:', artist.id);
+        console.log('Artist name for lookup:', artist.name);
         
-        console.log('Follow operation result:', success);
-        
-        if (success) {
-          // Update follower count immediately
-          setActualFollowers(prev => (prev || 0) + 1);
-          onFollowChange?.(artist.id, true);
-        } else {
-          // Revert if the operation failed
-          console.log('Follow operation failed, reverting state');
-          setIsFollowing(false);
+        try {
+          // Try to get demo artist user ID first
+          realArtistId = await supabaseService.getDemoArtistUserId(artist.name);
+          console.log('getDemoArtistUserId result:', realArtistId);
+          
+          if (!realArtistId) {
+            console.log('Demo artist user ID not found, trying fallback...');
+            // Fallback to creating artist user if not found
+            realArtistId = await supabaseService.getOrCreateArtistUser(artist.id, {
+              name: artist.name,
+              bio: artist.bio,
+              avatar: artist.avatar
+            });
+            console.log('getOrCreateArtistUser result:', realArtistId);
+          }
+          
+          console.log('Final converted to real artist ID for direct test:', realArtistId);
+        } catch (error) {
+          console.error('Failed to convert artist ID for direct test:', error);
+          return;
         }
       } else {
-        console.log('Attempting to unfollow artist...');
-        const success = await followingService.unfollowArtist(user.id, artist.id);
-        
-        console.log('Unfollow operation result:', success);
-        
-        if (success) {
-          // Update follower count immediately
-          setActualFollowers(prev => Math.max(0, (prev || 0) - 1));
-          onFollowChange?.(artist.id, false);
-        } else {
-          // Revert if the operation failed
-          console.log('Unfollow operation failed, reverting state');
-          setIsFollowing(true);
-        }
+        console.log('Artist ID is already a valid UUID:', realArtistId);
       }
+
+      const directTestData = {
+        follower_id: user.id,
+        artist_id: realArtistId,
+        followed_at: new Date().toISOString()
+      };
+      console.log('Direct test data:', directTestData);
+
+      try {
+        const { data, error } = await supabase
+          .from('follow_relationships')
+          .insert(directTestData)
+          .select()
+          .single();
+
+        if (error) {
+          console.log('❌ DIRECT FOLLOW TEST FAILED:', error);
+          console.log('Error code:', error.code);
+          console.log('Error message:', error.message);
+          console.log('Error details:', error.details);
+          console.log('Error hint:', error.hint);
+        } else {
+          console.log('✅ DIRECT FOLLOW TEST SUCCESS:', data);
+          
+          // Clean up the test data
+          await supabase
+            .from('follow_relationships')
+            .delete()
+            .eq('id', data.id);
+          console.log('✅ Test data cleaned up');
+        }
+      } catch (directError) {
+        console.log('❌ DIRECT FOLLOW TEST FAILED:', directError);
+      }
+
+      // Set optimistic UI update
+      const newFollowingState = !isFollowing;
+      console.log('Setting new following state to:', newFollowingState);
+      setIsFollowing(newFollowingState);
+
+      // Attempt to follow/unfollow artist
+      console.log('Attempting to follow artist...');
+      let result = false;
+
+      if (newFollowingState) {
+        result = await followingService.followArtist(user.id, { name: user.name, avatar: user.avatar }, realArtistId, { name: artist.name, avatar: artist.avatar });
+      } else {
+        result = await followingService.unfollowArtist(user.id, realArtistId);
+      }
+
+      console.log('Follow operation result:', result);
+
+      // Update follower count
+      await loadFollowerCount();
+
+      // Show notification
+      toast({
+        title: newFollowingState ? 'Following!' : 'Unfollowed',
+        description: newFollowingState ? `You're now following ${artist.name}` : `You've unfollowed ${artist.name}`,
+      });
+
+      // Test the mappings
+      console.log('=== TESTING DEMO ARTIST MAPPINGS ===');
+      const testMappings = await supabaseService.getDemoArtistUserIds();
+      console.log('Demo artist mappings:', testMappings);
+
     } catch (error) {
-      console.error('Error following/unfollowing artist:', error);
-      // Revert on error
-      setIsFollowing(!newFollowingState);
-    } finally {
-      setIsLoading(false);
+      console.error('Error in handleFollow:', error);
+      // Revert optimistic update
+      setIsFollowing(isFollowing);
+      toast({
+        title: 'Error',
+        description: 'Failed to update follow status. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 

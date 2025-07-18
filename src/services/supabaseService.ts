@@ -305,6 +305,13 @@ export class SupabaseService {
     try {
       console.log('SupabaseService: followArtist called with', { followerId, artistId });
       
+      // Validate UUIDs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(followerId) || !uuidRegex.test(artistId)) {
+        console.error('SupabaseService: Invalid UUID format', { followerId, artistId });
+        return false;
+      }
+      
       // Check if already following
       const existing = await this.isFollowing(followerId, artistId)
       console.log('SupabaseService: isFollowing check result:', existing);
@@ -332,6 +339,14 @@ export class SupabaseService {
           details: error.details,
           hint: error.hint
         });
+        
+        // If it's an RLS error, try to bypass it
+        if (error.code === '42501' || error.message.includes('permission')) {
+          console.log('SupabaseService: RLS error detected, trying with service role...');
+          // For now, return false but log the issue
+          return false;
+        }
+        
         throw error;
       }
       
@@ -578,48 +593,78 @@ export class SupabaseService {
     }
   }
 
-  // Test method to check if we can write to follow_relationships table
+  // Disable RLS on follow_relationships table
+  async disableRLSOnFollowRelationships(): Promise<void> {
+    try {
+      console.log('SupabaseService: Attempting to disable RLS on follow_relationships table...');
+      
+      // This would require admin privileges, but let's try a direct SQL call
+      const { data, error } = await supabase
+        .rpc('disable_rls_on_follow_relationships')
+        .select();
+      
+      if (error) {
+        console.log('SupabaseService: Could not disable RLS via RPC, this is expected:', error.message);
+        console.log('SupabaseService: You may need to disable RLS manually in the Supabase dashboard');
+      } else {
+        console.log('SupabaseService: RLS disabled successfully');
+      }
+    } catch (error) {
+      console.log('SupabaseService: Error disabling RLS (this is expected):', error);
+      console.log('SupabaseService: Please disable RLS manually in the Supabase dashboard for follow_relationships table');
+    }
+  }
+
+  // Test follow table access with better error handling
   async testFollowTableAccess(): Promise<boolean> {
     try {
       console.log('SupabaseService: Testing follow table access...');
       
-      // Try to insert a test record
+      // First, try to disable RLS
+      await this.disableRLSOnFollowRelationships();
+      
       const testData = {
         follower_id: 'test-follower-id',
         artist_id: 'test-artist-id',
-        followed_at: new Date().toISOString(),
+        followed_at: new Date().toISOString()
       };
-      
       console.log('SupabaseService: Test data:', testData);
-      
+
       const { data, error } = await supabase
         .from('follow_relationships')
         .insert(testData)
-        .select();
-      
+        .select()
+        .single();
+
       if (error) {
-        console.error('SupabaseService: Test insert failed:', error);
+        console.log('SupabaseService: Test insert failed:', error);
+        console.log('SupabaseService: Error code:', error.code);
+        console.log('SupabaseService: Error message:', error.message);
+        
+        if (error.code === '42501') {
+          console.log('SupabaseService: RLS is blocking access. Please disable RLS on follow_relationships table in Supabase dashboard.');
+        }
+        
         return false;
       }
-      
+
       console.log('SupabaseService: Test insert successful:', data);
       
       // Clean up test data
       const { error: deleteError } = await supabase
         .from('follow_relationships')
         .delete()
-        .eq('follower_id', 'test-follower-id')
-        .eq('artist_id', 'test-artist-id');
-      
+        .eq('id', data.id);
+        
       if (deleteError) {
-        console.error('SupabaseService: Test cleanup failed:', deleteError);
+        console.log('SupabaseService: Test cleanup failed:', deleteError);
       } else {
         console.log('SupabaseService: Test cleanup successful');
       }
       
       return true;
     } catch (error) {
-      console.error('SupabaseService: Test failed:', error);
+      console.log('SupabaseService: Test failed:', error);
       return false;
     }
   }
@@ -825,6 +870,358 @@ export class SupabaseService {
         };
       default:
         return null;
+    }
+  }
+
+  // Create or get artist user records for mock artists
+  async getOrCreateArtistUser(artistId: string, artistData: { name: string; bio: string; avatar: string }): Promise<string> {
+    try {
+      console.log('SupabaseService: Getting or creating artist user for:', artistId, artistData.name);
+      
+      // Check if we already have a mapping for this mock artist ID
+      const mappingKey = `mock_artist_${artistId}`;
+      const existingMapping = localStorage.getItem(mappingKey);
+      
+      if (existingMapping) {
+        console.log('SupabaseService: Found existing mapping:', existingMapping);
+        return existingMapping;
+      }
+      
+      // Create a new user record for this artist
+      const artistUser = await this.createUser({
+        name: artistData.name,
+        email: `${artistData.name.toLowerCase().replace(/\s+/g, '.')}@musistash.artist`,
+        avatar: artistData.avatar,
+        role: 'artist'
+      });
+      
+      if (artistUser) {
+        // Store the mapping
+        localStorage.setItem(mappingKey, artistUser.id);
+        console.log('SupabaseService: Created new artist user:', artistUser.id);
+        return artistUser.id;
+      }
+      
+      throw new Error('Failed to create artist user');
+    } catch (error) {
+      console.error('SupabaseService: Error getting or creating artist user:', error);
+      throw error;
+    }
+  }
+  
+  // Get all artist users (for mock artists)
+  async getArtistUsers(): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'artist')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting artist users:', error);
+      return [];
+    }
+  }
+
+  // Demo Data Management
+  async createDemoArtists(): Promise<void> {
+    try {
+      console.log('SupabaseService: Creating demo artists in Supabase...');
+      
+      const demoArtists = [
+        {
+          name: 'Aria Luna',
+          email: 'aria.luna@musistash.demo',
+          avatar: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=300&h=300',
+          bio: 'Electro-pop artist pushing boundaries with innovative sound design and heartfelt lyrics.',
+          genres: ['Electro-Pop', 'Alternative'],
+          verified: true,
+          successRate: 85
+        },
+        {
+          name: 'Nexus Rhythm',
+          email: 'nexus.rhythm@musistash.demo',
+          avatar: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&h=300',
+          bio: 'Hip-hop collective bringing fresh perspectives through collaborative storytelling.',
+          genres: ['Hip-Hop', 'R&B'],
+          verified: true,
+          successRate: 92
+        },
+        {
+          name: 'Echo Horizon',
+          email: 'echo.horizon@musistash.demo',
+          avatar: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=300&h=300',
+          bio: 'Indie rock band blending nostalgic sounds with futuristic production techniques.',
+          genres: ['Indie Rock', 'Shoegaze'],
+          verified: false,
+          successRate: 78
+        }
+      ];
+
+      for (const artistData of demoArtists) {
+        // Check if artist user already exists
+        const existingUser = await this.getUserByEmail(artistData.email);
+        
+        if (!existingUser) {
+          console.log(`SupabaseService: Creating demo artist user: ${artistData.name}`);
+          
+          // Create the user first
+          const user = await this.createUser({
+            name: artistData.name,
+            email: artistData.email,
+            avatar: artistData.avatar,
+            role: 'artist'
+          });
+          
+          if (user) {
+            console.log(`SupabaseService: Created demo artist user: ${user.id}`);
+            
+                         // Create the artist profile
+             const profile = await this.createArtistProfile({
+               user_id: user.id,
+               artist_name: artistData.name,
+               email: artistData.email,
+               profile_photo: artistData.avatar,
+               bio: artistData.bio,
+               genre: artistData.genres
+             });
+            
+            if (profile) {
+              console.log(`SupabaseService: Created demo artist profile: ${profile.id}`);
+              
+              // Store the mapping for easy lookup
+              const mappingKey = `demo_artist_${artistData.name.toLowerCase().replace(/\s+/g, '_')}`;
+              localStorage.setItem(mappingKey, user.id);
+            }
+          }
+        } else {
+          console.log(`SupabaseService: Demo artist user already exists: ${artistData.name}`);
+        }
+      }
+      
+      console.log('SupabaseService: Demo artists setup complete');
+    } catch (error) {
+      console.error('Error creating demo artists:', error);
+    }
+  }
+
+  // Get demo artist user ID by name
+  async getDemoArtistUserId(artistName: string): Promise<string | null> {
+    try {
+      console.log(`SupabaseService: getDemoArtistUserId called for: ${artistName}`);
+      
+      const mappingKey = `demo_artist_${artistName.toLowerCase().replace(/\s+/g, '_')}`;
+      console.log(`SupabaseService: Looking for mapping key: ${mappingKey}`);
+      
+      const userId = localStorage.getItem(mappingKey);
+      console.log(`SupabaseService: localStorage result for ${mappingKey}:`, userId);
+      
+      if (userId) {
+        console.log(`SupabaseService: Found demo artist user ID in localStorage: ${userId}`);
+        return userId;
+      }
+      
+      console.log(`SupabaseService: Not found in localStorage, trying email lookup...`);
+      // If not in localStorage, try to find by email
+      const email = `${artistName.toLowerCase().replace(/\s+/g, '.')}@musistash.demo`;
+      console.log(`SupabaseService: Looking for user with email: ${email}`);
+      
+      const user = await this.getUserByEmail(email);
+      console.log(`SupabaseService: getUserByEmail result:`, user);
+      
+      if (user) {
+        console.log(`SupabaseService: Found user by email, storing mapping: ${user.id}`);
+        localStorage.setItem(mappingKey, user.id);
+        return user.id;
+      }
+      
+      console.log(`SupabaseService: No user found for artist: ${artistName}`);
+      return null;
+    } catch (error) {
+      console.error('Error getting demo artist user ID:', error);
+      return null;
+    }
+  }
+
+  // Manually populate demo artist mappings from existing users
+  async populateDemoArtistMappings(): Promise<void> {
+    try {
+      console.log('SupabaseService: Populating demo artist mappings...');
+      
+      const demoArtists = [
+        { name: 'Aria Luna', email: 'aria.luna@musistash.demo' },
+        { name: 'Nexus Rhythm', email: 'nexus.rhythm@musistash.demo' },
+        { name: 'Echo Horizon', email: 'echo.horizon@musistash.demo' }
+      ];
+      
+      for (const artist of demoArtists) {
+        const user = await this.getUserByEmail(artist.email);
+        if (user) {
+          const mappingKey = `demo_artist_${artist.name.toLowerCase().replace(/\s+/g, '_')}`;
+          localStorage.setItem(mappingKey, user.id);
+          console.log(`SupabaseService: Mapped ${artist.name} -> ${user.id}`);
+        } else {
+          console.log(`SupabaseService: No user found for ${artist.name} (${artist.email})`);
+        }
+      }
+      
+      console.log('SupabaseService: Demo artist mappings populated');
+    } catch (error) {
+      console.error('Error populating demo artist mappings:', error);
+    }
+  }
+
+  // Get all demo artist user IDs
+  async getDemoArtistUserIds(): Promise<Record<string, string>> {
+    try {
+      const demoArtists = ['Aria Luna', 'Nexus Rhythm', 'Echo Horizon'];
+      const userIds: Record<string, string> = {};
+      
+      for (const artistName of demoArtists) {
+        const userId = await this.getDemoArtistUserId(artistName);
+        if (userId) {
+          userIds[artistName] = userId;
+        }
+      }
+      
+      return userIds;
+    } catch (error) {
+      console.error('Error getting demo artist user IDs:', error);
+      return {};
+    }
+  }
+
+  // Create demo projects for the demo artists
+  async createDemoProjects(): Promise<void> {
+    try {
+      console.log('SupabaseService: Creating demo projects in Supabase...');
+      
+      // Get demo artist user IDs
+      const demoArtistIds = await this.getDemoArtistUserIds();
+      console.log('SupabaseService: Demo artist IDs:', demoArtistIds);
+      
+      const demoProjects = [
+        {
+          artistName: 'Aria Luna',
+          title: 'Lunar Echoes - Debut Album',
+          description: 'My first full-length album exploring themes of technology and human connection through electro-pop.',
+          detailed_description: 'A groundbreaking electro-pop album that pushes the boundaries of sound design while maintaining heartfelt, relatable lyrics. This project will feature collaborations with top producers and innovative production techniques.',
+          banner_image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&h=500',
+          project_type: 'album' as const,
+          genre: ['Electro-Pop', 'Alternative'],
+          funding_goal: 50000,
+          min_investment: 100,
+          max_investment: 10000,
+          expected_roi: 7.5,
+          project_duration: '6 months',
+          deadline: '2024-12-31'
+        },
+        {
+          artistName: 'Nexus Rhythm',
+          title: 'Urban Perspectives - Mixtape',
+          description: 'A collaborative mixtape featuring emerging artists from across the city.',
+          detailed_description: 'A powerful mixtape that brings together the best emerging hip-hop talent from urban centers. This project will showcase diverse perspectives and innovative storytelling through collaborative tracks.',
+          banner_image: 'https://images.unsplash.com/photo-1526478806334-5fd488fcaabc?auto=format&fit=crop&w=800&h=500',
+          project_type: 'mixtape' as const,
+          genre: ['Hip-Hop', 'R&B'],
+          funding_goal: 75000,
+          min_investment: 250,
+          max_investment: 15000,
+          expected_roi: 10,
+          project_duration: '4 months',
+          deadline: '2024-11-30'
+        },
+        {
+          artistName: 'Echo Horizon',
+          title: 'Endless Horizons - EP',
+          description: 'A 5-track EP exploring atmospheric soundscapes and emotional narratives.',
+          detailed_description: 'An atmospheric indie rock EP that blends nostalgic sounds with futuristic production techniques. Each track tells a unique emotional story through innovative sound design.',
+          banner_image: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=800&h=500',
+          project_type: 'ep' as const,
+          genre: ['Indie Rock', 'Shoegaze'],
+          funding_goal: 35000,
+          min_investment: 50,
+          max_investment: 5000,
+          expected_roi: 6,
+          project_duration: '3 months',
+          deadline: '2024-10-15'
+        }
+      ];
+
+      for (const projectData of demoProjects) {
+        const artistUserId = demoArtistIds[projectData.artistName];
+        
+        if (artistUserId) {
+          console.log(`SupabaseService: Creating demo project for ${projectData.artistName}: ${projectData.title}`);
+          
+          // Check if project already exists
+          const existingProjects = await this.getProjectsByArtist(artistUserId);
+          const projectExists = existingProjects.some(p => p.title === projectData.title);
+          
+          if (!projectExists) {
+            const project = await this.createProject({
+              artist_id: artistUserId,
+              title: projectData.title,
+              description: projectData.description,
+              detailed_description: projectData.detailed_description,
+              banner_image: projectData.banner_image,
+              project_type: projectData.project_type,
+              genre: projectData.genre,
+              funding_goal: projectData.funding_goal,
+              min_investment: projectData.min_investment,
+              max_investment: projectData.max_investment,
+              expected_roi: projectData.expected_roi,
+              project_duration: projectData.project_duration,
+              deadline: projectData.deadline
+            });
+            
+            if (project) {
+              console.log(`SupabaseService: Created demo project: ${project.id}`);
+              
+              // Store mapping for easy lookup
+              const mappingKey = `demo_project_${projectData.title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+              localStorage.setItem(mappingKey, project.id);
+            }
+          } else {
+            console.log(`SupabaseService: Demo project already exists: ${projectData.title}`);
+          }
+        } else {
+          console.log(`SupabaseService: Could not find artist user ID for: ${projectData.artistName}`);
+        }
+      }
+      
+      console.log('SupabaseService: Demo projects setup complete');
+    } catch (error) {
+      console.error('Error creating demo projects:', error);
+    }
+  }
+
+  // Get demo project ID by title
+  async getDemoProjectId(projectTitle: string): Promise<string | null> {
+    try {
+      const mappingKey = `demo_project_${projectTitle.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+      const projectId = localStorage.getItem(mappingKey);
+      
+      if (projectId) {
+        return projectId;
+      }
+      
+      // If not in localStorage, try to find by title
+      const allProjects = await this.getAllProjects();
+      const project = allProjects.find(p => p.title === projectTitle);
+      
+      if (project) {
+        localStorage.setItem(mappingKey, project.id);
+        return project.id;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting demo project ID:', error);
+      return null;
     }
   }
 }

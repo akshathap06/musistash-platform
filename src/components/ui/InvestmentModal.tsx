@@ -68,7 +68,7 @@ const InvestmentModal: React.FC<InvestmentModalProps> = ({
       });
 
       console.log('InvestmentModal: Investment created successfully:', newInvestment);
-      
+
       onInvestmentComplete();
       onClose();
       setAmount('');

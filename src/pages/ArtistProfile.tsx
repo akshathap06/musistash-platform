@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
+import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/hooks/useAuth';
 import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
 import spotifyService from '@/services/spotify';
@@ -44,42 +45,67 @@ const ArtistProfile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   
+  const navigate = useNavigate();
+  
   useEffect(() => {
     // Simulate API fetch for artist data
     const fetchData = async () => {
       try {
+        console.log('ArtistProfile: Fetching data for artist ID:', id);
+        
+        if (!id) {
+          console.error('ArtistProfile: No artist ID provided');
+          setArtist(null);
+          setIsLoading(false);
+          return;
+        }
+
         // First try to get from approved profiles
-        let foundProfile = await artistProfileService.getProfileById(id!);
+        let foundProfile = await artistProfileService.getProfileById(id);
+        console.log('ArtistProfile: Found profile:', foundProfile);
+        
         let foundArtist: any;
         
         if (foundProfile && foundProfile.status === 'approved') {
           // Convert profile to artist format
           foundArtist = {
             id: foundProfile.id,
-            name: foundProfile.artist_name,
-            avatar: foundProfile.profile_photo,
-            bio: foundProfile.bio,
-            biography: foundProfile.biography || foundProfile.bio,
-            genres: foundProfile.genre,
+            name: foundProfile.artist_name || 'Unknown Artist',
+            avatar: foundProfile.profile_photo || '/assets/logo-cricle.png',
+            bio: foundProfile.bio || 'No bio available',
+            biography: foundProfile.biography || foundProfile.bio || 'No biography available',
+            genres: Array.isArray(foundProfile.genre) ? foundProfile.genre : [],
             followers: 0, // Default for new profiles
-            verified: foundProfile.is_verified,
+            verified: foundProfile.is_verified || false,
             successRate: 75, // Default for new profiles
             musical_style: foundProfile.musical_style || '',
             influences: foundProfile.influences || '',
             career_highlights: foundProfile.career_highlights || []
           };
+          console.log('ArtistProfile: Created artist object from profile:', foundArtist);
           setArtist(foundArtist);
           
           // Get follower count
+          try {
           const count = await followingService.getFollowerCount(foundProfile.id);
           setFollowersCount(count);
+          } catch (error) {
+            console.error('ArtistProfile: Error getting follower count:', error);
+            setFollowersCount(0);
+          }
           
           // Check if current user is following this artist
           if (user && isAuthenticated) {
+            try {
             const isUserFollowing = await followingService.isFollowing(user.id, foundProfile.id);
             setIsFollowing(isUserFollowing);
+            } catch (error) {
+              console.error('ArtistProfile: Error checking follow status:', error);
+              setIsFollowing(false);
+            }
           }
         } else {
+          console.log('ArtistProfile: No approved profile found, checking mock data');
           // Only show mock data if no approved profile exists
           const mockArtist = artists.find(a => a.id === id);
           if (mockArtist) {
@@ -89,19 +115,72 @@ const ArtistProfile = () => {
             
             // Check if current user is following this mock artist
             if (user && isAuthenticated) {
+              try {
               const isUserFollowing = await followingService.isFollowing(user.id, mockArtist.id);
               setIsFollowing(isUserFollowing);
+              } catch (error) {
+                console.error('ArtistProfile: Error checking follow status for mock artist:', error);
+                setIsFollowing(false);
+              }
             }
           } else {
             // No profile found at all
+            console.error('ArtistProfile: No artist found with ID:', id);
             setArtist(null);
             setIsLoading(false);
             return;
           }
         }
         
-        // Only show projects if they exist for this specific artist
-        const foundProjects = projects.filter(p => p.artistId === foundArtist.id);
+        // Load projects for this artist
+        let foundProjects = [];
+        if (foundProfile && foundProfile.status === 'approved') {
+          // For approved profiles, get projects from Supabase
+          console.log('ArtistProfile: Loading projects for approved profile:', foundProfile.id);
+          try {
+            const supabaseProjects = await supabaseService.getProjectsByArtist(foundProfile.id);
+            console.log('ArtistProfile: Supabase projects:', supabaseProjects);
+            
+            // Convert Supabase projects to the format expected by ProjectCard
+            console.log('ArtistProfile: Raw Supabase projects before filtering:', supabaseProjects);
+            
+            foundProjects = supabaseProjects
+              .filter(project => {
+                const isCancelled = (project.status as string) === 'cancelled';
+                console.log(`ArtistProfile: Project ${project.title} (${project.id}) has status: ${project.status}, isCancelled: ${isCancelled}`);
+                return !isCancelled;
+              })
+              .map(project => ({
+                id: project.id,
+                artistId: project.artist_id,
+                artistName: foundArtist.name,
+                title: project.title || 'Untitled Project',
+                description: project.description || 'No description',
+                detailedDescription: project.detailed_description || project.description || 'No detailed description',
+                bannerImage: project.banner_image || '/assets/logo-cricle.png',
+                genre: Array.isArray(project.genre) ? project.genre : [],
+                projectType: project.project_type || 'album',
+                fundingGoal: Number(project.funding_goal) || 0,
+                currentFunding: 0, // TODO: Calculate from investments
+                minInvestment: Number(project.min_investment) || 0,
+                maxInvestment: Number(project.max_investment) || 0,
+                expectedROI: Number(project.expected_roi) || 0,
+                projectDuration: project.project_duration || 'Unknown',
+                deadline: project.deadline || new Date().toISOString(),
+                status: project.status || 'draft',
+                createdAt: project.created_at || new Date().toISOString(),
+                updatedAt: project.updated_at || new Date().toISOString()
+              }));
+          } catch (error) {
+            console.error('ArtistProfile: Error loading Supabase projects:', error);
+            foundProjects = [];
+          }
+        } else {
+          // For mock artists, use mock projects
+          foundProjects = projects.filter(p => p.artistId === foundArtist.id);
+        }
+        
+        console.log('ArtistProfile: Final projects array:', foundProjects);
         setArtistProjects(foundProjects);
         
         // Only show similarity data for mock artists
@@ -114,22 +193,33 @@ const ArtistProfile = () => {
         
         // Then fetch real Spotify data for the artist
         if (foundArtist && foundArtist.name) {
+          try {
           const spotifyData = await spotifyService.searchArtist(foundArtist.name);
           if (spotifyData) {
             setSpotifyArtist(spotifyData);
             if (spotifyData.images && spotifyData.images.length > 0) {
               setSpotifyImage(spotifyData.images[0].url);
             }
+            }
+          } catch (error) {
+            console.error('ArtistProfile: Error fetching Spotify data:', error);
           }
         }
       } catch (error) {
-        console.error('Error fetching artist data:', error);
+        console.error('ArtistProfile: Error fetching artist data:', error);
+        setArtist(null);
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchData();
+    
+    // Manual refresh function
+    const refreshData = () => {
+      console.log('ArtistProfile: Manual refresh triggered');
+      fetchData();
+    };
   }, [id, user, isAuthenticated]);
   
   const handleFollow = async () => {
@@ -154,39 +244,39 @@ const ArtistProfile = () => {
     setIsFollowing(newFollowingState);
     
     try {
-      if (newFollowingState) {
-        // Follow the artist
+    if (newFollowingState) {
+      // Follow the artist
         console.log('Attempting to follow artist...');
-        const success = await followingService.followArtist(
-          user.id,
-          { name: user.name, avatar: user.avatar },
-          artist.id,
-          { name: artist.name, avatar: artist.avatar }
-        );
+      const success = await followingService.followArtist(
+        user.id,
+        { name: user.name, avatar: user.avatar },
+        artist.id,
+        { name: artist.name, avatar: artist.avatar }
+      );
         
         console.log('Follow operation result:', success);
-        
-        if (success) {
-          setFollowersCount(prev => prev + 1);
+      
+      if (success) {
+        setFollowersCount(prev => prev + 1);
         } else {
           // Revert if the operation failed
           console.log('Follow operation failed, reverting state');
           setIsFollowing(false);
-        }
-      } else {
-        // Unfollow the artist
+      }
+    } else {
+      // Unfollow the artist
         console.log('Attempting to unfollow artist...');
-        const success = await followingService.unfollowArtist(user.id, artist.id);
+      const success = await followingService.unfollowArtist(user.id, artist.id);
         
         console.log('Unfollow operation result:', success);
-        
-        if (success) {
-          setFollowersCount(prev => Math.max(0, prev - 1));
+      
+      if (success) {
+        setFollowersCount(prev => Math.max(0, prev - 1));
         } else {
           // Revert if the operation failed
           console.log('Unfollow operation failed, reverting state');
           setIsFollowing(true);
-        }
+    }
       }
     } catch (error) {
       console.error('Error following/unfollowing artist:', error);
@@ -195,13 +285,61 @@ const ArtistProfile = () => {
     }
   };
 
-  if (isLoading || !artist) {
+  const handleViewProjectDashboard = () => {
+    navigate('/artist-project-dashboard');
+  };
+
+  const handleViewLatestProject = () => {
+    if (artistProjects.length > 0) {
+      navigate(`/project/${artistProjects[0].id}`);
+    }
+  };
+
+  // Check if current user is the project owner
+  const isProjectOwner = user && artist && user.id === artist.id;
+
+  // Image error handling
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/assets/logo-cricle.png';
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 pt-16">
+          <div className="flex justify-center items-center min-h-[60vh]">
         <div className="animate-pulse text-center">
           <div className="text-xl font-semibold mb-2">Loading Artist Profile</div>
           <div className="text-muted-foreground">Please wait...</div>
         </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!artist) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 pt-16">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="text-xl font-semibold mb-2">Artist Not Found</div>
+              <div className="text-muted-foreground mb-4">
+                The artist profile you're looking for doesn't exist or has been removed.
+              </div>
+              <Link to="/browse-artists">
+                <Button>
+                  Browse Artists
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -221,6 +359,7 @@ const ArtistProfile = () => {
                   src={spotifyImage || artist.avatar} 
                   alt={artist.name}
                   className="w-full h-full object-cover"
+                  onError={handleImageError}
                 />
               </div>
               
@@ -231,6 +370,28 @@ const ArtistProfile = () => {
                   {artist.verified && (
                     <Badge className="h-6">Verified Artist</Badge>
                   )}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.reload()}
+                    className="ml-2"
+                  >
+                    🔄 Refresh
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={async () => {
+                      console.log('ArtistProfile: Debug - checking project statuses...');
+                      for (const project of artistProjects) {
+                        const status = await supabaseService.getProjectStatus(project.id);
+                        console.log(`Project ${project.title}: Database status = ${status}, UI status = ${project.status}`);
+                      }
+                    }}
+                    className="ml-2"
+                  >
+                    🐛 Debug
+                  </Button>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
@@ -271,26 +432,27 @@ const ArtistProfile = () => {
                 </div>
               </div>
               
-              <div className="flex gap-3 mt-4 md:mt-0">
-                {/* Only show follow button if not viewing own profile */}
-                {(!user || user.id !== artist.id) && (
+              <div className="flex gap-3">
+                  {user && isAuthenticated && user.id !== artist.id && (
                   <Button 
+                      onClick={handleFollow}
                     variant={isFollowing ? "outline" : "default"}
-                    className={`transition-all duration-200 ${
-                      isFollowing 
-                        ? "border-gray-500 text-gray-400 bg-gray-800/50 hover:bg-gray-700/50" 
-                        : "bg-green-600 hover:bg-green-700 text-white"
-                    }`}
-                    onClick={handleFollow}
+                      className={isFollowing ? "border-green-500 text-green-400 hover:bg-green-500/20" : "bg-blue-600 hover:bg-blue-700"}
                   >
-                    {isFollowing ? "Following" : "Follow"}
+                      {isFollowing ? 'Following' : 'Follow'}
                   </Button>
                 )}
-                <Link to={artistProjects.length > 0 ? `/project/${artistProjects[0].id}` : '#'}>
-                  <Button>
+                  <Button onClick={handleViewLatestProject} variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
                     View Latest Project
                   </Button>
-                </Link>
+                  {isProjectOwner && (
+                    <Button 
+                      onClick={handleViewProjectDashboard}
+                      className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    >
+                      View Project Dashboard
+                    </Button>
+                  )}
               </div>
             </div>
           </div>
@@ -311,9 +473,36 @@ const ArtistProfile = () => {
               
               {artistProjects.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {artistProjects.map(project => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
+                  {artistProjects.map(project => {
+                    // Ensure project has all required fields for ProjectCard
+                    const safeProject = {
+                      id: project.id || 'unknown',
+                      artistId: project.artistId || artist.id,
+                      title: project.title || 'Untitled Project',
+                      description: project.description || 'No description',
+                      image: project.bannerImage || project.image || '/assets/logo-cricle.png',
+                      fundingGoal: Number(project.fundingGoal) || 0,
+                      currentFunding: Number(project.currentFunding) || 0,
+                      roi: Number(project.expectedROI) || Number(project.roi) || 0,
+                      deadline: project.deadline || new Date().toISOString(),
+                      packages: project.packages || [{
+                        id: 'default',
+                        title: 'Basic Investment',
+                        description: 'Standard investment package',
+                        cost: Number(project.minInvestment) || 100,
+                        provider: 'MusiStash',
+                        type: 'other' as const
+                      }],
+                      status: project.status || 'draft',
+                      createdAt: project.createdAt || new Date().toISOString()
+                    };
+                    
+                    return (
+                      <div key={project.id} className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 rounded-xl">
+                        <ProjectCard project={safeProject} />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <Card>
@@ -345,9 +534,9 @@ const ArtistProfile = () => {
                       {artist.biography ? (
                         <p className="text-muted-foreground whitespace-pre-wrap">
                           {artist.biography}
-                        </p>
+                      </p>
                       ) : (
-                        <p className="text-muted-foreground">
+                      <p className="text-muted-foreground">
                           {artist.bio || "No biography available yet."}
                         </p>
                       )}
@@ -367,20 +556,20 @@ const ArtistProfile = () => {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-muted-foreground">
-                          {artist.name}'s music blends traditional elements of {
-                            spotifyArtist && spotifyArtist.genres ? 
-                              spotifyArtist.genres.slice(0, 2).join(' and ') : 
-                              artist.genres.join(' and ')
-                          } with innovative production techniques. Their sound is characterized by emotional depth
-                          and meticulous attention to sonic detail.
-                        </p>
+                      <p className="text-muted-foreground">
+                        {artist.name}'s music blends traditional elements of {
+                          spotifyArtist && spotifyArtist.genres ? 
+                            spotifyArtist.genres.slice(0, 2).join(' and ') : 
+                            artist.genres.join(' and ')
+                        } with innovative production techniques. Their sound is characterized by emotional depth
+                        and meticulous attention to sonic detail.
+                      </p>
                       )}
                       
                       {artist.influences && (
                         <div>
                           <h4 className="font-medium mb-2">Influences</h4>
-                          <p className="text-muted-foreground">
+                      <p className="text-muted-foreground">
                             {artist.influences}
                           </p>
                         </div>
@@ -412,37 +601,37 @@ const ArtistProfile = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          <div className="flex gap-3">
-                            <div className="text-sm font-medium text-primary">2023</div>
-                            <div>
-                              <div className="font-medium">Released 'Reflections' EP</div>
-                              <p className="text-sm text-muted-foreground">
-                                Reached top 50 on streaming charts
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-3">
-                            <div className="text-sm font-medium text-primary">2022</div>
-                            <div>
-                              <div className="font-medium">Collaborated with top producers</div>
-                              <p className="text-sm text-muted-foreground">
-                                Worked with industry veterans
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-3">
-                            <div className="text-sm font-medium text-primary">2021</div>
-                            <div>
-                              <div className="font-medium">Debut single release</div>
-                              <p className="text-sm text-muted-foreground">
-                                First major industry recognition
-                              </p>
-                            </div>
+                      <div className="space-y-4">
+                        <div className="flex gap-3">
+                          <div className="text-sm font-medium text-primary">2023</div>
+                          <div>
+                            <div className="font-medium">Released 'Reflections' EP</div>
+                            <p className="text-sm text-muted-foreground">
+                              Reached top 50 on streaming charts
+                            </p>
                           </div>
                         </div>
+                        
+                        <div className="flex gap-3">
+                          <div className="text-sm font-medium text-primary">2022</div>
+                          <div>
+                            <div className="font-medium">Collaborated with top producers</div>
+                            <p className="text-sm text-muted-foreground">
+                              Worked with industry veterans
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-3">
+                          <div className="text-sm font-medium text-primary">2021</div>
+                          <div>
+                            <div className="font-medium">Debut single release</div>
+                            <p className="text-sm text-muted-foreground">
+                              First major industry recognition
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                       )}
                     </CardContent>
                   </Card>

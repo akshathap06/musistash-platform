@@ -282,10 +282,33 @@ class ArtistProfileService {
 
   async getProjectById(projectId: string): Promise<ArtistProject | null> {
     try {
-      // Note: We'll need to add a getProjectById method to supabaseService
-      // For now, return null
-      console.warn('Get project by ID not yet implemented in Supabase service');
-      return null;
+      const project = await supabaseService.getProjectById(projectId);
+      if (!project) return null;
+
+      return {
+        id: project.id,
+        artistId: project.artist_id,
+        artistName: '', // Will need to be fetched separately
+        title: project.title,
+        description: project.description,
+        detailedDescription: project.detailed_description,
+        bannerImage: project.banner_image,
+        genre: project.genre,
+        projectType: project.project_type as any,
+        fundingGoal: project.funding_goal,
+        currentFunding: 0, // Will need to be calculated from investments
+        minInvestment: project.min_investment,
+        maxInvestment: project.max_investment,
+        expectedROI: project.expected_roi,
+        projectDuration: project.project_duration,
+        deadline: project.deadline,
+        status: project.status as any,
+        contractTerms: this.createBasicContract(project.id),
+        fundingBreakdown: this.generateFundingBreakdown(project.funding_goal),
+        rewards: this.generateBasicRewards(project.project_type),
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+      };
     } catch (error) {
       console.error('Error getting project by ID:', error);
       return null;

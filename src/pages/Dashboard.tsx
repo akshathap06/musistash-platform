@@ -12,6 +12,7 @@ import { projects } from '@/lib/mockData';
 import { InvestmentService, UserInvestment } from '@/services/investmentService';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
+import { supabaseService } from '@/services/supabaseService';
 import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
@@ -128,8 +129,8 @@ const Dashboard = () => {
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50 capitalize">
-                      {user.role}
-                    </Badge>
+                    {user.role}
+                  </Badge>
                     <button
                       onClick={() => setShowFollowingModal(true)}
                       className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/20 text-red-300 border border-red-500/50 rounded-full hover:bg-red-500/30 transition-colors"
@@ -170,12 +171,41 @@ const Dashboard = () => {
                         </Button>
                       </Link>
                     )}
+                    
+                    {/* Show different button based on user role and project status */}
+                    {user.role === 'artist' && userProfile && userProfile.status === 'approved' ? (
+                      // For artists with approved profiles, show both project dashboard and create project buttons
+                      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <Link to="/artist-project-dashboard" className="w-full sm:w-auto">
+                          <Button className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            View Project Dashboard
+                          </Button>
+                        </Link>
                     <Link to="/create-project" className="w-full sm:w-auto">
                       <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Create New Project
                       </Button>
                     </Link>
+                      </div>
+                    ) : (
+                      // For listeners or artists without approved profiles, show create project AND project dashboard for testing
+                      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <Link to="/artist-project-dashboard" className="w-full sm:w-auto">
+                          <Button className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            View Project Dashboard
+                          </Button>
+                        </Link>
+                        <Link to="/create-project" className="w-full sm:w-auto">
+                          <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create New Project
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -235,6 +265,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
   const [recentFollowing, setRecentFollowing] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [recentFollowers, setRecentFollowers] = useState<any[]>([]);
+  const [allProjects, setAllProjects] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -243,6 +274,17 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           const stats = await InvestmentService.getUserInvestmentStats(user.id);
           setInvestmentStats(stats);
           
+          // Load all projects from database
+          const dbProjects = await supabaseService.getAllProjects();
+          const artistProjects = await Promise.all(
+            dbProjects.map(async (project) => {
+              const artistProject = await artistProfileService.getProjectById(project.id);
+              return artistProject;
+            })
+          );
+          const validProjects = artistProjects.filter(p => p !== null);
+          setAllProjects([...projects, ...validProjects]); // Combine mock and real projects
+        
           // Load following data
           const following = await followingService.getRecentFollowing(user.id);
           setRecentFollowing(following);
@@ -268,7 +310,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
     if (user) {
       try {
         const stats = await InvestmentService.getUserInvestmentStats(user.id);
-        setInvestmentStats(stats);
+      setInvestmentStats(stats);
       } catch (error) {
         console.error('Error refreshing investment stats:', error);
       }
@@ -280,7 +322,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
 
   // Get projects that the user has invested in
   const investedProjectIds = investmentStats.investments.map(inv => inv.projectId);
-  const investedProjects = projects.filter(project => investedProjectIds.includes(project.id));
+  const investedProjects = allProjects.filter(project => investedProjectIds.includes(project.id));
   
   return (
     <div className="space-y-6 sm:space-y-8 animate-fade-in">
@@ -357,7 +399,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           averageROI={investmentStats.averageROI}
           investments={investmentStats.investments}
         />
-      )}
+        )}
 
       {/* Content Tabs */}
       <Tabs defaultValue="portfolio" className="w-full">
@@ -425,7 +467,7 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.slice(0, 6).map((project) => (
+            {allProjects.slice(0, 6).map((project) => (
               <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
                 <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />
               </div>

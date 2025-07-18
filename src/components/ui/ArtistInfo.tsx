@@ -51,7 +51,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
   const followers = spotifyArtist?.followers?.total || artist.followers;
 
   // Load following state and actual follower count
-  const loadFollowingState = async () => {
+    const loadFollowingState = async () => {
     if (!user || !isAuthenticated) return;
 
     console.log('Loading following state for user:', user.id, 'artist:', artist.id);
@@ -86,12 +86,12 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
       // Check follow status with real UUID
       const following = await followingService.isFollowing(user.id, realArtistId);
       console.log('Following state loaded:', following);
-      setIsFollowing(following);
-    } catch (error) {
-      console.error('Error loading following state:', error);
+        setIsFollowing(following);
+      } catch (error) {
+        console.error('Error loading following state:', error);
       setIsFollowing(false);
-    }
-  };
+      }
+    };
 
   const loadFollowerCount = async () => {
     try {

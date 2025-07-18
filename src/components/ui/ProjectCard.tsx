@@ -128,6 +128,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
     }
   };
 
+  // Image error handling
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/assets/logo-cricle.png';
+  };
+
   // Create a compatible project object for the investment modal
   const compatibleProject: Project = isArtistProject ? {
     ...project as ArtistProject,
@@ -152,6 +157,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
           src={projectImage} 
           alt={project.title}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          onError={handleImageError}
         />
         <div className="absolute top-3 right-3">
           <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="bg-blue-500/80 text-white">

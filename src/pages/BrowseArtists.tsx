@@ -24,16 +24,16 @@ const BrowseArtists = () => {
 
   // Load approved profiles with refresh capability
   const loadProfiles = useCallback(async (showLoading = true, isAutoRefresh = false) => {
-    try {
+      try {
       if (showLoading) {
         setIsLoading(true);
       } else {
         setIsRefreshing(true);
       }
-      console.log('Loading approved profiles...');
-      const profiles = await artistProfileService.getApprovedProfiles();
-      console.log('Loaded approved profiles:', profiles);
-      setApprovedProfiles(profiles || []);
+        console.log('Loading approved profiles...');
+        const profiles = await artistProfileService.getApprovedProfiles();
+        console.log('Loaded approved profiles:', profiles);
+        setApprovedProfiles(profiles || []);
       setLastRefresh(new Date());
       
       // Show toast notification for manual refresh
@@ -44,9 +44,9 @@ const BrowseArtists = () => {
           duration: 2000,
         });
       }
-    } catch (error) {
-      console.error('Error loading approved profiles:', error);
-      setApprovedProfiles([]);
+      } catch (error) {
+        console.error('Error loading approved profiles:', error);
+        setApprovedProfiles([]);
       
       if (!isAutoRefresh) {
         toast({
@@ -56,12 +56,12 @@ const BrowseArtists = () => {
           duration: 3000,
         });
       }
-    } finally {
-      setIsLoading(false);
+      } finally {
+        setIsLoading(false);
       setIsRefreshing(false);
-    }
+      }
   }, [toast]);
-
+    
   // Initial load
   useEffect(() => {
     loadProfiles();
@@ -83,14 +83,14 @@ const BrowseArtists = () => {
 
   // Combine mock artists with approved profiles
   const allArtists = approvedProfiles.map(profile => ({
-    id: profile.id,
-    name: profile.artist_name,
-    avatar: profile.profile_photo,
-    bio: profile.bio,
+      id: profile.id,
+      name: profile.artist_name,
+      avatar: profile.profile_photo,
+      bio: profile.bio,
     genres: profile.genre || [],
-    followers: 0, // Default for new profiles
-    verified: profile.is_verified,
-    successRate: 75 // Default for new profiles
+      followers: 0, // Default for new profiles
+      verified: profile.is_verified,
+      successRate: 75 // Default for new profiles
   }));
 
   console.log('All artists (approved profiles only):', allArtists);

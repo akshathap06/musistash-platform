@@ -44,6 +44,9 @@ export class InvestmentService {
             if (project) {
               projectTitle = project.title;
               projectROI = project.expectedROI || 0;
+              console.log('InvestmentService: Found project details:', { projectTitle, projectROI });
+            } else {
+              console.log('InvestmentService: No project found for ID:', dbInv.project_id);
             }
           } catch (error) {
             console.error('Error fetching project details:', error);
@@ -85,17 +88,17 @@ export class InvestmentService {
       console.error('Error retrieving user investments from database:', error);
       
       // Fallback to localStorage if database fails
-      try {
-        const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
-        if (!storedInvestments) return [];
-        
-        const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
+    try {
+      const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+      if (!storedInvestments) return [];
+      
+      const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
         const userInvestments = allInvestments.filter(investment => investment.userId === userId);
         console.log('InvestmentService: Fallback to localStorage, found:', userInvestments.length, 'investments');
         return userInvestments;
       } catch (localError) {
         console.error('Error retrieving user investments from localStorage:', localError);
-        return [];
+      return [];
       }
     }
   }
@@ -111,19 +114,19 @@ export class InvestmentService {
       if (isMockProject) {
         console.log('InvestmentService: Detected mock project, using localStorage only');
         // For mock projects, use localStorage only
-        const newInvestment: UserInvestment = {
-          ...investment,
-          id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          date: new Date().toISOString().split('T')[0],
-          investmentDate: new Date().toISOString(),
-          status: 'completed'
-        };
+      const newInvestment: UserInvestment = {
+        ...investment,
+        id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        date: new Date().toISOString().split('T')[0],
+        investmentDate: new Date().toISOString(),
+        status: 'completed'
+      };
 
-        const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
-        const allInvestments: UserInvestment[] = storedInvestments ? JSON.parse(storedInvestments) : [];
-        
-        allInvestments.push(newInvestment);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+      const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+      const allInvestments: UserInvestment[] = storedInvestments ? JSON.parse(storedInvestments) : [];
+      
+      allInvestments.push(newInvestment);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
         
         // Update project funding
         await ProjectFundingService.updateProjectFunding(investment.projectId, investment.amount);
@@ -158,8 +161,8 @@ export class InvestmentService {
         
         // Update project funding
         await ProjectFundingService.updateProjectFunding(investment.projectId, investment.amount);
-        
-        return newInvestment;
+      
+      return newInvestment;
       }
       
       throw new Error('Failed to create investment in database');
@@ -172,6 +175,16 @@ export class InvestmentService {
   // Get investment statistics for a user
   static async getUserInvestmentStats(userId: string) {
     const userInvestments = await this.getUserInvestments(userId);
+    
+    console.log('InvestmentService: getUserInvestmentStats - investments found:', userInvestments.length);
+    userInvestments.forEach(inv => {
+      console.log('InvestmentService: Investment details:', {
+        id: inv.id,
+        projectTitle: inv.projectTitle,
+        amount: inv.amount,
+        projectROI: inv.projectROI
+      });
+    });
     
     if (userInvestments.length === 0) {
       return {
@@ -186,6 +199,13 @@ export class InvestmentService {
     const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.amount, 0);
     const potentialReturns = userInvestments.reduce((sum, inv) => sum + (inv.amount * (inv.projectROI / 100)), 0);
     const averageROI = userInvestments.reduce((sum, inv) => sum + inv.projectROI, 0) / userInvestments.length;
+
+    console.log('InvestmentService: Calculated stats:', {
+      totalInvested,
+      potentialReturns,
+      averageROI,
+      totalProjects: userInvestments.length
+    });
 
     return {
       totalInvested,

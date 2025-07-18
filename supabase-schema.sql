@@ -57,7 +57,7 @@ CREATE TABLE projects (
     expected_roi DECIMAL(5,2) NOT NULL,
     project_duration VARCHAR(100) NOT NULL,
     deadline DATE NOT NULL,
-    status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'funded', 'completed')),
+    status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'funded', 'completed', 'cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

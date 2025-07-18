@@ -526,6 +526,22 @@ export class SupabaseService {
     }
   }
 
+  async getInvestmentsByProject(projectId: string): Promise<Investment[]> {
+    try {
+      const { data, error } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting investments by project:', error)
+      return []
+    }
+  }
+
   // Project Management
   async createProject(projectData: {
     artist_id: string
@@ -541,55 +557,226 @@ export class SupabaseService {
     expected_roi: number
     project_duration: string
     deadline: string
+    status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
   }): Promise<Project | null> {
     try {
+      console.log('SupabaseService: Creating project with data:', projectData);
+      
       const { data, error } = await supabase
         .from('projects')
         .insert({
           ...projectData,
-          status: 'draft',
+          status: projectData.status || 'pending', // Use provided status or default to pending
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .select()
         .single()
 
+      if (error) {
+        console.error('SupabaseService: Error creating project:', error);
+        console.error('SupabaseService: Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      
+      console.log('SupabaseService: Project created successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('SupabaseService: Error creating project:', error);
+      return null;
+    }
+  }
+
+  async getProjectsByArtist(artistId: string, includeCancelled: boolean = false): Promise<Project[]> {
+    try {
+      console.log('SupabaseService: Getting projects for artist:', artistId, 'includeCancelled:', includeCancelled);
+      
+      let query = supabase
+        .from('projects')
+        .select('*')
+        .eq('artist_id', artistId);
+
+      // Filter out cancelled projects unless explicitly requested
+      if (!includeCancelled) {
+        query = query.neq('status', 'cancelled');
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('SupabaseService: Error getting projects by artist:', error);
+        return [];
+      }
+
+      console.log('SupabaseService: Found projects:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('SupabaseService: Error getting projects by artist:', error);
+      return [];
+    }
+  }
+
+  async getAllProjects(includeCancelled: boolean = false): Promise<Project[]> {
+    try {
+      console.log('SupabaseService: Getting all projects, includeCancelled:', includeCancelled);
+      
+      let query = supabase
+        .from('projects')
+        .select('*');
+
+      // Filter out cancelled projects unless explicitly requested
+      if (!includeCancelled) {
+        query = query.neq('status', 'cancelled');
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('SupabaseService: Error getting all projects:', error);
+        return [];
+      }
+
+      console.log('SupabaseService: Found projects:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('SupabaseService: Error getting all projects:', error);
+      return [];
+    }
+  }
+
+  async getPendingProjects(): Promise<Project[]> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting pending projects:', error)
+      return []
+    }
+  }
+
+  async approveProject(projectId: string, approvedBy: string): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', projectId)
+        .select()
+        .single()
+
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error creating project:', error)
+      console.error('Error approving project:', error)
       return null
     }
   }
 
-  async getProjectsByArtist(artistId: string): Promise<Project[]> {
+  async rejectProject(projectId: string, rejectedBy: string): Promise<Project | null> {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
-        .eq('artist_id', artistId)
-        .order('created_at', { ascending: false })
+        .update({
+          status: 'rejected',
+          updated_at: new Date().toISOString(),
+          rejected_by: rejectedBy,
+          rejected_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+        .select()
+        .single();
 
-      if (error) throw error
-      return data || []
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error getting artist projects:', error)
-      return []
+      console.error('Error rejecting project:', error);
+      return null;
     }
   }
 
-  async getAllProjects(): Promise<Project[]> {
+  async endProject(projectId: string, endedBy: string): Promise<Project | null> {
     try {
-      const { data, error } = await supabase
+      console.log('SupabaseService: Ending project:', projectId, 'by user:', endedBy);
+      
+      // First, get the project details to check if it's being ended prematurely
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .order('created_at', { ascending: false })
+        .eq('id', projectId)
+        .single();
 
-      if (error) throw error
-      return data || []
+      if (projectError) {
+        console.error('SupabaseService: Error fetching project:', projectError);
+        throw projectError;
+      }
+
+      // Get all investments for this project
+      const investments = await this.getInvestmentsByProject(projectId);
+      console.log('SupabaseService: Found investments:', investments.length);
+
+      // Check if project is being ended prematurely
+      const fundingGoal = projectData.funding_goal || 0;
+      const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+      const deadline = new Date(projectData.deadline);
+      const today = new Date();
+      const isPremature = totalInvested < fundingGoal || today < deadline;
+
+      console.log('SupabaseService: Project analysis:', {
+        fundingGoal,
+        totalInvested,
+        deadline: projectData.deadline,
+        today: today.toISOString(),
+        isPremature,
+        fundingMet: totalInvested >= fundingGoal,
+        deadlineReached: today >= deadline
+      });
+
+      // Determine status based on whether it's premature
+      const newStatus = isPremature ? 'cancelled' : 'completed';
+      console.log('SupabaseService: Setting project status to:', newStatus);
+      
+      // Update project status
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('SupabaseService: Error ending project:', error);
+        console.error('SupabaseService: Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+
+      console.log('SupabaseService: Project ended successfully:', data);
+      console.log(`Project ${projectId} ${isPremature ? 'cancelled prematurely' : 'completed'}. ${investments.length} investments to be returned.`);
+      
+      return data;
     } catch (error) {
-      console.error('Error getting all projects:', error)
-      return []
+      console.error('SupabaseService: Error ending project:', error);
+      return null;
     }
   }
 
@@ -1101,7 +1288,7 @@ export class SupabaseService {
       
       // Get demo artist user IDs
       const demoArtistIds = await this.getDemoArtistUserIds();
-      console.log('SupabaseService: Demo artist IDs:', demoArtistIds);
+      console.log('SupabaseService: Demo artist user IDs:', demoArtistIds);
       
       const demoProjects = [
         {
@@ -1157,36 +1344,46 @@ export class SupabaseService {
         if (artistUserId) {
           console.log(`SupabaseService: Creating demo project for ${projectData.artistName}: ${projectData.title}`);
           
-          // Check if project already exists
-          const existingProjects = await this.getProjectsByArtist(artistUserId);
-          const projectExists = existingProjects.some(p => p.title === projectData.title);
+          // Get the artist profile ID for this user
+          const artistProfile = await this.getArtistProfileByUserId(artistUserId);
           
-          if (!projectExists) {
-            const project = await this.createProject({
-              artist_id: artistUserId,
-              title: projectData.title,
-              description: projectData.description,
-              detailed_description: projectData.detailed_description,
-              banner_image: projectData.banner_image,
-              project_type: projectData.project_type,
-              genre: projectData.genre,
-              funding_goal: projectData.funding_goal,
-              min_investment: projectData.min_investment,
-              max_investment: projectData.max_investment,
-              expected_roi: projectData.expected_roi,
-              project_duration: projectData.project_duration,
-              deadline: projectData.deadline
-            });
+          if (artistProfile) {
+            console.log(`SupabaseService: Found artist profile for ${projectData.artistName}: ${artistProfile.id}`);
             
-            if (project) {
-              console.log(`SupabaseService: Created demo project: ${project.id}`);
+            // Check if project already exists
+            const existingProjects = await this.getProjectsByArtist(artistProfile.id);
+            const projectExists = existingProjects.some(p => p.title === projectData.title);
+            
+            if (!projectExists) {
+              const project = await this.createProject({
+                artist_id: artistProfile.id, // Use artist profile ID, not user ID
+                title: projectData.title,
+                description: projectData.description,
+                detailed_description: projectData.detailed_description,
+                banner_image: projectData.banner_image,
+                project_type: projectData.project_type,
+                genre: projectData.genre,
+                funding_goal: projectData.funding_goal,
+                min_investment: projectData.min_investment,
+                max_investment: projectData.max_investment,
+                expected_roi: projectData.expected_roi,
+                project_duration: projectData.project_duration,
+                deadline: projectData.deadline,
+                status: 'active' // Set status to active for demo projects
+              });
               
-              // Store mapping for easy lookup
-              const mappingKey = `demo_project_${projectData.title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
-              localStorage.setItem(mappingKey, project.id);
+              if (project) {
+                console.log(`SupabaseService: Created demo project: ${project.id}`);
+                
+                // Store mapping for easy lookup
+                const mappingKey = `demo_project_${projectData.title.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+                localStorage.setItem(mappingKey, project.id);
+              }
+            } else {
+              console.log(`SupabaseService: Demo project already exists: ${projectData.title}`);
             }
           } else {
-            console.log(`SupabaseService: Demo project already exists: ${projectData.title}`);
+            console.log(`SupabaseService: Could not find artist profile for user: ${artistUserId}`);
           }
         } else {
           console.log(`SupabaseService: Could not find artist user ID for: ${projectData.artistName}`);
@@ -1221,6 +1418,55 @@ export class SupabaseService {
       return null;
     } catch (error) {
       console.error('Error getting demo project ID:', error);
+      return null;
+    }
+  }
+
+  async getRecentFollowers(artistId: string, limit: number = 5): Promise<FollowRelationship[]> {
+    try {
+      const { data, error } = await supabase
+        .from('follow_relationships')
+        .select('*')
+        .eq('artist_id', artistId)
+        .order('followed_at', { ascending: false })
+        .limit(limit)
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting recent followers:', error)
+      return []
+    }
+  }
+
+  async getProjectStatus(projectId: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('status')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      return data?.status || null;
+    } catch (error) {
+      console.error('Error getting project status:', error);
+      return null;
+    }
+  }
+
+  async getProjectById(projectId: string): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error getting project by ID:', error);
       return null;
     }
   }

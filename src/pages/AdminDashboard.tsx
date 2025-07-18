@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Eye, User, Music, CheckCircle, XCircle } from "lucide-react";
+import { Trash2, Eye, User, Music, CheckCircle, XCircle, FolderOpen, DollarSign } from "lucide-react";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { artistProfileService } from '@/services/artistProfileService';
+import { supabaseService } from '@/services/supabaseService';
 import type { Database } from '@/lib/supabase';
 
 type ArtistProfile = Database['public']['Tables']['artist_profiles']['Row'];
+type Project = Database['public']['Tables']['projects']['Row'];
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +21,8 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<ArtistProfile[]>([]);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -32,6 +36,7 @@ const AdminDashboard = () => {
     }
 
     loadProfiles();
+    loadProjects();
   }, [user, isAuthenticated, isLoading, navigate]);
 
   const loadProfiles = async () => {
@@ -48,6 +53,23 @@ const AdminDashboard = () => {
       });
     } finally {
       setIsLoadingProfiles(false);
+    }
+  };
+
+  const loadProjects = async () => {
+    setIsLoadingProjects(true);
+    try {
+      const allProjects = await supabaseService.getAllProjects(true); // Include cancelled projects for admin
+      setProjects(allProjects);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingProjects(false);
     }
   };
 
@@ -133,6 +155,64 @@ const AdminDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to reject profile",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleApproveProject = async (projectId: string, projectTitle: string) => {
+    if (!confirm(`Are you sure you want to approve the project "${projectTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const approvedProject = await supabaseService.approveProject(projectId, user!.id);
+      
+      if (approvedProject) {
+        // Reload projects
+        loadProjects();
+        
+        toast({
+          title: "Success",
+          description: `Project "${projectTitle}" has been approved`,
+        });
+      } else {
+        throw new Error('Project not found');
+      }
+    } catch (error) {
+      console.error('Error approving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve project",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRejectProject = async (projectId: string, projectTitle: string) => {
+    if (!confirm(`Are you sure you want to reject the project "${projectTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const rejectedProject = await supabaseService.rejectProject(projectId, user!.id);
+      
+      if (rejectedProject) {
+        // Reload projects
+        loadProjects();
+        
+        toast({
+          title: "Success",
+          description: `Project "${projectTitle}" has been rejected`,
+        });
+      } else {
+        throw new Error('Project not found');
+      }
+    } catch (error) {
+      console.error('Error rejecting project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject project",
         variant: "destructive"
       });
     }
@@ -364,6 +444,141 @@ const AdminDashboard = () => {
                             </td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Projects Table */}
+            <Card className="bg-gray-800/50 border-gray-700/50 mt-8">
+              <CardHeader>
+                <CardTitle>Project Management</CardTitle>
+                <CardDescription>Review and approve pending projects</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingProjects ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : projects.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-400">No projects found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Project</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Artist</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Type</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Funding Goal</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Status</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Created</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projects.map((project) => {
+                          // Find the artist profile for this project
+                          const artistProfile = profiles.find(p => p.id === project.artist_id);
+                          
+                          return (
+                            <tr key={project.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                              <td className="py-3 px-4">
+                                <div>
+                                  <div className="font-medium text-white">{project.title}</div>
+                                  <div className="text-sm text-gray-400 line-clamp-2">{project.description}</div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-gray-300">
+                                  {artistProfile ? artistProfile.artist_name : 'Unknown Artist'}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge variant="outline" className="capitalize">
+                                  {project.project_type}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center">
+                                  <DollarSign className="w-4 h-4 text-green-400 mr-1" />
+                                  <span className="text-gray-300">
+                                    ${project.funding_goal?.toLocaleString() || '0'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                {(() => {
+                                  const getStatusConfig = (status: string) => {
+                                    switch (status) {
+                                      case 'active':
+                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Active" };
+                                      case 'draft':
+                                        return { variant: "secondary", className: "bg-blue-500/20 text-blue-300", label: "Draft" };
+                                      case 'pending':
+                                        return { variant: "secondary", className: "bg-yellow-500/20 text-yellow-300", label: "Pending" };
+                                      case 'funded':
+                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Funded" };
+                                      case 'completed':
+                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Completed" };
+                                      case 'cancelled':
+                                        return { variant: "destructive", className: "bg-red-500/20 text-red-300", label: "Cancelled" };
+                                      default:
+                                        return { variant: "destructive", className: "bg-red-500/20 text-red-300", label: "Rejected" };
+                                    }
+                                  };
+                                  
+                                  const config = getStatusConfig(project.status);
+                                  
+                                  return (
+                                    <Badge variant={config.variant as any} className={config.className}>
+                                      {config.label}
+                                    </Badge>
+                                  );
+                                })()}
+                              </td>
+                              <td className="py-3 px-4 text-gray-300">
+                                {new Date(project.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center space-x-2">
+                                  {project.status === 'draft' && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleApproveProject(project.id, project.title)}
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                      >
+                                        <CheckCircle className="w-4 h-4 mr-1" />
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => handleRejectProject(project.id, project.title)}
+                                      >
+                                        <XCircle className="w-4 h-4 mr-1" />
+                                        Reject
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => navigate(`/project/${project.id}`)}
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

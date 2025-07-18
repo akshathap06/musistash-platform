@@ -1,595 +1,516 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import { useAuth } from '@/hooks/useAuth';
-import { artistProfileService, ArtistProject, FundingBreakdown, InvestmentReward } from '@/services/artistProfileService';
-import { 
-  Save, 
-  Upload, 
-  Camera, 
-  DollarSign, 
-  Target, 
-  FileText, 
-  Plus, 
-  AlertCircle, 
-  CheckCircle,
-  Music,
-  TrendingUp
-} from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { X, Upload, DollarSign, Calendar, Target, Music, Mic, Album, Play } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-const projectTypes = [
-  { value: 'album', label: 'Album', description: 'Full-length studio album' },
-  { value: 'ep', label: 'EP', description: 'Extended play recording' },
-  { value: 'single', label: 'Single', description: 'Single song release' },
-  { value: 'tour', label: 'Tour', description: 'Concert tour or live performances' },
-  { value: 'merchandise', label: 'Merchandise', description: 'Artist merchandise production' },
-  { value: 'other', label: 'Other', description: 'Other music-related project' },
-];
+interface FormData {
+  title: string;
+  description: string;
+  detailedDescription: string;
+  projectType: 'album' | 'single' | 'ep' | 'mixtape' | '';
+  genre: string[];
+  fundingGoal: string;
+  minInvestment: string;
+  maxInvestment: string;
+  expectedROI: string;
+  projectDuration: string;
+  deadline: string;
+  bannerImage: File | null;
+}
 
-const musicGenres = [
-  'Pop', 'Rock', 'Hip-Hop', 'R&B', 'Country', 'Electronic', 'Jazz', 'Classical',
-  'Folk', 'Blues', 'Reggae', 'Alternative', 'Indie', 'Metal', 'Punk', 'Funk',
-  'Soul', 'Gospel', 'Latin', 'World', 'Experimental', 'Ambient', 'Other'
-];
+interface ArtistProject {
+  id: string;
+  title: string;
+  description: string;
+  fundingGoal: number;
+  deadline: string;
+  projectType: string;
+  genre: string[];
+}
 
-const CreateProject = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+export default function CreateProject() {
   const navigate = useNavigate();
-  const [currentTab, setCurrentTab] = useState('basic');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [artistProfile, setArtistProfile] = useState(null);
-
-  const [projectData, setProjectData] = useState({
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     detailedDescription: '',
-    bannerImage: '/placeholder.svg',
-    projectType: 'album' as ArtistProject['projectType'],
-    genre: [] as string[],
-    fundingGoal: 10000,
-    minInvestment: 50,
-    maxInvestment: 5000,
-    expectedROI: 7.5,
-    projectDuration: '6 months',
+    projectType: '',
+    genre: [],
+    fundingGoal: '',
+    minInvestment: '',
+    maxInvestment: '',
+    expectedROI: '',
+    projectDuration: '',
     deadline: '',
+    bannerImage: null,
   });
 
-  const [contractData, setContractData] = useState({
-    roiPercentage: 7.5,
-    paymentSchedule: 'quarterly' as 'monthly' | 'quarterly' | 'annually' | 'on_completion',
-    contractDuration: '2 years',
-    earlyTermination: true,
-    artistTerms: '',
-    customTerms: '',
-  });
+  const genres = [
+    'Hip Hop', 'R&B', 'Pop', 'Rock', 'Jazz', 'Electronic', 'Country', 
+    'Folk', 'Classical', 'Reggae', 'Blues', 'Alternative', 'Indie'
+  ];
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
-    if (user) {
-      const profile = artistProfileService.getProfileByUserId(user.id);
-      if (!profile) {
-        navigate('/artist-profile');
-        return;
-      }
-      setArtistProfile(profile);
-      
-      // Set default deadline to 3 months from now
-      const defaultDeadline = new Date();
-      defaultDeadline.setMonth(defaultDeadline.getMonth() + 3);
-      setProjectData(prev => ({
-        ...prev,
-        deadline: defaultDeadline.toISOString().split('T')[0],
-      }));
-    }
-  }, [user, isLoading, isAuthenticated, navigate]);
-
-  const handleProjectDataChange = (field: string, value: any) => {
-    setProjectData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const projectIcons = {
+    album: Album,
+    single: Music,
+    ep: Play,
+    mixtape: Mic,
   };
 
-  const handleContractDataChange = (field: string, value: any) => {
-    setContractData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Sync ROI with project data
-    if (field === 'roiPercentage') {
-      setProjectData(prev => ({
-        ...prev,
-        expectedROI: value,
-      }));
-    }
+  const handleInputChange = (field: keyof FormData, value: string | string[] | File | null) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleGenreToggle = (genre: string) => {
-    setProjectData(prev => ({
+    setFormData(prev => ({
       ...prev,
       genre: prev.genre.includes(genre)
         ? prev.genre.filter(g => g !== genre)
-        : [...prev.genre, genre].slice(0, 3), // Max 3 genres
+        : [...prev.genre, genre]
     }));
   };
 
-  const handleImageUpload = () => {
-    // In a real app, this would handle file upload
-    const mockImageUrl = `https://images.unsplash.com/photo-${Date.now()}?auto=format&fit=crop&w=1200&h=600`;
-    handleProjectDataChange('bannerImage', mockImageUrl);
-  };
-
-  const handleSaveDraft = async () => {
-    if (!artistProfile) return;
-
-    setIsSaving(true);
-    setSaveStatus('idle');
-
-    try {
-      const fundingBreakdown = artistProfileService.generateFundingBreakdown(projectData.fundingGoal);
-      const rewards = artistProfileService.generateBasicRewards(projectData.projectType);
-
-      const newProject = artistProfileService.createProject(artistProfile.id, {
-        ...projectData,
-        fundingBreakdown,
-        rewards,
-      });
-
-      // Update contract terms
-      if (newProject.contractTerms) {
-        artistProfileService.updateContract(newProject.contractTerms.id, {
-          terms: {
-            ...newProject.contractTerms.terms,
-            roiPercentage: contractData.roiPercentage,
-            paymentSchedule: contractData.paymentSchedule,
-            contractDuration: contractData.contractDuration,
-            earlyTermination: contractData.earlyTermination,
-          },
-          artistTerms: contractData.artistTerms,
-          customTerms: contractData.customTerms,
-        });
-      }
-
-      setSaveStatus('success');
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-    } catch (error) {
-      console.error('Error saving project:', error);
-      setSaveStatus('error');
-    } finally {
-      setIsSaving(false);
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleInputChange('bannerImage', file);
     }
   };
 
-  const handlePublish = async () => {
-    if (!artistProfile) return;
-
-    setIsSaving(true);
-    setSaveStatus('idle');
-
-    try {
-      const fundingBreakdown = artistProfileService.generateFundingBreakdown(projectData.fundingGoal);
-      const rewards = artistProfileService.generateBasicRewards(projectData.projectType);
-
-      const newProject = artistProfileService.createProject(artistProfile.id, {
-        ...projectData,
-        fundingBreakdown,
-        rewards,
-        status: 'active',
-      });
-
-      // Update contract terms
-      if (newProject.contractTerms) {
-        artistProfileService.updateContract(newProject.contractTerms.id, {
-          terms: {
-            ...newProject.contractTerms.terms,
-            roiPercentage: contractData.roiPercentage,
-            paymentSchedule: contractData.paymentSchedule,
-            contractDuration: contractData.contractDuration,
-            earlyTermination: contractData.earlyTermination,
-          },
-          artistTerms: contractData.artistTerms,
-          customTerms: contractData.customTerms,
-        });
-      }
-
-      setSaveStatus('success');
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-    } catch (error) {
-      console.error('Error publishing project:', error);
-      setSaveStatus('error');
-    } finally {
-      setIsSaving(false);
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!(formData.title && formData.description && formData.projectType);
+      case 2:
+        return !!(formData.detailedDescription && formData.genre.length > 0);
+      case 3:
+        return !!(formData.fundingGoal && formData.minInvestment && formData.maxInvestment && 
+                 formData.expectedROI && formData.projectDuration && formData.deadline);
+      default:
+        return true;
     }
   };
 
-  if (isLoading || !user || !artistProfile) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-        <div className="animate-pulse text-center">
-          <div className="text-xl font-semibold mb-2 text-white">Loading Project Creator</div>
-          <div className="text-gray-300">Please wait...</div>
-        </div>
-      </div>
-    );
-  }
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    } else {
+      toast({
+        title: "Incomplete Information",
+        description: "Please fill in all required fields before continuing.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      <Navbar />
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  // Mock function to simulate project creation
+  const createArtistProject = async (data: FormData): Promise<ArtistProject> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      title: data.title,
+      description: data.description,
+      fundingGoal: parseInt(data.fundingGoal),
+      deadline: data.deadline,
+      projectType: data.projectType as string,
+      genre: data.genre,
+    };
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(3)) {
+      toast({
+        title: "Incomplete Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const project = await createArtistProject(formData);
       
-      <div className="flex-1 pt-20">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Create New Project</h1>
-            <p className="text-gray-300">Launch your next musical project and connect with investors</p>
-          </div>
+      toast({
+        title: "Project Created Successfully!",
+        description: `Your ${formData.projectType} project "${formData.title}" has been created.`,
+      });
 
-          {/* Status Messages */}
-          {saveStatus === 'success' && (
-            <Alert className="mb-6 bg-green-500/20 border-green-500/50 text-green-300">
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Project saved successfully! Redirecting to dashboard...
-              </AlertDescription>
-            </Alert>
-          )}
+      navigate('/artist-dashboard');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-          {saveStatus === 'error' && (
-            <Alert className="mb-6 bg-red-500/20 border-red-500/50 text-red-300">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to save project. Please try again.
-              </AlertDescription>
-            </Alert>
-          )}
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="title">Project Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder="Enter your project title"
+                className="mt-1"
+              />
+            </div>
 
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="basic">Project Details</TabsTrigger>
-              <TabsTrigger value="funding">Funding & ROI</TabsTrigger>
-              <TabsTrigger value="contract">Contract & Publish</TabsTrigger>
-            </TabsList>
+            <div>
+              <Label htmlFor="description">Short Description *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Brief description of your project"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
 
-            {/* Basic Project Details */}
-            <TabsContent value="basic" className="space-y-6">
-              {/* Banner Image */}
-              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm overflow-hidden">
-                <div className="relative h-48 md:h-64">
-                  <img
-                    src={projectData.bannerImage}
-                    alt="Project Banner"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div>
+              <Label>Project Type *</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                {(['album', 'single', 'ep', 'mixtape'] as const).map((type) => {
+                  const Icon = projectIcons[type];
+                  return (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleImageUpload}
-                      className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      key={type}
+                      type="button"
+                      variant={formData.projectType === type ? "default" : "outline"}
+                      className="h-20 flex flex-col items-center justify-center space-y-2"
+                      onClick={() => handleInputChange('projectType', type)}
                     >
-                      <Camera className="mr-2 h-4 w-4" />
-                      Upload Banner Image
+                      <Icon className="h-6 w-6" />
+                      <span className="capitalize">{type}</span>
                     </Button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="detailedDescription">Detailed Description *</Label>
+              <Textarea
+                id="detailedDescription"
+                value={formData.detailedDescription}
+                onChange={(e) => handleInputChange('detailedDescription', e.target.value)}
+                placeholder="Provide detailed information about your project, your vision, and what makes it unique"
+                className="mt-1"
+                rows={6}
+              />
+            </div>
+
+            <div>
+              <Label>Genres * (Select all that apply)</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {genres.map((genre) => (
+                  <Badge
+                    key={genre}
+                    variant={formData.genre.includes(genre) ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/80"
+                    onClick={() => handleGenreToggle(genre)}
+                  >
+                    {genre}
+                    {formData.genre.includes(genre) && (
+                      <X className="ml-1 h-3 w-3" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="bannerImage">Project Banner Image</Label>
+              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                <input
+                  id="bannerImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <label htmlFor="bannerImage" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">
+                    {formData.bannerImage ? formData.bannerImage.name : 'Click to upload banner image'}
+                  </p>
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="fundingGoal">Funding Goal ($) *</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="fundingGoal"
+                    type="number"
+                    value={formData.fundingGoal}
+                    onChange={(e) => handleInputChange('fundingGoal', e.target.value)}
+                    placeholder="50000"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="expectedROI">Expected ROI (%) *</Label>
+                <div className="relative mt-1">
+                  <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="expectedROI"
+                    type="number"
+                    value={formData.expectedROI}
+                    onChange={(e) => handleInputChange('expectedROI', e.target.value)}
+                    placeholder="15"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="minInvestment">Minimum Investment ($) *</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="minInvestment"
+                    type="number"
+                    value={formData.minInvestment}
+                    onChange={(e) => handleInputChange('minInvestment', e.target.value)}
+                    placeholder="100"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="maxInvestment">Maximum Investment ($) *</Label>
+                <div className="relative mt-1">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="maxInvestment"
+                    type="number"
+                    value={formData.maxInvestment}
+                    onChange={(e) => handleInputChange('maxInvestment', e.target.value)}
+                    placeholder="10000"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="projectDuration">Project Duration *</Label>
+                <div className="relative mt-1">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Select value={formData.projectDuration} onValueChange={(value) => handleInputChange('projectDuration', value)}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3-months">3 Months</SelectItem>
+                      <SelectItem value="6-months">6 Months</SelectItem>
+                      <SelectItem value="9-months">9 Months</SelectItem>
+                      <SelectItem value="12-months">12 Months</SelectItem>
+                      <SelectItem value="18-months">18 Months</SelectItem>
+                      <SelectItem value="24-months">24 Months</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="deadline">Funding Deadline *</Label>
+                <div className="relative mt-1">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => handleInputChange('deadline', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Review Your Project</h3>
+              <p className="text-gray-600">Please review all details before submitting</p>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {formData.projectType && React.createElement(projectIcons[formData.projectType as keyof typeof projectIcons], { className: "h-5 w-5" })}
+                  {formData.title}
+                </CardTitle>
+                <CardDescription>{formData.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Project Details</h4>
+                  <p className="text-sm text-gray-600">{formData.detailedDescription}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-2">Genres</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.genre.map(g => (
+                      <Badge key={g} variant="secondary">{g}</Badge>
+                    ))}
                   </div>
                 </div>
-              </Card>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Project Information */}
-                <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white">Project Information</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Basic details about your project
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title" className="text-gray-300">Project Title</Label>
-                      <Input
-                        id="title"
-                        value={projectData.title}
-                        onChange={(e) => handleProjectDataChange('title', e.target.value)}
-                        placeholder="e.g., 'Midnight Dreams - Debut Album'"
-                        className="bg-gray-700/50 border-gray-600 text-white"
-                      />
-                    </div>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold">Funding Goal:</span> ${parseInt(formData.fundingGoal || '0').toLocaleString()}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Expected ROI:</span> {formData.expectedROI}%
+                  </div>
+                  <div>
+                    <span className="font-semibold">Investment Range:</span> ${parseInt(formData.minInvestment || '0').toLocaleString()} - ${parseInt(formData.maxInvestment || '0').toLocaleString()}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Duration:</span> {formData.projectDuration}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Deadline:</span> {new Date(formData.deadline).toLocaleDateString()}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
 
-                    <div className="space-y-2">
-                      <Label htmlFor="projectType" className="text-gray-300">Project Type</Label>
-                      <Select
-                        value={projectData.projectType}
-                        onValueChange={(value) => handleProjectDataChange('projectType', value)}
-                      >
-                        <SelectTrigger className="bg-gray-700/50 border-gray-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {projectTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              <div>
-                                <div className="font-medium">{type.label}</div>
-                                <div className="text-sm text-gray-400">{type.description}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+      default:
+        return null;
+    }
+  };
 
-                    <div className="space-y-2">
-                      <Label htmlFor="description" className="text-gray-300">Short Description</Label>
-                      <Textarea
-                        id="description"
-                        value={projectData.description}
-                        onChange={(e) => handleProjectDataChange('description', e.target.value)}
-                        placeholder="A brief description of your project (max 200 characters)"
-                        className="bg-gray-700/50 border-gray-600 text-white"
-                        maxLength={200}
-                      />
-                      <p className="text-xs text-gray-400">
-                        {projectData.description.length}/200 characters
-                      </p>
-                    </div>
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
+          <p className="mt-2 text-gray-600">Launch your music project and connect with investors</p>
+        </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="detailedDescription" className="text-gray-300">Detailed Description</Label>
-                      <Textarea
-                        id="detailedDescription"
-                        value={projectData.detailedDescription}
-                        onChange={(e) => handleProjectDataChange('detailedDescription', e.target.value)}
-                        placeholder="Provide a comprehensive description of your project, goals, and vision..."
-                        className="bg-gray-700/50 border-gray-600 text-white min-h-[120px]"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Project Timeline */}
-                <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white">Timeline & Genre</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Project timeline and musical genres
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="projectDuration" className="text-gray-300">Project Duration</Label>
-                      <Input
-                        id="projectDuration"
-                        value={projectData.projectDuration}
-                        onChange={(e) => handleProjectDataChange('projectDuration', e.target.value)}
-                        placeholder="e.g., '6 months', '1 year'"
-                        className="bg-gray-700/50 border-gray-600 text-white"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="deadline" className="text-gray-300">Funding Deadline</Label>
-                      <Input
-                        id="deadline"
-                        type="date"
-                        value={projectData.deadline}
-                        onChange={(e) => handleProjectDataChange('deadline', e.target.value)}
-                        className="bg-gray-700/50 border-gray-600 text-white"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">Music Genres (max 3)</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {musicGenres.map((genre) => (
-                          <Badge
-                            key={genre}
-                            variant={projectData.genre.includes(genre) ? "default" : "outline"}
-                            className={`cursor-pointer transition-all ${
-                              projectData.genre.includes(genre)
-                                ? 'bg-blue-600 text-white border-blue-500'
-                                : 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                            }`}
-                            onClick={() => handleGenreToggle(genre)}
-                          >
-                            {genre}
-                          </Badge>
-                        ))}
-                      </div>
-                      {projectData.genre.length >= 3 && (
-                        <p className="text-xs text-yellow-400">
-                          Maximum 3 genres selected. Remove one to add another.
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center">
+            {[1, 2, 3, 4].map((step, index) => (
+              <div key={step} className="flex items-center">
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                    currentStep >= step
+                      ? 'bg-primary border-primary text-white'
+                      : 'border-gray-300 text-gray-300'
+                  }`}
+                >
+                  {step}
+                </div>
+                {index < 3 && (
+                  <div
+                    className={`w-12 h-0.5 ${
+                      currentStep > step ? 'bg-primary' : 'bg-gray-300'
+                    }`}
+                  />
+                )}
               </div>
-            </TabsContent>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <span>Basic Info</span>
+            <span>Details</span>
+            <span>Funding</span>
+            <span>Review</span>
+          </div>
+        </div>
 
-            {/* Funding & ROI */}
-            <TabsContent value="funding" className="space-y-6">
-              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Target className="mr-2 h-5 w-5" />
-                    Funding Goals
-                  </CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Set your funding targets and investment limits
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fundingGoal" className="text-gray-300">Funding Goal</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="fundingGoal"
-                          type="number"
-                          value={projectData.fundingGoal}
-                          onChange={(e) => handleProjectDataChange('fundingGoal', parseInt(e.target.value) || 0)}
-                          className="bg-gray-700/50 border-gray-600 text-white pl-10"
-                          min="1000"
-                          step="1000"
-                        />
-                      </div>
-                    </div>
+        <Card>
+          <CardContent className="p-6">
+            {renderStep()}
+          </CardContent>
+        </Card>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="minInvestment" className="text-gray-300">Min Investment</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="minInvestment"
-                          type="number"
-                          value={projectData.minInvestment}
-                          onChange={(e) => handleProjectDataChange('minInvestment', parseInt(e.target.value) || 0)}
-                          className="bg-gray-700/50 border-gray-600 text-white pl-10"
-                          min="50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="maxInvestment" className="text-gray-300">Max Investment</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="maxInvestment"
-                          type="number"
-                          value={projectData.maxInvestment}
-                          onChange={(e) => handleProjectDataChange('maxInvestment', parseInt(e.target.value) || 0)}
-                          className="bg-gray-700/50 border-gray-600 text-white pl-10"
-                          min="100"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Expected ROI: {projectData.expectedROI}%</Label>
-                    <Slider
-                      value={[projectData.expectedROI]}
-                      onValueChange={(value) => {
-                        handleProjectDataChange('expectedROI', value[0]);
-                        handleContractDataChange('roiPercentage', value[0]);
-                      }}
-                      max={25}
-                      min={1}
-                      step={0.5}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400">
-                      <span>1%</span>
-                      <span>25%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Contract & Publish */}
-            <TabsContent value="contract" className="space-y-6">
-              <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <FileText className="mr-2 h-5 w-5" />
-                    Contract Terms
-                  </CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Define the terms and conditions for your project
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="artistTerms" className="text-gray-300">Your Terms & Conditions</Label>
-                    <Textarea
-                      id="artistTerms"
-                      value={contractData.artistTerms}
-                      onChange={(e) => handleContractDataChange('artistTerms', e.target.value)}
-                      placeholder="Add any specific terms, conditions, or requirements you want included in the contract..."
-                      className="bg-gray-700/50 border-gray-600 text-white min-h-[120px]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="customTerms" className="text-gray-300">Additional Clauses</Label>
-                    <Textarea
-                      id="customTerms"
-                      value={contractData.customTerms}
-                      onChange={(e) => handleContractDataChange('customTerms', e.target.value)}
-                      placeholder="Any additional custom clauses or special arrangements..."
-                      className="bg-gray-700/50 border-gray-600 text-white min-h-[100px]"
-                    />
-                  </div>
-
-                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
-                      <div className="text-sm text-yellow-200">
-                        <p className="font-medium mb-2">Important Legal Notice:</p>
-                        <ul className="space-y-1 list-disc list-inside">
-                          <li>All investments carry risk and returns are not guaranteed</li>
-                          <li>This platform facilitates connections between artists and investors</li>
-                          <li>Both parties should consult legal counsel before finalizing agreements</li>
-                          <li>The artist retains all intellectual property rights unless otherwise specified</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-4 pt-4">
-                    <Button
-                      onClick={handleSaveDraft}
-                      disabled={isSaving}
-                      variant="outline"
-                      className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      {isSaving ? 'Saving...' : 'Save as Draft'}
-                    </Button>
-                    <Button
-                      onClick={handlePublish}
-                      disabled={isSaving || !projectData.title || !projectData.description}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {isSaving ? 'Publishing...' : 'Publish Project'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+          >
+            Previous
+          </Button>
+          
+          {currentStep < 4 ? (
+            <Button
+              type="button"
+              onClick={nextStep}
+              disabled={!validateStep(currentStep)}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating Project...' : 'Create Project'}
+            </Button>
+          )}
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
-};
-
-export default CreateProject; 
+}

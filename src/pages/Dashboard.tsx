@@ -15,6 +15,7 @@ import { followingService } from '@/services/followingService';
 import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
+import ProfitProjectionChart from '@/components/ui/ProfitProjectionChart';
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -338,7 +339,15 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
         </Card>
       </div>
 
-
+      {/* Profit Projection Chart */}
+      {investmentStats.totalInvested > 0 && (
+        <ProfitProjectionChart
+          totalInvested={investmentStats.totalInvested}
+          potentialReturns={investmentStats.potentialReturns}
+          averageROI={investmentStats.averageROI}
+          investments={investmentStats.investments}
+        />
+      )}
 
       {/* Content Tabs */}
       <Tabs defaultValue="portfolio" className="w-full">

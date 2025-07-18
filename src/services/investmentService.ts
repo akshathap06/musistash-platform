@@ -6,6 +6,16 @@ export interface UserInvestment extends Investment {
   investmentDate: string;
 }
 
+export interface WithdrawalRequest {
+  userId: string;
+  investmentId: string;
+  amount: number;
+  percentage: number;
+  type: 'partial' | 'full';
+  projectTitle: string;
+  projectROI: number;
+}
+
 export class InvestmentService {
   private static STORAGE_KEY = 'musistash_user_investments';
 
@@ -105,6 +115,59 @@ export class InvestmentService {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(otherInvestments));
     } catch (error) {
       console.error('Error clearing user investments:', error);
+    }
+  }
+
+  // Withdraw from an investment
+  static async withdrawInvestment(withdrawal: WithdrawalRequest): Promise<boolean> {
+    try {
+      const storedInvestments = localStorage.getItem(this.STORAGE_KEY);
+      if (!storedInvestments) throw new Error('No investments found');
+      
+      const allInvestments: UserInvestment[] = JSON.parse(storedInvestments);
+      const investmentIndex = allInvestments.findIndex(
+        inv => inv.id === withdrawal.investmentId && inv.userId === withdrawal.userId
+      );
+      
+      if (investmentIndex === -1) throw new Error('Investment not found');
+      
+      const investment = allInvestments[investmentIndex];
+      const currentValue = investment.amount * (1 + investment.projectROI / 100);
+      
+      if (withdrawal.amount > currentValue) {
+        throw new Error('Withdrawal amount exceeds current investment value');
+      }
+      
+      if (withdrawal.type === 'full') {
+        // Remove the entire investment
+        allInvestments.splice(investmentIndex, 1);
+      } else {
+        // Partial withdrawal - reduce the investment amount proportionally
+        const remainingPercentage = 100 - withdrawal.percentage;
+        const remainingAmount = (investment.amount * remainingPercentage) / 100;
+        
+        allInvestments[investmentIndex] = {
+          ...investment,
+          amount: remainingAmount
+        };
+      }
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(allInvestments));
+      
+      // Store withdrawal history (optional - for tracking purposes)
+      const withdrawalHistory = JSON.parse(localStorage.getItem('musistash_withdrawals') || '[]');
+      withdrawalHistory.push({
+        ...withdrawal,
+        withdrawalDate: new Date().toISOString(),
+        originalInvestmentAmount: investment.amount,
+        currentValue: currentValue
+      });
+      localStorage.setItem('musistash_withdrawals', JSON.stringify(withdrawalHistory));
+      
+      return true;
+    } catch (error) {
+      console.error('Error withdrawing investment:', error);
+      throw error;
     }
   }
 } 

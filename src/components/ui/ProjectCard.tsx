@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import InvestmentModal from './InvestmentModal';
+import WithdrawalModal from './WithdrawalModal';
 import { useAuth } from '@/hooks/useAuth';
+import { InvestmentService, UserInvestment } from '@/services/investmentService';
 
 interface ProjectCardProps {
   project: Project | ArtistProject;
@@ -16,8 +18,10 @@ interface ProjectCardProps {
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isInvestmentModalOpen, setIsInvestmentModalOpen] = useState(false);
+  const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
+  const [userInvestment, setUserInvestment] = useState<UserInvestment | null>(null);
   
   // Handle different project types
   const isArtistProject = 'bannerImage' in project;
@@ -44,6 +48,34 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
   const handleInvestmentComplete = () => {
     if (onInvestmentComplete) {
       onInvestmentComplete();
+    }
+  };
+
+  // Check if user has invested in this project
+  React.useEffect(() => {
+    if (user) {
+      const userInvestments = InvestmentService.getUserInvestments(user.id);
+      const investment = userInvestments.find(inv => inv.projectId === project.id);
+      setUserInvestment(investment || null);
+    }
+  }, [user, project.id]);
+
+  const handleWithdrawClick = () => {
+    if (!isAuthenticated || !userInvestment) {
+      return;
+    }
+    setIsWithdrawalModalOpen(true);
+  };
+
+  const handleWithdrawalComplete = () => {
+    if (onInvestmentComplete) {
+      onInvestmentComplete();
+    }
+    // Refresh user investment data
+    if (user) {
+      const userInvestments = InvestmentService.getUserInvestments(user.id);
+      const investment = userInvestments.find(inv => inv.projectId === project.id);
+      setUserInvestment(investment || null);
     }
   };
 
@@ -137,7 +169,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
               View Project
             </Button>
           </Link>
-          {project.status === 'active' && (
+          {userInvestment ? (
+            <Button 
+              onClick={handleWithdrawClick}
+              className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white"
+              disabled={!isAuthenticated}
+            >
+              Withdraw
+            </Button>
+          ) : project.status === 'active' ? (
             <Button 
               onClick={handleInvestClick}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
@@ -145,7 +185,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
             >
               Invest Now
             </Button>
-          )}
+          ) : null}
         </div>
       </CardFooter>
 
@@ -156,6 +196,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
         project={compatibleProject}
         onInvestmentComplete={handleInvestmentComplete}
       />
+
+      {/* Withdrawal Modal */}
+      {userInvestment && (
+        <WithdrawalModal
+          isOpen={isWithdrawalModalOpen}
+          onClose={() => setIsWithdrawalModalOpen(false)}
+          investment={userInvestment}
+          onWithdrawalComplete={handleWithdrawalComplete}
+        />
+      )}
     </Card>
   );
 };

@@ -179,7 +179,7 @@ export interface Database {
           expected_roi: number
           project_duration: string
           deadline: string
-          status: 'draft' | 'active' | 'funded' | 'completed'
+          status: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
           created_at: string
           updated_at: string
         }
@@ -198,7 +198,7 @@ export interface Database {
           expected_roi: number
           project_duration: string
           deadline: string
-          status?: 'draft' | 'active' | 'funded' | 'completed'
+          status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
           created_at?: string
           updated_at?: string
         }
@@ -217,7 +217,7 @@ export interface Database {
           expected_roi?: number
           project_duration?: string
           deadline?: string
-          status?: 'draft' | 'active' | 'funded' | 'completed'
+          status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
           created_at?: string
           updated_at?: string
         }

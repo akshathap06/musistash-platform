@@ -223,15 +223,13 @@ export default function CreateProject() {
           expected_roi: parseFloat(formData.expectedROI),
           project_duration: formData.projectDuration,
           deadline: formData.deadline,
-          status: saveAsDraft ? 'draft' : 'pending' // 'draft' for saving, 'pending' for admin approval
+          status: 'draft' // Temporarily use 'draft' for both until database migration is applied
         });
         
         if (updatedProject) {
           toast({
-            title: saveAsDraft ? "Project Updated!" : "Project Submitted for Approval!",
-            description: saveAsDraft 
-              ? `Your ${formData.projectType} project "${formData.title}" has been updated and saved as a draft.`
-              : `Your ${formData.projectType} project "${formData.title}" has been updated and submitted for admin approval.`,
+            title: "Project Updated!",
+            description: `Your ${formData.projectType} project "${formData.title}" has been updated and saved as a draft.`,
           });
           navigate('/artist-project-dashboard');
         } else {
@@ -253,15 +251,13 @@ export default function CreateProject() {
           expected_roi: parseFloat(formData.expectedROI),
           project_duration: formData.projectDuration,
           deadline: formData.deadline,
-          status: saveAsDraft ? 'draft' : 'pending' // 'draft' for saving, 'pending' for admin approval
+          status: 'draft' // Temporarily use 'draft' for both until database migration is applied
         });
 
         if (project) {
           toast({
-            title: saveAsDraft ? "Project Saved as Draft!" : "Project Submitted for Approval!",
-            description: saveAsDraft 
-              ? `Your ${formData.projectType} project "${formData.title}" has been saved as a draft. You can edit it later.`
-              : `Your ${formData.projectType} project "${formData.title}" has been submitted and is pending admin approval.`,
+            title: "Project Saved as Draft!",
+            description: `Your ${formData.projectType} project "${formData.title}" has been saved as a draft. You can edit it later.`,
           });
           navigate('/artist-project-dashboard');
         } else {
@@ -678,8 +674,7 @@ export default function CreateProject() {
                 className="bg-blue-600 hover:bg-blue-700"
             >
                 {isSubmitting ? (isEditing ? 'Updating Project...' : 'Creating Project...') : 
-                 saveAsDraft ? (isEditing ? 'Update Draft' : 'Save as Draft') : 
-                 (isEditing ? 'Update & Submit' : 'Submit for Approval')}
+                 (isEditing ? 'Update Draft' : 'Save as Draft')}
             </Button>
           )}
         </div>

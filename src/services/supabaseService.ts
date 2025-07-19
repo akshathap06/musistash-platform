@@ -651,10 +651,12 @@ export class SupabaseService {
 
   async getPendingProjects(): Promise<Project[]> {
     try {
+      // Temporarily get draft projects that need approval
+      // We'll use a different approach until database migration is applied
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('status', 'pending')
+        .eq('status', 'draft')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -690,10 +692,8 @@ export class SupabaseService {
       const { data, error } = await supabase
         .from('projects')
         .update({
-          status: 'rejected',
-          updated_at: new Date().toISOString(),
-          rejected_by: rejectedBy,
-          rejected_at: new Date().toISOString()
+          status: 'cancelled', // Use 'cancelled' instead of 'rejected' to match database constraint
+          updated_at: new Date().toISOString()
         })
         .eq('id', projectId)
         .select()

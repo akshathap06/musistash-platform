@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ImageEditModal from '@/components/ui/ImageEditModal';
 import { useAuth } from '@/hooks/useAuth';
 import { artistProfileService } from '@/services/artistProfileService';
 import { supabaseService } from '@/services/supabaseService';
@@ -23,7 +24,8 @@ import {
   Trash2,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import type { Database } from '@/lib/supabase';
 
@@ -46,6 +48,8 @@ const ArtistProjectDashboard = () => {
   const [artistProfile, setArtistProfile] = useState<any>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectWithInvestments | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
+  const [showImageEditModal, setShowImageEditModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectWithInvestments | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -197,6 +201,34 @@ const ArtistProjectDashboard = () => {
 
   const handleEditProject = (projectId: string) => {
     navigate(`/edit-project/${projectId}`);
+  };
+
+  const handleEditImage = (project: ProjectWithInvestments) => {
+    setEditingProject(project);
+    setShowImageEditModal(true);
+  };
+
+  const handleImageUpdated = (newImageUrl: string) => {
+    if (editingProject) {
+      // Update the project in the local state
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === editingProject.id 
+            ? { ...project, banner_image: newImageUrl }
+            : project
+        )
+      );
+      
+      // Update the selected project if it's the same one
+      if (selectedProject && selectedProject.id === editingProject.id) {
+        setSelectedProject(prev => prev ? { ...prev, banner_image: newImageUrl } : null);
+      }
+    }
+  };
+
+  const handleCloseImageEditModal = () => {
+    setShowImageEditModal(false);
+    setEditingProject(null);
   };
 
   const handleDeleteProject = async (projectId: string, projectTitle: string) => {
@@ -435,6 +467,31 @@ const ArtistProjectDashboard = () => {
                       
                       return (
                         <Card key={project.id} className="bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
+                          {/* Project Image */}
+                          <div className="relative w-full h-48 bg-gray-700 overflow-hidden">
+                            {project.banner_image && project.banner_image !== '/placeholder.svg' ? (
+                              <img 
+                                src={project.banner_image} 
+                                alt={project.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="w-12 h-12 text-gray-500" />
+                                <span className="text-gray-500 ml-2">No image</span>
+                              </div>
+                            )}
+                            {/* Edit Image Button */}
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleEditImage(project)}
+                              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white border-0"
+                            >
+                              <ImageIcon className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
                           <CardHeader>
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
@@ -521,6 +578,31 @@ const ArtistProjectDashboard = () => {
                     
                     return (
                       <Card key={project.id} className="bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
+                        {/* Project Image */}
+                        <div className="relative w-full h-48 bg-gray-700 overflow-hidden">
+                          {project.banner_image && project.banner_image !== '/placeholder.svg' ? (
+                            <img 
+                              src={project.banner_image} 
+                              alt={project.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="w-12 h-12 text-gray-500" />
+                              <span className="text-gray-500 ml-2">No image</span>
+                            </div>
+                          )}
+                          {/* Edit Image Button */}
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleEditImage(project)}
+                            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white border-0"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
@@ -566,6 +648,31 @@ const ArtistProjectDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {projects.filter(p => p.status === 'draft').map((project) => (
                     <Card key={project.id} className="bg-gray-800/50 border-gray-700/50">
+                      {/* Project Image */}
+                      <div className="relative w-full h-48 bg-gray-700 overflow-hidden">
+                        {project.banner_image && project.banner_image !== '/placeholder.svg' ? (
+                          <img 
+                            src={project.banner_image} 
+                            alt={project.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon className="w-12 h-12 text-gray-500" />
+                            <span className="text-gray-500 ml-2">No image</span>
+                          </div>
+                        )}
+                        {/* Edit Image Button */}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleEditImage(project)}
+                          className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white border-0"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
                       <CardHeader>
                         <CardTitle className="text-lg text-white">{project.title}</CardTitle>
                         <CardDescription>{project.description}</CardDescription>
@@ -737,6 +844,42 @@ const ArtistProjectDashboard = () => {
                 </div>
               </div>
 
+              {/* Project Image */}
+              <Card className="bg-gray-800/50 border-gray-700/50 mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                    <ImageIcon className="w-5 h-5" />
+                    Project Banner
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative w-full h-64 bg-gray-700 rounded-lg overflow-hidden">
+                    {selectedProject.banner_image && selectedProject.banner_image !== '/placeholder.svg' ? (
+                      <img 
+                        src={selectedProject.banner_image} 
+                        alt={selectedProject.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-16 h-16 text-gray-500" />
+                        <span className="text-gray-500 ml-3 text-lg">No banner image set</span>
+                      </div>
+                    )}
+                    {/* Edit Image Button */}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleEditImage(selectedProject)}
+                      className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white border-0"
+                    >
+                      <ImageIcon className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Project Overview */}
                 <Card className="bg-gray-800/50 border-gray-700/50">
@@ -897,6 +1040,18 @@ const ArtistProjectDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Image Edit Modal */}
+      {editingProject && (
+        <ImageEditModal
+          isOpen={showImageEditModal}
+          onClose={handleCloseImageEditModal}
+          projectId={editingProject.id}
+          currentImageUrl={editingProject.banner_image || '/placeholder.svg'}
+          projectTitle={editingProject.title}
+          onImageUpdated={handleImageUpdated}
+        />
       )}
       
       <Footer />

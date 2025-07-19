@@ -1470,6 +1470,50 @@ export class SupabaseService {
       return null;
     }
   }
+
+  async uploadProjectImage(file: File, projectId: string): Promise<string | null> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${projectId}-${Date.now()}.${fileExt}`;
+      const filePath = `project-banners/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('project-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('project-images')
+        .getPublicUrl(filePath);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading project image:', error);
+      return null;
+    }
+  }
+
+  async updateProjectImage(projectId: string, imageUrl: string): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({ banner_image: imageUrl })
+        .eq('id', projectId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating project image:', error);
+      return null;
+    }
+  }
 }
 
 export const supabaseService = new SupabaseService() 

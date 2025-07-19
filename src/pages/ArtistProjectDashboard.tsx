@@ -25,7 +25,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Send
 } from 'lucide-react';
 import type { Database } from '@/lib/supabase';
 
@@ -248,6 +249,33 @@ const ArtistProjectDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to delete project",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubmitForApproval = async (projectId: string, projectTitle: string) => {
+    if (!confirm(`Are you sure you want to submit "${projectTitle}" for admin approval? You won't be able to edit it while it's pending approval.`)) {
+      return;
+    }
+
+    try {
+      const updatedProject = await supabaseService.updateProjectStatus(projectId, 'pending');
+      
+      if (updatedProject) {
+        toast({
+          title: "Project Submitted for Approval",
+          description: `"${projectTitle}" has been submitted for admin approval. You'll be notified once it's reviewed.`,
+        });
+        loadArtistData();
+      } else {
+        throw new Error('Failed to submit project - service returned null');
+      }
+    } catch (error) {
+      console.error('Error submitting project for approval:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit project for approval. Please try again.",
         variant: "destructive"
       });
     }
@@ -553,6 +581,14 @@ const ArtistProjectDashboard = () => {
                                   </Button>
                                   <Button 
                                     size="sm" 
+                                    variant="secondary"
+                                    onClick={() => handleSubmitForApproval(project.id, project.title)}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    <Send className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
                                     variant="destructive"
                                     onClick={() => handleDeleteProject(project.id, project.title)}
                                   >
@@ -686,6 +722,15 @@ const ArtistProjectDashboard = () => {
                           >
                             <Edit className="w-4 h-4 mr-1" />
                             Edit Project
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={() => handleSubmitForApproval(project.id, project.title)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <Send className="w-4 h-4 mr-1" />
+                            Submit for Approval
                           </Button>
                           <Button 
                             size="sm" 

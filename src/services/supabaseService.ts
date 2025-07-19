@@ -566,7 +566,7 @@ export class SupabaseService {
         .from('projects')
         .insert({
           ...projectData,
-          status: projectData.status || 'pending', // Use provided status or default to pending
+          status: projectData.status || 'draft', // Use provided status or default to draft
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -703,6 +703,60 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error('Error rejecting project:', error);
+      return null;
+    }
+  }
+
+  async updateProjectStatus(projectId: string, status: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      return null;
+    }
+  }
+
+  async updateProject(projectId: string, updates: {
+    title?: string;
+    description?: string;
+    detailed_description?: string;
+    banner_image?: string;
+    project_type?: 'album' | 'single' | 'ep' | 'mixtape';
+    genre?: string[];
+    funding_goal?: number;
+    min_investment?: number;
+    max_investment?: number;
+    expected_roi?: number;
+    project_duration?: string;
+    deadline?: string;
+    status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled';
+  }): Promise<Project | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating project:', error);
       return null;
     }
   }

@@ -42,6 +42,34 @@ interface ArtistAnalysis {
     };
   };
   musistash_resonance_score: number;
+  musical_compatibility?: {
+    key_signatures: {
+      artist1_keys: string[];
+      artist2_keys: string[];
+      compatibility_note: string;
+    };
+    collaboration_history: {
+      has_collaborated: boolean;
+      collaboration_details: string;
+      mutual_connections: string;
+    };
+    data_quality: string;
+  };
+  market_analysis?: {
+    artist1_market_data: {
+      record_label: string;
+      career_earnings: string;
+      label_ownership: string;
+      revenue_breakdown: string;
+    };
+    artist2_market_data: {
+      record_label: string;
+      career_earnings: string;
+      label_ownership: string;
+      revenue_breakdown: string;
+    };
+    data_quality: string;
+  };
   resonance_details: {
     score: number;
     confidence: string;
@@ -456,6 +484,18 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
               <div className="flex items-center gap-2">
                 <Music className="h-4 w-4" />
                 Musical Compatibility
+                {data.musical_compatibility?.data_quality && (
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    data.musical_compatibility.data_quality === 'verified' 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : data.musical_compatibility.data_quality === 'partial'
+                      ? 'bg-yellow-500/20 text-yellow-400'
+                      : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {data.musical_compatibility.data_quality === 'verified' ? '✓ Verified' : 
+                     data.musical_compatibility.data_quality === 'partial' ? '⚠ Partial' : 'ℹ Fallback'}
+                  </span>
+                )}
               </div>
               <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
             </summary>
@@ -466,7 +506,18 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
                   <span className="font-medium">Key Signatures:</span>
                 </div>
                 <div className="ml-4 text-gray-400 leading-tight">
-                  {data.artist.name} typically performs in C major and A minor keys, while {data.comparable_artist.name} favors D minor and F major - complementary ranges that would blend well for audience crossover.
+                  {data.musical_compatibility?.key_signatures ? (
+                    <>
+                      {data.artist.name} typically performs in {data.musical_compatibility.key_signatures.artist1_keys.join(", ")} keys, 
+                      while {data.comparable_artist.name} favors {data.musical_compatibility.key_signatures.artist2_keys.join(", ")} keys - 
+                      {data.musical_compatibility.key_signatures.compatibility_note}
+                    </>
+                  ) : (
+                    <>
+                      {data.artist.name} typically performs in C major and A minor keys, while {data.comparable_artist.name} favors D minor and F major - 
+                      complementary ranges that would blend well for audience crossover.
+                    </>
+                  )}
                 </div>
               </div>
               <div className="text-xs text-gray-300">
@@ -475,7 +526,19 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
                   <span className="font-medium">Collaboration History:</span>
                 </div>
                 <div className="ml-4 text-gray-400 leading-tight">
-                  These artists have collaborated before on tracks like "Crew Love" and share mutual connections, indicating natural musical chemistry and audience acceptance.
+                  {data.musical_compatibility?.collaboration_history ? (
+                    data.musical_compatibility.collaboration_history.has_collaborated ? (
+                      <>
+                        {data.musical_compatibility.collaboration_history.collaboration_details} {data.musical_compatibility.collaboration_history.mutual_connections}
+                      </>
+                    ) : (
+                      <>
+                        {data.musical_compatibility.collaboration_history.collaboration_details} {data.musical_compatibility.collaboration_history.mutual_connections}
+                      </>
+                    )
+                  ) : (
+                    "These artists have collaborated before on tracks like 'Crew Love' and share mutual connections, indicating natural musical chemistry and audience acceptance."
+                  )}
                 </div>
               </div>
             </div>
@@ -539,38 +602,50 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </div>
       </div>
 
-      {/* Expandable Market Analysis */}
-      <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-        <details className="group">
-          <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-green-400 hover:text-green-300">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Market & Record Deal Analysis
-            </div>
-            <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
-            <div className="text-xs text-gray-300">
-              <div className="font-medium mb-2">{data.artist.name}</div>
-              <div className="space-y-1 text-gray-400">
-                <div>• Republic Records / Universal Music Group</div>
-                <div>• Est. $400M+ career earnings</div>
-                <div>• OVO Sound label owner</div>
-                <div>• 75% streaming, 25% touring revenue</div>
+              {/* Expandable Market Analysis */}
+        <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+          <details className="group">
+            <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-green-400 hover:text-green-300">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Market & Record Deal Analysis
+                {data.market_analysis?.data_quality && (
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    data.market_analysis.data_quality === 'verified' 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : data.market_analysis.data_quality === 'partial'
+                      ? 'bg-yellow-500/20 text-yellow-400'
+                      : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {data.market_analysis.data_quality === 'verified' ? '✓ Verified' : 
+                     data.market_analysis.data_quality === 'partial' ? '⚠ Partial' : 'ℹ Fallback'}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+              <div className="text-xs text-gray-300">
+                <div className="font-medium mb-2">{data.artist.name}</div>
+                <div className="space-y-1 text-gray-400">
+                  <div>• {data.market_analysis?.artist1_market_data?.record_label || "Republic Records / Universal Music Group"}</div>
+                  <div>• {data.market_analysis?.artist1_market_data?.career_earnings || "Est. $400M+ career earnings"}</div>
+                  <div>• {data.market_analysis?.artist1_market_data?.label_ownership || "OVO Sound label owner"}</div>
+                  <div>• {data.market_analysis?.artist1_market_data?.revenue_breakdown || "75% streaming, 25% touring revenue"}</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-300">
+                <div className="font-medium mb-2">{data.comparable_artist.name}</div>
+                <div className="space-y-1 text-gray-400">
+                  <div>• {data.market_analysis?.artist2_market_data?.record_label || "Republic Records / XO"}</div>
+                  <div>• {data.market_analysis?.artist2_market_data?.career_earnings || "Est. $300M+ career earnings"}</div>
+                  <div>• {data.market_analysis?.artist2_market_data?.label_ownership || "Independent label control"}</div>
+                  <div>• {data.market_analysis?.artist2_market_data?.revenue_breakdown || "80% streaming, 20% touring revenue"}</div>
+                </div>
               </div>
             </div>
-            <div className="text-xs text-gray-300">
-              <div className="font-medium mb-2">{data.comparable_artist.name}</div>
-              <div className="space-y-1 text-gray-400">
-                <div>• Republic Records / XO</div>
-                <div>• Est. $300M+ career earnings</div>
-                <div>• Independent label control</div>
-                <div>• 80% streaming, 20% touring revenue</div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
+          </details>
+        </div>
 
       {/* Collapsible Success Drivers & Risk Analysis */}
       <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">

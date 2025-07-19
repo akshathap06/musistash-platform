@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,9 +33,11 @@ interface FormData {
 
 export default function CreateProject() {
   const navigate = useNavigate();
+  const { id: projectId } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -52,6 +54,55 @@ export default function CreateProject() {
     bannerImage: null,
   });
   const [saveAsDraft, setSaveAsDraft] = useState(false);
+  const isEditing = !!projectId;
+
+  // Load existing project data when editing
+  useEffect(() => {
+    const loadProjectData = async () => {
+      if (!projectId) return;
+      
+      setIsLoading(true);
+      try {
+        const project = await supabaseService.getProjectById(projectId);
+        if (project) {
+          setFormData({
+            title: project.title || '',
+            description: project.description || '',
+            detailedDescription: project.detailed_description || '',
+            projectType: project.project_type || '',
+            genre: project.genre || [],
+            fundingGoal: project.funding_goal?.toString() || '',
+            minInvestment: project.min_investment?.toString() || '',
+            maxInvestment: project.max_investment?.toString() || '',
+            expectedROI: project.expected_roi?.toString() || '',
+            projectDuration: project.project_duration || '',
+            deadline: project.deadline || '',
+            bannerImage: null, // We'll handle image separately
+          });
+          setSaveAsDraft(project.status === 'draft');
+        } else {
+          toast({
+            title: "Project Not Found",
+            description: "The project you're trying to edit could not be found.",
+            variant: "destructive",
+          });
+          navigate('/artist-project-dashboard');
+        }
+      } catch (error) {
+        console.error('Error loading project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load project data. Please try again.",
+          variant: "destructive",
+        });
+        navigate('/artist-project-dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProjectData();
+  }, [projectId, navigate, toast]);
 
   const genres = [
     'Hip Hop', 'R&B', 'Pop', 'Rock', 'Jazz', 'Electronic', 'Country', 
@@ -157,38 +208,68 @@ export default function CreateProject() {
 
       console.log('CreateProject: Creating project with artist_id:', artistProfile.id);
       
-      // Create the project in Supabase with pending status
-      const project = await supabaseService.createProject({
-        artist_id: artistProfile.id,
-        title: formData.title,
-        description: formData.description,
-        detailed_description: formData.detailedDescription,
-        banner_image: formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : '/placeholder.svg',
-        project_type: formData.projectType as 'album' | 'single' | 'ep' | 'mixtape',
-        genre: formData.genre,
-        funding_goal: parseFloat(formData.fundingGoal),
-        min_investment: parseFloat(formData.minInvestment),
-        max_investment: parseFloat(formData.maxInvestment),
-        expected_roi: parseFloat(formData.expectedROI),
-        project_duration: formData.projectDuration,
-        deadline: formData.deadline,
-        status: saveAsDraft ? 'draft' : 'pending' // Changed from 'pending' to 'draft' to match database constraint
-      });
-
-      console.log('CreateProject: Project creation result:', project);
-
-      if (project) {
-        toast({
-          title: saveAsDraft ? "Project Saved as Draft!" : "Project Submitted for Approval!",
-          description: saveAsDraft 
-            ? `Your ${formData.projectType} project "${formData.title}" has been saved as a draft. You can edit it later.`
-            : `Your ${formData.projectType} project "${formData.title}" has been submitted and is pending admin approval.`,
-      });
-
-        navigate('/dashboard');
+      if (isEditing && projectId) {
+        // Update existing project
+        const updatedProject = await supabaseService.updateProject(projectId, {
+          title: formData.title,
+          description: formData.description,
+          detailed_description: formData.detailedDescription,
+          banner_image: formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : '/placeholder.svg',
+          project_type: formData.projectType as 'album' | 'single' | 'ep' | 'mixtape',
+          genre: formData.genre,
+          funding_goal: parseFloat(formData.fundingGoal),
+          min_investment: parseFloat(formData.minInvestment),
+          max_investment: parseFloat(formData.maxInvestment),
+          expected_roi: parseFloat(formData.expectedROI),
+          project_duration: formData.projectDuration,
+          deadline: formData.deadline,
+          status: saveAsDraft ? 'draft' : 'pending' // 'draft' for saving, 'pending' for admin approval
+        });
+        
+        if (updatedProject) {
+          toast({
+            title: saveAsDraft ? "Project Updated!" : "Project Submitted for Approval!",
+            description: saveAsDraft 
+              ? `Your ${formData.projectType} project "${formData.title}" has been updated and saved as a draft.`
+              : `Your ${formData.projectType} project "${formData.title}" has been updated and submitted for admin approval.`,
+          });
+          navigate('/artist-project-dashboard');
+        } else {
+          throw new Error('Failed to update project - no project returned');
+        }
       } else {
-        throw new Error('Failed to create project - no project returned');
+        // Create new project
+        const project = await supabaseService.createProject({
+          artist_id: artistProfile.id,
+          title: formData.title,
+          description: formData.description,
+          detailed_description: formData.detailedDescription,
+          banner_image: formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : '/placeholder.svg',
+          project_type: formData.projectType as 'album' | 'single' | 'ep' | 'mixtape',
+          genre: formData.genre,
+          funding_goal: parseFloat(formData.fundingGoal),
+          min_investment: parseFloat(formData.minInvestment),
+          max_investment: parseFloat(formData.maxInvestment),
+          expected_roi: parseFloat(formData.expectedROI),
+          project_duration: formData.projectDuration,
+          deadline: formData.deadline,
+          status: saveAsDraft ? 'draft' : 'pending' // 'draft' for saving, 'pending' for admin approval
+        });
+
+        if (project) {
+          toast({
+            title: saveAsDraft ? "Project Saved as Draft!" : "Project Submitted for Approval!",
+            description: saveAsDraft 
+              ? `Your ${formData.projectType} project "${formData.title}" has been saved as a draft. You can edit it later.`
+              : `Your ${formData.projectType} project "${formData.title}" has been submitted and is pending admin approval.`,
+          });
+          navigate('/artist-project-dashboard');
+        } else {
+          throw new Error('Failed to create project - no project returned');
+        }
       }
+
+      console.log('CreateProject: Project operation completed');
     } catch (error) {
       console.error('CreateProject: Error creating project:', error);
       console.error('CreateProject: Error details:', {
@@ -496,6 +577,25 @@ export default function CreateProject() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#0f1216]">
+        <Navbar />
+        <main className="flex-grow pt-24">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex justify-center items-center min-h-[60vh]">
+              <div className="animate-pulse text-center">
+                <div className="text-xl font-semibold mb-2">Loading Project Data</div>
+                <div className="text-muted-foreground">Please wait...</div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0f1216]">
       <Navbar />
@@ -504,9 +604,11 @@ export default function CreateProject() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Create <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">New Project</span>
+              {isEditing ? 'Edit' : 'Create'} <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">Project</span>
             </h1>
-            <p className="text-xl text-gray-400">Launch your music project and connect with investors</p>
+            <p className="text-xl text-gray-400">
+              {isEditing ? 'Update your music project details' : 'Launch your music project and connect with investors'}
+            </p>
         </div>
 
         {/* Progress Steps */}
@@ -572,10 +674,12 @@ export default function CreateProject() {
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
             >
-                {isSubmitting ? 'Creating Project...' : saveAsDraft ? 'Save as Draft' : 'Submit for Approval'}
+                {isSubmitting ? (isEditing ? 'Updating Project...' : 'Creating Project...') : 
+                 saveAsDraft ? (isEditing ? 'Update Draft' : 'Save as Draft') : 
+                 (isEditing ? 'Update & Submit' : 'Submit for Approval')}
             </Button>
           )}
         </div>

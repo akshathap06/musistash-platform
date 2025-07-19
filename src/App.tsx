@@ -89,6 +89,7 @@ const AppContent = () => {
               <Route path="/create-artist-profile" element={<ArtistProfileManager />} />
               <Route path="/view-artist-profile" element={<ViewArtistProfile />} />
               <Route path="/create-project" element={<CreateProject />} />
+              <Route path="/edit-project/:id" element={<CreateProject />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/profile/:profileId" element={<AdminViewProfile />} />
               <Route path="/supabase-test" element={<SupabaseTest />} />

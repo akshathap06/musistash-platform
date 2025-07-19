@@ -629,8 +629,11 @@ export class SupabaseService {
         .from('projects')
         .select('*');
 
-      // Filter out cancelled projects unless explicitly requested
+      // For public discover page, only show active projects
+      // For admin dashboard, show all except cancelled (unless explicitly requested)
       if (!includeCancelled) {
+        query = query.eq('status', 'active');
+      } else {
         query = query.neq('status', 'cancelled');
       }
 
@@ -651,12 +654,11 @@ export class SupabaseService {
 
   async getPendingProjects(): Promise<Project[]> {
     try {
-      // Temporarily get draft projects that need approval
-      // We'll use a different approach until database migration is applied
+      // Get projects that are pending admin approval
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('status', 'draft')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) throw error

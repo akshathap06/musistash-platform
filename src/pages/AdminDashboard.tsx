@@ -59,7 +59,7 @@ const AdminDashboard = () => {
   const loadProjects = async () => {
     setIsLoadingProjects(true);
     try {
-      const allProjects = await supabaseService.getAllProjects(true); // Include cancelled projects for admin
+      const allProjects = await supabaseService.getAllProjects(true); // Include all projects for admin review
       setProjects(allProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
@@ -547,7 +547,7 @@ const AdminDashboard = () => {
                               </td>
                               <td className="py-3 px-4">
                                 <div className="flex items-center space-x-2">
-                                  {project.status === 'draft' && (
+                                  {project.status === 'pending' && (
                                     <>
                                       <Button
                                         size="sm"

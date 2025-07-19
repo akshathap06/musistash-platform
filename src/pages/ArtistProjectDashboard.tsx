@@ -260,17 +260,15 @@ const ArtistProjectDashboard = () => {
     }
 
     try {
-      // Since the database doesn't support 'pending' status yet,
-      // we'll change the status to 'active' directly for now
-      // This bypasses the admin approval step temporarily
+      // Submit project for admin approval
       const updatedProject = await supabaseService.updateProject(projectId, {
-        status: 'active' // Temporarily make it active directly
+        status: 'pending' // Submit for admin approval
       });
       
       if (updatedProject) {
         toast({
-          title: "Project Approved and Live!",
-          description: `"${projectTitle}" has been approved and is now live on the platform.`,
+          title: "Project Submitted for Approval",
+          description: `"${projectTitle}" has been submitted for admin approval. You'll be notified once it's reviewed.`,
         });
         loadArtistData();
       } else {
@@ -734,8 +732,8 @@ const ArtistProjectDashboard = () => {
                             onClick={() => handleSubmitForApproval(project.id, project.title)}
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Make Live
+                            <Send className="w-4 h-4 mr-1" />
+                            Submit for Approval
                           </Button>
                           <Button 
                             size="sm" 

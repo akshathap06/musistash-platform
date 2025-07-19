@@ -1473,9 +1473,48 @@ export class SupabaseService {
 
   async uploadProjectImage(file: File, projectId: string): Promise<string | null> {
     try {
+      console.log('SupabaseService: Starting image upload for project:', projectId);
+      console.log('SupabaseService: File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${projectId}-${Date.now()}.${fileExt}`;
       const filePath = `project-banners/${fileName}`;
+
+      console.log('SupabaseService: Upload path:', filePath);
+
+      // First, try to create the bucket if it doesn't exist
+      try {
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        console.log('SupabaseService: Available buckets:', buckets?.map(b => b.name));
+        
+        if (listError) {
+          console.error('SupabaseService: Error listing buckets:', listError);
+        }
+
+        const projectImagesBucket = buckets?.find(b => b.name === 'project-images');
+        if (!projectImagesBucket) {
+          console.log('SupabaseService: project-images bucket not found, attempting to create...');
+          const { data: newBucket, error: createError } = await supabase.storage.createBucket('project-images', {
+            public: true,
+            allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+            fileSizeLimit: 5242880 // 5MB
+          });
+          
+          if (createError) {
+            console.error('SupabaseService: Error creating bucket:', createError);
+            throw new Error(`Failed to create storage bucket: ${createError.message}`);
+          }
+          
+          console.log('SupabaseService: Created project-images bucket:', newBucket);
+        }
+      } catch (bucketError) {
+        console.error('SupabaseService: Bucket setup error:', bucketError);
+        // Continue with upload attempt even if bucket creation fails
+      }
 
       const { data, error } = await supabase.storage
         .from('project-images')
@@ -1484,18 +1523,49 @@ export class SupabaseService {
           upsert: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('SupabaseService: Upload error:', error);
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      console.log('SupabaseService: Upload successful:', data);
 
       // Get the public URL
       const { data: urlData } = supabase.storage
         .from('project-images')
         .getPublicUrl(filePath);
 
+      console.log('SupabaseService: Generated public URL:', urlData.publicUrl);
       return urlData.publicUrl;
     } catch (error) {
-      console.error('Error uploading project image:', error);
-      return null;
+      console.error('SupabaseService: Error uploading project image:', error);
+      
+      // Fallback: Convert to base64 and store directly
+      console.log('SupabaseService: Attempting fallback base64 conversion...');
+      try {
+        const base64Url = await this.convertFileToBase64(file);
+        console.log('SupabaseService: Base64 conversion successful');
+        return base64Url;
+      } catch (base64Error) {
+        console.error('SupabaseService: Base64 conversion also failed:', base64Error);
+        throw error; // Re-throw original error
+      }
     }
+  }
+
+  private async convertFileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('File reading failed'));
+      reader.readAsDataURL(file);
+    });
   }
 
   async updateProjectImage(projectId: string, imageUrl: string): Promise<Project | null> {

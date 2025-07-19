@@ -68,14 +68,21 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
     setIsUploading(true);
     try {
+      console.log('ImageEditModal: Starting upload for project:', projectId);
+      console.log('ImageEditModal: Selected file:', selectedFile);
+      
       // Upload image to Supabase storage
       const imageUrl = await supabaseService.uploadProjectImage(selectedFile, projectId);
       
       if (imageUrl) {
+        console.log('ImageEditModal: Upload successful, updating project with URL:', imageUrl);
+        
         // Update project with new image URL
         const updatedProject = await supabaseService.updateProjectImage(projectId, imageUrl);
         
         if (updatedProject) {
+          console.log('ImageEditModal: Project updated successfully:', updatedProject);
+          
           toast({
             title: "Image Updated Successfully",
             description: "Your project banner image has been updated",
@@ -84,16 +91,31 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
           onImageUpdated(imageUrl);
           onClose();
         } else {
-          throw new Error('Failed to update project with new image');
+          throw new Error('Failed to update project with new image URL');
         }
       } else {
-        throw new Error('Failed to upload image');
+        throw new Error('Upload completed but no image URL was returned');
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('ImageEditModal: Error uploading image:', error);
+      
+      let errorMessage = "Failed to upload image. Please try again.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('storage bucket')) {
+          errorMessage = "Storage configuration error. Please contact support.";
+        } else if (error.message.includes('permission')) {
+          errorMessage = "Permission denied. Please check your account permissions.";
+        } else if (error.message.includes('network')) {
+          errorMessage = "Network error. Please check your internet connection.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Upload Failed",
-        description: "Failed to upload image. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -111,7 +133,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900/95 border border-gray-700/50 rounded-xl max-w-2xl w-full">
+      <div className="bg-gray-900/95 border border-gray-700/50 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
@@ -135,7 +157,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 <CardTitle className="text-lg text-white">Current Image</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative w-full h-48 bg-gray-700 rounded-lg overflow-hidden">
+                <div className="relative w-full h-40 bg-gray-700 rounded-lg overflow-hidden">
                   {currentImageUrl && currentImageUrl !== '/placeholder.svg' ? (
                     <img 
                       src={currentImageUrl} 
@@ -181,7 +203,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 {previewUrl && (
                   <div>
                     <p className="text-sm text-gray-400 mb-2">Preview:</p>
-                    <div className="relative w-full h-48 bg-gray-700 rounded-lg overflow-hidden">
+                    <div className="relative w-full h-40 bg-gray-700 rounded-lg overflow-hidden">
                       <img 
                         src={previewUrl} 
                         alt="Preview"
@@ -192,24 +214,24 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 )}
               </CardContent>
             </Card>
+          </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3">
-              <Button 
-                variant="outline" 
-                onClick={handleClose}
-                className="border-white/20 text-gray-300 hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleUpload}
-                disabled={!selectedFile || isUploading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isUploading ? 'Uploading...' : 'Update Image'}
-              </Button>
-            </div>
+          {/* Actions - Fixed positioning */}
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-700/50">
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="border-white/20 text-gray-300 hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isUploading ? 'Uploading...' : 'Update Image'}
+            </Button>
           </div>
         </div>
       </div>

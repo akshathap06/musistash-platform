@@ -218,6 +218,35 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteProject = async (projectId: string, projectTitle: string) => {
+    if (!confirm(`Are you sure you want to delete the project "${projectTitle}"? This action cannot be undone and will also delete all related investments.`)) {
+      return;
+    }
+
+    try {
+      const success = await supabaseService.deleteProject(projectId);
+      
+      if (success) {
+        // Reload projects
+        loadProjects();
+        
+        toast({
+          title: "Success",
+          description: `Project "${projectTitle}" has been deleted`,
+        });
+      } else {
+        throw new Error('Failed to delete project');
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleViewProfile = (profileId: string) => {
     navigate(`/admin/profile/${profileId}`);
   };
@@ -259,37 +288,37 @@ const AdminDashboard = () => {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Manage artist profiles and platform content</p>
+              <h1 className="text-3xl font-bold mb-2 text-white">Admin Dashboard</h1>
+              <p className="text-gray-200">Manage artist profiles and platform content</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="bg-gray-800/50 border-gray-700/50">
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-300">
+                    <CardTitle className="text-sm font-medium text-white">
                       Total Artist Profiles
                     </CardTitle>
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                      <Music className="w-4 h-4 text-blue-400" />
+                    <div className="w-8 h-8 bg-blue-500/30 rounded-full flex items-center justify-center">
+                      <Music className="w-4 h-4 text-blue-300" />
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-white">{profiles.length}</div>
-                  <p className="text-xs text-gray-400 mt-1">Active profiles on platform</p>
+                  <p className="text-xs text-gray-200 mt-1">Active profiles on platform</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gray-800/50 border-gray-700/50">
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-300">
+                    <CardTitle className="text-sm font-medium text-white">
                       Verified Artists
                     </CardTitle>
-                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-green-400" />
+                    <div className="w-8 h-8 bg-green-500/30 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-green-300" />
                     </div>
                   </div>
                 </CardHeader>
@@ -297,18 +326,18 @@ const AdminDashboard = () => {
                   <div className="text-2xl font-bold text-white">
                     {profiles.filter(p => p.is_verified).length}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">Verified artist accounts</p>
+                  <p className="text-xs text-gray-200 mt-1">Verified artist accounts</p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gray-800/50 border-gray-700/50">
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-gray-300">
+                    <CardTitle className="text-sm font-medium text-white">
                       Recent Activity
                     </CardTitle>
-                    <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                      <Eye className="w-4 h-4 text-purple-400" />
+                    <div className="w-8 h-8 bg-purple-500/30 rounded-full flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-purple-300" />
                     </div>
                   </div>
                 </CardHeader>
@@ -321,16 +350,16 @@ const AdminDashboard = () => {
                       return createdAt > weekAgo;
                     }).length}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">New profiles this week</p>
+                  <p className="text-xs text-gray-200 mt-1">New profiles this week</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* Artist Profiles Table */}
-            <Card className="bg-gray-800/50 border-gray-700/50">
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Artist Profiles</CardTitle>
-                <CardDescription>Manage all artist profiles on the platform</CardDescription>
+                <CardTitle className="text-white">Artist Profiles</CardTitle>
+                <CardDescription className="text-gray-200">Manage all artist profiles on the platform</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingProfiles ? (
@@ -340,24 +369,24 @@ const AdminDashboard = () => {
                 ) : profiles.length === 0 ? (
                   <div className="text-center py-8">
                     <Music className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-400">No artist profiles found</p>
+                    <p className="text-gray-200">No artist profiles found</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-700">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Artist</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Genre</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Location</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Status</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Created</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Actions</th>
+                        <tr className="border-b border-white/20">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Artist</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Genre</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Location</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Status</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Created</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {profiles.map((profile) => (
-                          <tr key={profile.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                          <tr key={profile.id} className="border-b border-white/10 hover:bg-white/5">
                             <td className="py-3 px-4">
                               <div className="flex items-center space-x-3">
                                 <img
@@ -367,20 +396,20 @@ const AdminDashboard = () => {
                                 />
                                 <div>
                                   <div className="font-medium text-white">{profile.artist_name}</div>
-                                  <div className="text-sm text-gray-400">{profile.email}</div>
+                                  <div className="text-sm text-gray-200">{profile.email}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex flex-wrap gap-1">
                                 {profile.genre.map((g, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
+                                  <Badge key={index} variant="secondary" className="text-xs bg-blue-500/20 text-blue-200 border-blue-500/30">
                                     {g}
                                   </Badge>
                                 ))}
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-gray-300">{profile.location}</td>
+                            <td className="py-3 px-4 text-gray-200">{profile.location}</td>
                             <td className="py-3 px-4">
                               <Badge 
                                 variant={
@@ -388,16 +417,16 @@ const AdminDashboard = () => {
                                   profile.status === 'pending' ? "secondary" : "destructive"
                                 }
                                 className={
-                                  profile.status === 'approved' ? "bg-green-500/20 text-green-300" :
-                                  profile.status === 'pending' ? "bg-yellow-500/20 text-yellow-300" :
-                                  "bg-red-500/20 text-red-300"
+                                  profile.status === 'approved' ? "bg-green-500/30 text-green-200 border-green-500/40" :
+                                  profile.status === 'pending' ? "bg-yellow-500/30 text-yellow-200 border-yellow-500/40" :
+                                  "bg-red-500/30 text-red-200 border-red-500/40"
                                 }
                               >
                                 {profile.status === 'approved' ? "Approved" : 
                                  profile.status === 'pending' ? "Pending" : "Rejected"}
                               </Badge>
                             </td>
-                            <td className="py-3 px-4 text-gray-300">
+                            <td className="py-3 px-4 text-gray-200">
                               {new Date(profile.created_at).toLocaleDateString()}
                             </td>
                             <td className="py-3 px-4">
@@ -406,7 +435,7 @@ const AdminDashboard = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleViewProfile(profile.id)}
-                                  className="h-8 w-8 p-0"
+                                  className="h-8 w-8 p-0 border-white/20 text-white hover:bg-white/10"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -417,7 +446,7 @@ const AdminDashboard = () => {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleApproveProfile(profile.id, profile.artist_name)}
-                                      className="h-8 w-8 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                                      className="h-8 w-8 p-0 text-green-300 hover:text-green-200 hover:bg-green-500/20 border-green-500/30"
                                     >
                                       <CheckCircle className="h-4 w-4" />
                                     </Button>
@@ -425,7 +454,7 @@ const AdminDashboard = () => {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleRejectProfile(profile.id, profile.artist_name)}
-                                      className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                                      className="h-8 w-8 p-0 text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-500/30"
                                     >
                                       <XCircle className="h-4 w-4" />
                                     </Button>
@@ -436,7 +465,7 @@ const AdminDashboard = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteProfile(profile.id, profile.artist_name)}
-                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                                  className="h-8 w-8 p-0 text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-500/30"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -452,10 +481,10 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Projects Table */}
-            <Card className="bg-gray-800/50 border-gray-700/50 mt-8">
+            <Card className="bg-white/10 border-white/20 backdrop-blur-sm mt-8">
               <CardHeader>
-                <CardTitle>Project Management</CardTitle>
-                <CardDescription>Review and approve pending projects</CardDescription>
+                <CardTitle className="text-white">Project Management</CardTitle>
+                <CardDescription className="text-gray-200">Review and approve pending projects</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingProjects ? (
@@ -465,20 +494,20 @@ const AdminDashboard = () => {
                 ) : projects.length === 0 ? (
                   <div className="text-center py-8">
                     <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-400">No projects found</p>
+                    <p className="text-gray-200">No projects found</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-700">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Project</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Artist</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Type</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Funding Goal</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Status</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Created</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-300">Actions</th>
+                        <tr className="border-b border-white/20">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Project</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Artist</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Type</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Funding Goal</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Status</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Created</th>
+                          <th className="text-left py-3 px-4 text-sm font-medium text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -487,27 +516,27 @@ const AdminDashboard = () => {
                           const artistProfile = profiles.find(p => p.id === project.artist_id);
                           
                           return (
-                            <tr key={project.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                            <tr key={project.id} className="border-b border-white/10 hover:bg-white/5">
                               <td className="py-3 px-4">
                                 <div>
                                   <div className="font-medium text-white">{project.title}</div>
-                                  <div className="text-sm text-gray-400 line-clamp-2">{project.description}</div>
+                                  <div className="text-sm text-gray-200 line-clamp-2">{project.description}</div>
                                 </div>
                               </td>
                               <td className="py-3 px-4">
-                                <div className="text-gray-300">
+                                <div className="text-gray-200">
                                   {artistProfile ? artistProfile.artist_name : 'Unknown Artist'}
                                 </div>
                               </td>
                               <td className="py-3 px-4">
-                                <Badge variant="outline" className="capitalize">
+                                <Badge variant="outline" className="capitalize bg-purple-500/20 text-purple-200 border-purple-500/30">
                                   {project.project_type}
                                 </Badge>
                               </td>
                               <td className="py-3 px-4">
                                 <div className="flex items-center">
-                                  <DollarSign className="w-4 h-4 text-green-400 mr-1" />
-                                  <span className="text-gray-300">
+                                  <DollarSign className="w-4 h-4 text-green-300 mr-1" />
+                                  <span className="text-gray-200">
                                     ${project.funding_goal?.toLocaleString() || '0'}
                                   </span>
                                 </div>
@@ -517,19 +546,19 @@ const AdminDashboard = () => {
                                   const getStatusConfig = (status: string) => {
                                     switch (status) {
                                       case 'active':
-                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Active" };
+                                        return { variant: "default", className: "bg-green-500/30 text-green-200 border-green-500/40", label: "Active" };
                                       case 'draft':
-                                        return { variant: "secondary", className: "bg-blue-500/20 text-blue-300", label: "Draft" };
+                                        return { variant: "secondary", className: "bg-blue-500/30 text-blue-200 border-blue-500/40", label: "Draft" };
                                       case 'pending':
-                                        return { variant: "secondary", className: "bg-yellow-500/20 text-yellow-300", label: "Pending" };
+                                        return { variant: "secondary", className: "bg-yellow-500/30 text-yellow-200 border-yellow-500/40", label: "Pending" };
                                       case 'funded':
-                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Funded" };
+                                        return { variant: "default", className: "bg-green-500/30 text-green-200 border-green-500/40", label: "Funded" };
                                       case 'completed':
-                                        return { variant: "default", className: "bg-green-500/20 text-green-300", label: "Completed" };
+                                        return { variant: "default", className: "bg-green-500/30 text-green-200 border-green-500/40", label: "Completed" };
                                       case 'cancelled':
-                                        return { variant: "destructive", className: "bg-red-500/20 text-red-300", label: "Cancelled" };
+                                        return { variant: "destructive", className: "bg-red-500/30 text-red-200 border-red-500/40", label: "Cancelled" };
                                       default:
-                                        return { variant: "destructive", className: "bg-red-500/20 text-red-300", label: "Rejected" };
+                                        return { variant: "destructive", className: "bg-red-500/30 text-red-200 border-red-500/40", label: "Rejected" };
                                     }
                                   };
                                   
@@ -542,7 +571,7 @@ const AdminDashboard = () => {
                                   );
                                 })()}
                               </td>
-                              <td className="py-3 px-4 text-gray-300">
+                              <td className="py-3 px-4 text-gray-200">
                                 {new Date(project.created_at).toLocaleDateString()}
                               </td>
                               <td className="py-3 px-4">
@@ -571,8 +600,17 @@ const AdminDashboard = () => {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => navigate(`/project/${project.id}`)}
+                                    className="h-8 w-8 p-0 border-white/20 text-white hover:bg-white/10"
                                   >
-                                    <Eye className="w-4 h-4" />
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDeleteProject(project.id, project.title)}
+                                    className="h-8 w-8 p-0 text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-500/30"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </td>

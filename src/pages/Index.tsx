@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AIRecommendationTool from '@/components/ui/AIRecommendationTool';
+import RotatingArtistShowcase from '@/components/ui/RotatingArtistShowcase';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -155,6 +156,9 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Rotating Artist Showcase */}
+        <RotatingArtistShowcase />
 
         {/* How It Works Section */}
         <section className="py-24 px-4 md:px-6 relative overflow-hidden">

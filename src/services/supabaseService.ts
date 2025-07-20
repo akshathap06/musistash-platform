@@ -1640,6 +1640,33 @@ export class SupabaseService {
       return null;
     }
   }
+
+  async deleteProject(projectId: string): Promise<boolean> {
+    try {
+      // First, delete any related investments
+      const { error: investmentsError } = await supabase
+        .from('investments')
+        .delete()
+        .eq('project_id', projectId)
+
+      if (investmentsError) {
+        console.error('Error deleting project investments:', investmentsError)
+        throw investmentsError
+      }
+
+      // Then delete the project
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId)
+
+      if (error) throw error
+      return true
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      return false
+    }
+  }
 }
 
 export const supabaseService = new SupabaseService() 

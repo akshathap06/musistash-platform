@@ -1,0 +1,11 @@
+# ML Dependencies for MusiStash XGBoost Integration
+xgboost>=2.0.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy>=1.24.0
+joblib>=1.3.0
+
+# Optional: For advanced ML features
+# tensorflow>=2.13.0  # For neural networks (future)
+# torch>=2.0.0        # For PyTorch models (future)
+# prophet>=1.1.0      # For time series forecasting (future) 

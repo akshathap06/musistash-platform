@@ -42,6 +42,49 @@ interface ArtistAnalysis {
     };
   };
   musistash_resonance_score: number;
+  
+  // NEW: XGBoost ML Enhancements
+  ml_insights?: {
+    model_version: string;
+    confidence_interval: [number, number];
+    prediction_confidence: number;
+    feature_importance: {
+      [feature: string]: number;
+    };
+    top_driving_factors: Array<{
+      feature: string;
+      importance: number;
+      impact: 'positive' | 'negative';
+      explanation: string;
+    }>;
+    growth_potential: {
+      short_term: number; // 3 months
+      medium_term: number; // 6 months
+      long_term: number; // 12 months
+    };
+    risk_assessment: {
+      overall_risk: 'low' | 'medium' | 'high';
+      risk_factors: Array<{
+        factor: string;
+        risk_level: 'low' | 'medium' | 'high';
+        mitigation: string;
+      }>;
+    };
+    market_timing: {
+      optimal_launch_window: string;
+      seasonal_factors: Array<{
+        season: string;
+        impact: 'positive' | 'negative';
+        reasoning: string;
+      }>;
+    };
+    competitive_analysis: {
+      market_position: 'leader' | 'challenger' | 'niche' | 'emerging';
+      competitive_advantage: string[];
+      market_gaps: string[];
+    };
+  };
+  
   musical_compatibility?: {
     key_signatures: {
       artist1_keys: string[];
@@ -448,6 +491,66 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </div>
       </div>
 
+      {/* NEW: XGBoost ML Insights Section */}
+      {data.ml_insights && (
+        <div className="space-y-4">
+          {/* ML Header */}
+          <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-4 rounded-lg border border-blue-500/30">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">AI-Powered Insights</h3>
+                <p className="text-xs text-gray-400">Machine Learning Analysis v{data.ml_insights.model_version}</p>
+              </div>
+            </div>
+            <ConfidenceInterval 
+              confidence={data.ml_insights.prediction_confidence} 
+              interval={data.ml_insights.confidence_interval} 
+            />
+          </div>
+
+          {/* ML Insights Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Feature Importance */}
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <FeatureImportanceChart featureImportance={data.ml_insights.feature_importance} />
+            </div>
+
+            {/* Growth Prediction */}
+            <GrowthPrediction growth={data.ml_insights.growth_potential} />
+          </div>
+
+          {/* Risk & Market Analysis */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <RiskAssessment risk={data.ml_insights.risk_assessment} />
+            <MarketTiming timing={data.ml_insights.market_timing} />
+            <CompetitiveAnalysis analysis={data.ml_insights.competitive_analysis} />
+          </div>
+
+          {/* Top Driving Factors */}
+          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+            <h4 className="text-sm font-semibold text-yellow-400 mb-3">Key Success Drivers</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {data.ml_insights.top_driving_factors.slice(0, 4).map((factor, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <span className={`mt-1 ${factor.impact === 'positive' ? 'text-green-400' : 'text-red-400'}`}>
+                    {factor.impact === 'positive' ? '↑' : '↓'}
+                  </span>
+                  <div>
+                    <span className="font-medium text-gray-300 capitalize">
+                      {factor.feature.replace(/_/g, ' ')}
+                    </span>
+                    <div className="text-gray-400 mt-1">{factor.explanation}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Expandable Score Analysis */}
       <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
         <details className="group">
@@ -743,6 +846,187 @@ const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
         </div>
       </div>
     </motion.div>
+  );
+};
+
+const FeatureImportanceChart = ({ featureImportance }: { featureImportance: { [feature: string]: number } }) => {
+  const sortedFeatures = Object.entries(featureImportance)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 8); // Top 8 features
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold text-blue-400">Key Driving Factors</h4>
+      <div className="space-y-2">
+        {sortedFeatures.map(([feature, importance]) => (
+          <div key={feature} className="flex items-center gap-3">
+            <div className="flex-1">
+              <div className="text-xs text-gray-300 capitalize">
+                {feature.replace(/_/g, ' ')}
+              </div>
+              <div className="h-2 bg-gray-700 rounded-full mt-1">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(importance / Math.max(...sortedFeatures.map(([,imp]) => imp))) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="text-xs font-bold text-blue-400 w-12 text-right">
+              {Math.round(importance * 100)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ConfidenceInterval = ({ confidence, interval }: { confidence: number; interval: [number, number] }) => (
+  <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 p-3 rounded-lg border border-green-500/30">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-medium text-green-400">Prediction Confidence</span>
+      <span className="text-sm font-bold text-white">{Math.round(confidence)}%</span>
+    </div>
+    <div className="text-xs text-gray-400">
+      Range: {Math.round(interval[0])} - {Math.round(interval[1])}
+    </div>
+    <div className="mt-2 h-2 bg-gray-700 rounded-full">
+      <div 
+        className="h-full bg-gradient-to-r from-green-400 to-blue-400 rounded-full"
+        style={{ width: `${confidence}%` }}
+      />
+    </div>
+  </div>
+);
+
+const GrowthPrediction = ({ growth }: { growth: { short_term: number; medium_term: number; long_term: number } }) => (
+  <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 p-4 rounded-lg border border-purple-500/30">
+    <h4 className="text-sm font-semibold text-purple-400 mb-3">Growth Trajectory</h4>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">3 Months</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+          <span className="text-sm font-bold text-green-400">+{growth.short_term}%</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">6 Months</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+          <span className="text-sm font-bold text-blue-400">+{growth.medium_term}%</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">12 Months</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+          <span className="text-sm font-bold text-purple-400">+{growth.long_term}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const RiskAssessment = ({ risk }: { risk: { overall_risk: string; risk_factors: Array<{ factor: string; risk_level: string; mitigation: string }> } }) => {
+  const riskColor = {
+    low: 'text-green-400',
+    medium: 'text-yellow-400', 
+    high: 'text-red-400'
+  };
+  
+  const riskBgColor = {
+    low: 'bg-green-500/20 border-green-500/30',
+    medium: 'bg-yellow-500/20 border-yellow-500/30',
+    high: 'bg-red-500/20 border-red-500/30'
+  };
+
+  return (
+    <div className={`${riskBgColor[risk.overall_risk as keyof typeof riskBgColor]} p-4 rounded-lg border`}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-gray-300">Risk Assessment</h4>
+        <span className={`text-sm font-bold ${riskColor[risk.overall_risk as keyof typeof riskColor]}`}>
+          {risk.overall_risk.toUpperCase()}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {risk.risk_factors.slice(0, 3).map((factor, i) => (
+          <div key={i} className="text-xs">
+            <div className="flex items-start gap-2">
+              <span className={`mt-1 ${riskColor[factor.risk_level as keyof typeof riskColor]}`}>•</span>
+              <div>
+                <span className="font-medium text-gray-300">{factor.factor}</span>
+                <div className="text-gray-400 mt-1">{factor.mitigation}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const MarketTiming = ({ timing }: { timing: { optimal_launch_window: string; seasonal_factors: Array<{ season: string; impact: string; reasoning: string }> } }) => (
+  <div className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20 p-4 rounded-lg border border-orange-500/30">
+    <h4 className="text-sm font-semibold text-orange-400 mb-2">Market Timing</h4>
+    <div className="text-xs text-gray-300 mb-3">
+      <span className="font-medium">Optimal Launch:</span> {timing.optimal_launch_window}
+    </div>
+    <div className="space-y-2">
+      {timing.seasonal_factors.map((factor, i) => (
+        <div key={i} className="flex items-start gap-2 text-xs">
+          <span className={`mt-1 ${factor.impact === 'positive' ? 'text-green-400' : 'text-red-400'}`}>•</span>
+          <div>
+            <span className="font-medium text-gray-300">{factor.season}</span>
+            <div className="text-gray-400">{factor.reasoning}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const CompetitiveAnalysis = ({ analysis }: { analysis: { market_position: string; competitive_advantage: string[]; market_gaps: string[] } }) => {
+  const positionColor = {
+    leader: 'text-green-400',
+    challenger: 'text-blue-400',
+    niche: 'text-purple-400',
+    emerging: 'text-orange-400'
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 p-4 rounded-lg border border-indigo-500/30">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-indigo-400">Market Position</h4>
+        <span className={`text-sm font-bold ${positionColor[analysis.market_position as keyof typeof positionColor]}`}>
+          {analysis.market_position.toUpperCase()}
+        </span>
+      </div>
+      <div className="space-y-3">
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-2">Competitive Advantages</h5>
+          <div className="space-y-1">
+            {analysis.competitive_advantage.slice(0, 2).map((advantage, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <span className="text-green-400 mt-1">✓</span>
+                <span className="text-gray-400">{advantage}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-2">Market Opportunities</h5>
+          <div className="space-y-1">
+            {analysis.market_gaps.slice(0, 2).map((gap, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <span className="text-blue-400 mt-1">→</span>
+                <span className="text-gray-400">{gap}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

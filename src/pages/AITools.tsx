@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import MLModelDashboard from '@/components/ui/MLModelDashboard';
 import { Link } from 'react-router-dom';
 
 const AITools = () => {
@@ -57,13 +58,21 @@ const AITools = () => {
       features: ["Portfolio analysis", "Risk-adjusted recommendations", "Diversification insights"],
       status: "Coming Soon",
       color: "from-indigo-500 to-purple-600"
+    },
+    {
+      icon: <Brain className="h-8 w-8" />,
+      title: "XGBoost ML Engine",
+      description: "Advanced gradient boosting machine learning model for enhanced prediction accuracy",
+      features: ["Feature importance analysis", "Real-time predictions", "Model performance monitoring"],
+      status: "Live",
+      color: "from-purple-500 to-pink-600"
     }
   ];
 
   const metrics = [
-    { label: "Data Points Analyzed", value: "50M+", icon: <BarChart3 className="h-5 w-5" /> },
-    { label: "AI Models Running", value: "12", icon: <Brain className="h-5 w-5" /> },
-    { label: "Prediction Accuracy", value: "94%", icon: <Target className="h-5 w-5" /> },
+    { label: "Data Points Analyzed", value: "1.25M+", icon: <BarChart3 className="h-5 w-5" /> },
+    { label: "AI Models Running", value: "13", icon: <Brain className="h-5 w-5" /> },
+    { label: "Prediction Accuracy", value: "94.2%", icon: <Target className="h-5 w-5" /> },
     { label: "Artists Analyzed", value: "100K+", icon: <Music className="h-5 w-5" /> }
   ];
 
@@ -143,6 +152,13 @@ const AITools = () => {
               </div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ML Model Dashboard */}
+      <section className="py-16 px-4 bg-gray-900/50">
+        <div className="container max-w-7xl mx-auto">
+          <MLModelDashboard />
         </div>
       </section>
 

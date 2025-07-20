@@ -121,20 +121,20 @@ const BrowseArtists = () => {
     <div className="min-h-screen flex flex-col bg-[#0f1216]">
       <Navbar />
       
-      <main className="flex-grow pt-24">
+      <main className="flex-grow pt-16">
         {/* Hero Section */}
-        <section className="py-16 px-4 md:px-6 max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+        <section className="py-8 px-4 md:px-6 max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Browse <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">Artists</span>
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-400 max-w-3xl mx-auto">
               Discover emerging artists already using MusiStash to connect with fans and fund their projects.
             </p>
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8 max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-3 mb-6 max-w-4xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -150,6 +150,7 @@ const BrowseArtists = () => {
                   key={genre}
                   variant={selectedGenre === genre ? "default" : "outline"}
                   onClick={() => setSelectedGenre(genre)}
+                  size="sm"
                   className={selectedGenre === genre 
                     ? "bg-blue-600 hover:bg-blue-700" 
                     : "border-white/20 text-gray-300 hover:bg-white/10"
@@ -162,7 +163,7 @@ const BrowseArtists = () => {
           </div>
 
           {/* Refresh and Status Section */}
-          <div className="flex justify-between items-center mb-6 max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-4 max-w-4xl mx-auto">
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>
               {isRefreshing && (
@@ -185,31 +186,31 @@ const BrowseArtists = () => {
           </div>
 
           {/* Artists Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {isLoading ? (
-              <div className="col-span-full text-center py-16">
-                <Loader2 className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-spin" />
-                <h3 className="text-xl font-semibold text-white mb-2">Loading artists...</h3>
+              <div className="col-span-full text-center py-12">
+                <Loader2 className="h-12 w-12 text-gray-400 mx-auto mb-3 animate-spin" />
+                <h3 className="text-lg font-semibold text-white mb-2">Loading artists...</h3>
                 <p className="text-gray-400">Please wait while we fetch the latest artist profiles.</p>
               </div>
             ) : filteredArtists.length === 0 ? (
-              <div className="col-span-full text-center py-16">
-                <Music className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No artists found</h3>
+              <div className="col-span-full text-center py-12">
+                <Music className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">No artists found</h3>
                 <p className="text-gray-400">Try adjusting your search or filter criteria.</p>
               </div>
             ) : (
               filteredArtists.map((artist) => (
-                <div key={artist.id} className="bg-gray-900/80 backdrop-blur-xl rounded-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
+                <div key={artist.id} className="bg-gray-900/80 backdrop-blur-xl rounded-xl p-4 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
                   <ArtistInfo 
                     artist={artist} 
                     expanded={true} 
                     showFollowButton={true}
                     onFollowChange={handleFollowChange}
                   />
-                  <div className="mt-4">
+                  <div className="mt-3">
                     <Link to={`/artist/${artist.id}`}>
-                      <Button variant="outline" className="w-full border-blue-500 text-blue-300 hover:bg-blue-500/20">
+                      <Button variant="outline" size="sm" className="w-full border-blue-500 text-blue-300 hover:bg-blue-500/20">
                         View Profile
                       </Button>
                     </Link>

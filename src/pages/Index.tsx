@@ -22,18 +22,18 @@ const Index = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-24 px-4 md:px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <section className="py-12 px-4 md:px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column - Main Content */}
-            <div className="lg:col-span-6 space-y-8">
+            <div className="lg:col-span-6 space-y-4">
               {/* Terminal Badge */}
-              <div className="inline-block bg-[#1a1b26] rounded-lg p-3">
+              <div className="inline-block bg-[#1a1b26] rounded-lg p-2">
                 <code className="text-green-400 font-mono text-sm">$ revolutionizing_music_investment.exe_</code>
               </div>
               
               {/* Main Message */}
-              <div className="space-y-4">
-                <h1 className="text-7xl font-bold tracking-tight text-white leading-[1.1]">
+              <div className="space-y-2">
+                <h1 className="text-5xl font-bold tracking-tight text-white leading-[1.1]">
                   LET
                   <br />
                   ARTISTS
@@ -43,13 +43,13 @@ const Index = () => {
                   FUTURE
                 </h1>
                 
-                <h2 className="text-4xl font-semibold text-blue-400">
+                <h2 className="text-3xl font-semibold text-blue-400">
                   LET FANS PROFIT FROM IT
                 </h2>
               </div>
 
               {/* Value Props */}
-              <div className="space-y-6 text-lg border-l-2 border-gray-800 pl-6">
+              <div className="space-y-3 text-base border-l-2 border-gray-800 pl-4">
                 <p className="text-gray-300">Breaking the traditional music industry model.</p>
                 <p className="text-gray-300">Direct artist-fan connection through equity.</p>
                 <p className="text-gray-300">Everyone shares in the success.</p>
@@ -62,20 +62,20 @@ const Index = () => {
               </div>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   size="lg"
                   onClick={scrollToAITool}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg transition-all duration-300 transform hover:scale-105"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 text-base transition-all duration-300 transform hover:scale-105"
                 >
                   Try Our AI Tool
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Link to="/how-it-works">
                   <Button 
                     size="lg"
                     variant="outline"
-                    className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 px-8 py-6 text-lg transition-all duration-300 transform hover:scale-105"
+                    className="border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 px-6 py-4 text-base transition-all duration-300 transform hover:scale-105"
                   >
                     Learn More
                   </Button>
@@ -83,31 +83,31 @@ const Index = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-4 border border-gray-800/50">
-                  <div className="text-2xl font-bold text-blue-400">9+</div>
-                  <div className="text-sm text-gray-400">AI Models</div>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-3 border border-gray-800/50">
+                  <div className="text-xl font-bold text-blue-400">9+</div>
+                  <div className="text-xs text-gray-400">AI Models</div>
                 </div>
-                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-4 border border-gray-800/50">
-                  <div className="text-2xl font-bold text-purple-400">100K+</div>
-                  <div className="text-sm text-gray-400">Artists Analyzed</div>
+                <div className="bg-[#1a1b26]/50 backdrop-blur-sm rounded-lg p-3 border border-gray-800/50">
+                  <div className="text-xl font-bold text-purple-400">100K+</div>
+                  <div className="text-xs text-gray-400">Artists Analyzed</div>
                 </div>
               </div>
 
               {/* Live Demo Indicator */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-2 pt-1">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-medium">Live Demo Available</span>
+                  <span className="text-green-400 text-xs font-medium">Live Demo Available</span>
                 </div>
                 <div className="text-gray-500">→</div>
-                <span className="text-gray-400 text-sm">Try analyzing Drake vs The Weeknd</span>
+                <span className="text-gray-400 text-xs">Try analyzing Drake vs The Weeknd</span>
               </div>
             </div>
 
             {/* Right Column - AI Tool */}
             <div className="lg:col-span-6 flex items-start">
-              <div className="w-full mt-4 lg:mt-6" ref={aiToolRef}>
+              <div className="w-full mt-2 lg:mt-4" ref={aiToolRef}>
                 {/* Vibrant container with glow effects */}
                 <div className="relative">
                   {/* Animated background glow */}
@@ -115,17 +115,17 @@ const Index = () => {
                   <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-75 animate-pulse"></div>
                   
                   {/* Main container */}
-                  <div className="relative bg-gradient-to-br from-[#1a1b26] via-[#1e2030] to-[#1a1b26] rounded-2xl p-8 border border-blue-500/30 shadow-2xl backdrop-blur-sm">
+                  <div className="relative bg-gradient-to-br from-[#1a1b26] via-[#1e2030] to-[#1a1b26] rounded-2xl p-6 border border-blue-500/30 shadow-2xl backdrop-blur-sm">
                     {/* Header with enhanced styling */}
-                    <div className="mb-8 text-center">
-                      <div className="inline-flex items-center gap-3 mb-4 px-4 py-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
-                        <Sparkles className="h-5 w-5 text-blue-400 animate-pulse" />
-                        <span className="text-blue-400 font-medium">AI-Powered Analysis</span>
+                    <div className="mb-6 text-center">
+                      <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
+                        <Sparkles className="h-4 w-4 text-blue-400 animate-pulse" />
+                        <span className="text-blue-400 font-medium text-sm">AI-Powered Analysis</span>
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                      <h3 className="text-xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
                         AI Recommendation Tool
                       </h3>
-                      <p className="text-gray-300 text-lg">Analyze artist compatibility and market potential with AI-driven insights</p>
+                      <p className="text-gray-300 text-sm">Analyze artist compatibility and market potential with AI-driven insights</p>
                     </div>
                     
                     {/* Enhanced AI Tool component */}
@@ -134,8 +134,8 @@ const Index = () => {
                     </div>
                     
                     {/* Bottom accent */}
-                    <div className="mt-6 pt-6 border-t border-gray-700/50">
-                      <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
+                    <div className="mt-4 pt-4 border-t border-gray-700/50">
+                      <div className="flex items-center justify-center gap-3 text-xs text-gray-400">
                         <span className="flex items-center gap-1">
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                           Live Data

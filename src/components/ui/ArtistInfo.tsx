@@ -282,49 +282,49 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
 
   return (
     <div className={`flex ${expanded ? 'flex-col items-center text-center' : 'items-center'} animate-fade-in`}>
-      <Avatar className={`${expanded ? 'h-24 w-24 mb-4 ring-2 ring-blue-500/20' : 'h-10 w-10 mr-3'} border-2 border-blue-500/20`}>
+      <Avatar className={`${expanded ? 'h-20 w-20 mb-3 ring-2 ring-blue-500/20' : 'h-10 w-10 mr-3'} border-2 border-blue-500/20`}>
         <AvatarImage src={imageUrl} alt={artist.name} className="object-cover" />
         <AvatarFallback className="bg-gray-800 text-blue-400">{initials}</AvatarFallback>
       </Avatar>
       
-      <div className={expanded ? 'space-y-4 max-w-md text-center w-full' : 'text-center flex-1'}>
+      <div className={expanded ? 'space-y-3 max-w-md text-center w-full' : 'text-center flex-1'}>
         <div className={`flex items-center ${expanded ? 'justify-center' : 'justify-center'}`}>
           <Link to={`/artist/${artist.id}`}>
-            <h3 className={`font-medium text-white hover:text-blue-400 transition-colors ${expanded ? 'text-2xl' : ''}`}>
+            <h3 className={`font-medium text-white hover:text-blue-400 transition-colors ${expanded ? 'text-xl' : ''}`}>
               {artist.name}
             </h3>
           </Link>
           {artist.verified && (
-            <CheckCircle className={`text-blue-500 ml-1 ${expanded ? 'h-5 w-5' : 'h-4 w-4'}`} />
+            <CheckCircle className={`text-blue-500 ml-1 ${expanded ? 'h-4 w-4' : 'h-4 w-4'}`} />
           )}
         </div>
         
         {expanded && (
           <>
-            <p className="text-gray-400 break-words overflow-hidden">{artist.bio}</p>
+            <p className="text-gray-400 break-words overflow-hidden text-sm line-clamp-3">{artist.bio}</p>
             
-            <div className="flex flex-wrap gap-2 justify-center">
-              {genres.slice(0, 4).map((genre, index) => (
+            <div className="flex flex-wrap gap-1 justify-center">
+              {genres.slice(0, 3).map((genre, index) => (
                 <Badge 
                   key={index} 
                   variant="secondary" 
-                  className="capitalize bg-blue-500/10 text-blue-300 hover:bg-blue-500/20"
+                  className="capitalize bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 text-xs"
                 >
                   {genre}
                 </Badge>
               ))}
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
-                <div className="text-2xl font-semibold text-white">{displayFollowers.toLocaleString()}</div>
-                <div className="text-gray-400">Followers</div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-2 border border-gray-700">
+                <div className="text-lg font-semibold text-white">{displayFollowers.toLocaleString()}</div>
+                <div className="text-gray-400 text-xs">Followers</div>
               </div>
-              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700">
-                <div className="text-2xl font-semibold text-white">
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-2 border border-gray-700">
+                <div className="text-lg font-semibold text-white">
                   {spotifyArtist ? `${spotifyArtist.popularity}%` : `${artist.successRate}%`}
                 </div>
-                <div className="text-gray-400">
+                <div className="text-gray-400 text-xs">
                   {spotifyArtist ? 'Popularity' : 'Success Rate'}
                 </div>
               </div>
@@ -334,6 +334,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
             {showFollowButton && (!user || user.id !== artist.id) && (
               <Button 
                 variant={isFollowing ? "outline" : "default"}
+                size="sm"
                 className={`w-full transition-all duration-200 ${
                   isFollowing 
                     ? "border-gray-500 text-gray-400 bg-gray-800/50 hover:bg-gray-700/50" 
@@ -344,7 +345,7 @@ const ArtistInfo: React.FC<ArtistInfoProps> = ({
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     Loading...
                   </div>
                 ) : (

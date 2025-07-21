@@ -178,17 +178,49 @@ const RotatingArtistShowcase = () => {
           {/* Artist Card */}
           <div className="group relative max-w-3xl mx-auto">
             <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-300"></div>
-            <Card className="relative bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-                {/* Artist Image and Info */}
-                <div className="text-center lg:text-left">
-                  <div className="relative inline-block mb-4">
-                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-3 border-blue-500/30">
-                      <img 
-                        src={currentArtist.profile_photo || '/placeholder.svg'}
-                        alt={currentArtist.artist_name}
-                        className="w-full h-full object-cover"
-                      />
+            <Card className="relative bg-gray-900/80 backdrop-blur-sm rounded-2xl p-0 border border-gray-700/50 overflow-hidden flex flex-col items-center justify-center min-h-[340px]">
+              {/* Banner Image with Artist Name Overlay */}
+              {currentArtist.banner_photo && (
+                <div className="w-full h-40 md:h-56 bg-gray-800 relative flex flex-col items-center justify-center">
+                  <img
+                    src={currentArtist.banner_photo}
+                    alt={currentArtist.artist_name + ' banner'}
+                    className="w-full h-full object-cover object-center"
+                    onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
+                  />
+                  {/* Overlay for darkening the banner for text contrast */}
+                  <div className="absolute inset-0 bg-black/40" />
+                  {/* Artist Name and Empowerment Message Overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <h3 className="text-4xl md:text-5xl font-extrabold text-white text-center drop-shadow-lg shadow-black mb-1" style={{textShadow: '0 4px 24px rgba(0,0,0,0.7), 0 1px 2px rgba(0,0,0,0.8)'}}>
+                      {currentArtist.artist_name}
+                    </h3>
+                    <span className="block text-sm md:text-base text-blue-200 bg-blue-500/20 rounded-full px-4 py-1 font-semibold mt-1 drop-shadow-md shadow-black" style={{textShadow: '0 2px 8px rgba(0,0,0,0.7)'}}>
+                      Empowering Artists to Own Their Future
+                    </span>
+                  </div>
+                </div>
+              )}
+              {/* Profile and Info Section (below banner) */}
+              <div className="flex flex-row items-end justify-center w-full px-8 pt-8 pb-4 z-10">
+                {/* Artist Image and Genres */}
+                <div className="flex flex-col items-center justify-end mr-8">
+                  <div className="relative inline-block mb-2">
+                    <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500/30 bg-gray-800 flex items-center justify-center">
+                      {currentArtist.profile_photo ? (
+                        <img
+                          src={currentArtist.profile_photo}
+                          alt={currentArtist.artist_name}
+                          className="w-full h-full object-cover"
+                          onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
+                        />
+                      ) : (
+                        <img
+                          src="/placeholder.svg"
+                          alt="Artist Placeholder"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                     {currentArtist.is_verified && (
                       <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1.5">
@@ -196,84 +228,32 @@ const RotatingArtistShowcase = () => {
                       </div>
                     )}
                   </div>
-                  
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                    {currentArtist.artist_name}
-                  </h3>
-                  
-                  <div className="flex flex-wrap gap-1 justify-center lg:justify-start mb-4">
+                  <div className="flex flex-wrap gap-1 justify-center mt-2 mb-2">
                     {currentArtist.genre.slice(0, 3).map((genre, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
+                      <Badge
+                        key={index}
+                        variant="secondary"
                         className="bg-blue-500/20 text-blue-200 border-blue-500/30 text-xs"
                       >
                         {genre}
                       </Badge>
                     ))}
                   </div>
-                  
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-2">
-                    {currentArtist.biography || 'An amazing artist on the Musi$tash platform'}
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                    <Link to={`/artist/${currentArtist.id}`}>
-                      <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity">
-                        View Profile
-                      </Button>
-                    </Link>
-                    <Link to="/artists">
-                      <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
-                        Explore All Artists
-                      </Button>
-                    </Link>
-                  </div>
                 </div>
-
-                {/* Artist Stats */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Users className="w-4 h-4 text-blue-400" />
-                        <span className="text-white font-medium text-sm">Followers</span>
-                      </div>
-                      <div className="text-xl font-bold text-blue-400">
-                        {currentStats.followers.toLocaleString()}
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Music className="w-4 h-4 text-purple-400" />
-                        <span className="text-white font-medium text-sm">Projects</span>
-                      </div>
-                      <div className="text-xl font-bold text-purple-400">
-                        {currentStats.projects}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Star className="w-4 h-4 text-yellow-400" />
-                      <span className="text-white font-medium text-sm">Success Rate</span>
-                    </div>
-                    <div className="text-xl font-bold text-yellow-400">
-                      {Math.floor(Math.random() * 30) + 70}%
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-green-400" />
-                      <span className="text-white font-medium text-sm">Trending</span>
-                    </div>
-                    <div className="text-xl font-bold text-green-400">
-                      +{Math.floor(Math.random() * 200) + 50}%
-                    </div>
-                    <p className="text-gray-400 text-xs">this month</p>
+                {/* Artist Info */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <p className="text-gray-200 text-base mb-5 leading-relaxed max-w-xl">
+                    {currentArtist.biography || currentArtist.bio || 'This artist is building their future with MusiStash. Support their journey.'}
+                  </p>
+                  <div className="flex flex-row flex-wrap gap-3 justify-center items-center mt-2">
+                    <Link to={`/artist/${currentArtist.id}`}><Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">View Profile</Button></Link>
+                    {currentArtist.social_links && currentArtist.social_links.spotify && (
+                      <a href={currentArtist.social_links.spotify} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="border-green-500 text-green-400">Go to Spotify</Button>
+                      </a>
+                    )}
+                    <Link to={`/artist/${currentArtist.id}#projects`}><Button size="sm" variant="outline" className="border-blue-500 text-blue-400">View Projects</Button></Link>
+                    <Link to={`/artist/${currentArtist.id}#investment`}><Button size="sm" variant="outline" className="border-yellow-500 text-yellow-400">Investment Insights</Button></Link>
                   </div>
                 </div>
               </div>

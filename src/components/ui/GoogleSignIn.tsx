@@ -91,9 +91,9 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
         // Validate UUID format
         if (user.id && typeof user.id === 'string' && user.id.length > 20) {
           console.log('✅ User authenticated with proper UUID:', user);
-          
-          // Call the success callback
-          if (onSuccess) {
+      
+      // Call the success callback
+      if (onSuccess) {
             onSuccess(user);
           }
         } else {

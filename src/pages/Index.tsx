@@ -22,7 +22,7 @@ const Index = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-12 px-4 md:px-6 max-w-7xl mx-auto">
+        <section className="pt-28 pb-12 px-4 md:px-6 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-6 space-y-4">

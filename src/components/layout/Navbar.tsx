@@ -161,9 +161,6 @@ const Navbar = () => {
                           <ListItem href="/services" title="Our Features">
                             Comprehensive features for artists and investors
                           </ListItem>
-                          <ListItem href="/ai-tools" title="AI Tools">
-                            Advanced AI-powered analytics and insights
-                          </ListItem>
                           <ListItem href="/investment-tools" title="Investment Tools">
                             Tools to help you make informed investment decisions
                           </ListItem>
@@ -400,9 +397,6 @@ const Navbar = () => {
                   <div className="space-y-2">
                     <Link to="/services" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
                       Our Features
-                    </Link>
-                    <Link to="/ai-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
-                      AI Tools
                     </Link>
                     <Link to="/investment-tools" className="block py-2 text-gray-300 hover:text-blue-400" onClick={closeMobileMenu}>
                       Investment Tools

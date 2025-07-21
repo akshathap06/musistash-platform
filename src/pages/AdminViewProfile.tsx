@@ -203,7 +203,7 @@ const AdminViewProfile = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  {getStatusBadge(profile.status)}
+                {getStatusBadge(profile.status)}
                   {profile.status === 'pending' && (
                     <div className="flex space-x-2">
                       <Button
@@ -232,55 +232,55 @@ const AdminViewProfile = () => {
               <div className="lg:col-span-2 space-y-6">
                 {/* Basic Info */}
                 <Card className="bg-gray-800/50 border-gray-700/50">
-                  <CardHeader>
+                <CardHeader>
                     <CardTitle className="flex items-center space-x-4">
                       <img
                         src={profile.profile_photo}
                         alt={profile.artist_name}
                         className="w-16 h-16 rounded-full object-cover"
                       />
-                      <div>
+                  <div>
                         <div className="text-2xl font-bold">{profile.artist_name}</div>
                         <div className="text-gray-400">{profile.email}</div>
-                      </div>
+                  </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div>
+                  <div>
                       <h3 className="font-semibold mb-3 text-white text-lg">Bio</h3>
                       <p className="text-white leading-relaxed break-words overflow-hidden">{profile.bio || 'No bio provided'}</p>
-                    </div>
-                    
-                    <div>
+                  </div>
+                  
+                  <div>
                       <h3 className="font-semibold mb-3 text-white text-lg">Genre</h3>
                       <div className="flex flex-wrap gap-2">
-                        {profile.genre.map((g, index) => (
+                      {profile.genre.map((g, index) => (
                           <Badge key={index} variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
-                            {g}
-                          </Badge>
-                        ))}
-                      </div>
+                          {g}
+                        </Badge>
+                      ))}
                     </div>
-
-                    <div>
+                  </div>
+                  
+                  <div>
                       <h3 className="font-semibold mb-3 text-white text-lg">Location</h3>
                       <p className="text-white">{profile.location || 'No location provided'}</p>
-                    </div>
-
+                  </div>
+                  
                     {profile.musical_style && (
                       <div>
                         <h3 className="font-semibold mb-3 text-white text-lg">Musical Style</h3>
                         <p className="text-white">{profile.musical_style}</p>
                       </div>
                     )}
-
+                    
                     {profile.influences && (
                       <div>
                         <h3 className="font-semibold mb-3 text-white text-lg">Influences</h3>
                         <p className="text-white">{profile.influences}</p>
                       </div>
                     )}
-
+                    
                     {profile.social_links && Object.keys(profile.social_links).length > 0 && (
                       <div>
                         <h3 className="font-semibold mb-3 text-white text-lg">Social Links</h3>
@@ -335,33 +335,33 @@ const AdminViewProfile = () => {
                         </div>
                       </div>
                     )}
-
+                    
                     {profile.approved_by && (
                       <div>
                         <div className="text-sm text-blue-300 font-medium mb-1">Approved By</div>
                         <div className="font-medium text-white text-lg">{profile.approved_by}</div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                </CardContent>
+              </Card>
 
                                  {/* Career Highlights */}
                  {profile.career_highlights && profile.career_highlights.length > 0 && (
                    <Card className="bg-gray-800/50 border-gray-700/50">
-                     <CardHeader>
+              <CardHeader>
                        <CardTitle className="text-white">Career Highlights</CardTitle>
-                     </CardHeader>
-                     <CardContent>
+              </CardHeader>
+              <CardContent>
                        <div className="space-y-3">
                          {profile.career_highlights.map((highlight, index) => (
                            <div key={index} className="text-white p-3 bg-gray-700/30 rounded-lg">
                              <span className="text-blue-400 mr-2">•</span>
                              {highlight}
-                           </div>
+                  </div>
                          ))}
-                       </div>
-                     </CardContent>
-                   </Card>
+                </div>
+              </CardContent>
+            </Card>
                  )}
               </div>
             </div>

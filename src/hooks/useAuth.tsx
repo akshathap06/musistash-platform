@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Validate that the user has a proper UUID
         if (userData.id && typeof userData.id === 'string' && userData.id.length > 20) {
           // This looks like a proper UUID, use it
-          setUser(userData);
+        setUser(userData);
         } else {
           // Invalid user ID format, clear it and force re-authentication
           console.warn('Invalid user ID format found, clearing authentication');
@@ -63,8 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Validate UUID format
           if (userData.id && typeof userData.id === 'string' && userData.id.length > 20) {
-            setUser(userData);
-            return;
+          setUser(userData);
+          return;
           } else {
             throw new Error('Invalid user ID format');
           }

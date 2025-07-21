@@ -80,9 +80,10 @@ class ArtistProfileService {
         genre: profileData.genre || [],
         location: profileData.location || '',
         social_links: profileData.social_links || {},
-        career_highlights: (profileData as any).career_highlights || [],
-        musical_style: (profileData as any).musical_style || '',
-        influences: (profileData as any).influences || '',
+        // Only include these fields if they exist in the database schema
+        ...(profileData.career_highlights && { career_highlights: profileData.career_highlights }),
+        ...(profileData.musical_style && { musical_style: profileData.musical_style }),
+        ...(profileData.influences && { influences: profileData.influences }),
       });
       console.log('Profile created successfully:', profile);
       return profile;

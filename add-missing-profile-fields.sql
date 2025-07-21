@@ -1,12 +1,11 @@
 -- Add missing columns to artist_profiles table
-ALTER TABLE artist_profiles 
-ADD COLUMN IF NOT EXISTS career_highlights JSONB DEFAULT '[]',
-ADD COLUMN IF NOT EXISTS musical_style TEXT DEFAULT '',
-ADD COLUMN IF NOT EXISTS influences TEXT DEFAULT '';
+-- These columns are referenced in the code but don't exist in the database
 
--- Update existing rows to have default values
-UPDATE artist_profiles 
-SET 
-  career_highlights = '[]' WHERE career_highlights IS NULL,
-  musical_style = '' WHERE musical_style IS NULL,
-  influences = '' WHERE influences IS NULL; 
+ALTER TABLE artist_profiles ADD COLUMN career_highlights text[] DEFAULT '{}';
+ALTER TABLE artist_profiles ADD COLUMN musical_style text DEFAULT '';
+ALTER TABLE artist_profiles ADD COLUMN influences text DEFAULT '';
+
+-- Add comments for documentation
+COMMENT ON COLUMN artist_profiles.career_highlights IS 'Array of career highlights and achievements';
+COMMENT ON COLUMN artist_profiles.musical_style IS 'Description of the artist''s musical style';
+COMMENT ON COLUMN artist_profiles.influences IS 'Musical influences and inspirations'; 

@@ -8,9 +8,17 @@ ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS influences text DEFAULT '';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS location text DEFAULT '';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS social_links jsonb DEFAULT '{}';
 
--- Add foreign key constraint for user_id
-ALTER TABLE artist_profiles ADD CONSTRAINT IF NOT EXISTS artist_profiles_user_id_fkey 
-FOREIGN KEY (user_id) REFERENCES users(id);
+-- Add foreign key constraint for user_id (only if it doesn't already exist)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'artist_profiles_user_id_fkey'
+    ) THEN
+        ALTER TABLE artist_profiles ADD CONSTRAINT artist_profiles_user_id_fkey 
+        FOREIGN KEY (user_id) REFERENCES users(id);
+    END IF;
+END $$;
 
 -- Add comments for documentation
 COMMENT ON COLUMN artist_profiles.user_id IS 'Reference to the user who created this profile';

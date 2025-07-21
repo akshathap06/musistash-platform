@@ -1667,6 +1667,22 @@ export class SupabaseService {
       return false
     }
   }
+
+  async getActiveUserCount(days: number = 30): Promise<number> {
+    try {
+      const sinceDate = new Date();
+      sinceDate.setDate(sinceDate.getDate() - days);
+      const { count, error } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .gte('updated_at', sinceDate.toISOString());
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('Error getting active user count:', error);
+      return 0;
+    }
+  }
 }
 
 export const supabaseService = new SupabaseService() 

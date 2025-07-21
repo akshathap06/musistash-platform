@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [activeUserCount, setActiveUserCount] = useState<number>(0);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -37,6 +38,7 @@ const AdminDashboard = () => {
 
     loadProfiles();
     loadProjects();
+    loadActiveUsers();
   }, [user, isAuthenticated, isLoading, navigate]);
 
   const loadProfiles = async () => {
@@ -70,6 +72,15 @@ const AdminDashboard = () => {
       });
     } finally {
       setIsLoadingProjects(false);
+    }
+  };
+
+  const loadActiveUsers = async () => {
+    try {
+      const count = await supabaseService.getActiveUserCount(30);
+      setActiveUserCount(count);
+    } catch (error) {
+      setActiveUserCount(0);
     }
   };
 
@@ -293,7 +304,8 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {/* Total Artist Profiles */}
               <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
@@ -311,6 +323,7 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* Verified Artists */}
               <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
@@ -330,6 +343,25 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
+              {/* Active Users */}
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-white">
+                      Active Users
+                    </CardTitle>
+                    <div className="w-8 h-8 bg-yellow-500/30 rounded-full flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-yellow-300" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{activeUserCount}</div>
+                  <p className="text-xs text-gray-200 mt-1">Users active in last 30 days</p>
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
               <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">

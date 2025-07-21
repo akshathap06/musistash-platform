@@ -80,10 +80,10 @@ class ArtistProfileService {
         genre: profileData.genre || [],
         location: profileData.location || '',
         social_links: profileData.social_links || {},
-        // Only include these fields if they exist in the database schema
-        ...(profileData.career_highlights && { career_highlights: profileData.career_highlights }),
-        ...(profileData.musical_style && { musical_style: profileData.musical_style }),
-        ...(profileData.influences && { influences: profileData.influences }),
+        // Temporarily removed problematic fields until database is updated
+        // career_highlights: profileData.career_highlights || [],
+        // musical_style: profileData.musical_style || '',
+        // influences: profileData.influences || '',
       });
       console.log('Profile created successfully:', profile);
       return profile;

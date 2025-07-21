@@ -1,13 +1,19 @@
 -- Add missing columns to artist_profiles table
 -- These columns are referenced in the code but don't exist in the database
 
+ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS user_id uuid;
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS career_highlights text[] DEFAULT '{}';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS musical_style text DEFAULT '';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS influences text DEFAULT '';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS location text DEFAULT '';
 ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS social_links jsonb DEFAULT '{}';
 
+-- Add foreign key constraint for user_id
+ALTER TABLE artist_profiles ADD CONSTRAINT IF NOT EXISTS artist_profiles_user_id_fkey 
+FOREIGN KEY (user_id) REFERENCES users(id);
+
 -- Add comments for documentation
+COMMENT ON COLUMN artist_profiles.user_id IS 'Reference to the user who created this profile';
 COMMENT ON COLUMN artist_profiles.career_highlights IS 'Array of career highlights and achievements';
 COMMENT ON COLUMN artist_profiles.musical_style IS 'Description of the artist''s musical style';
 COMMENT ON COLUMN artist_profiles.influences IS 'Musical influences and inspirations';

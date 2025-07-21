@@ -80,10 +80,9 @@ class ArtistProfileService {
         genre: profileData.genre || [],
         location: profileData.location || '',
         social_links: profileData.social_links || {},
-        // Temporarily removed problematic fields until database is updated
-        // career_highlights: profileData.career_highlights || [],
-        // musical_style: profileData.musical_style || '',
-        // influences: profileData.influences || '',
+        career_highlights: profileData.career_highlights || [],
+        musical_style: profileData.musical_style || '',
+        influences: profileData.influences || '',
       });
       console.log('Profile created successfully:', profile);
       return profile;

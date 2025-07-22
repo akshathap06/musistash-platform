@@ -247,8 +247,7 @@ export class SupabaseService {
         .from('artist_profiles')
         .update({
           status: 'approved',
-          approved_at: new Date().toISOString(),
-          approved_by: approvedBy,
+          approved: true,
           updated_at: new Date().toISOString(),
         })
         .eq('id', profileId)

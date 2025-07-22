@@ -87,10 +87,11 @@ const BrowseArtists = () => {
       name: profile.artist_name,
       avatar: profile.profile_photo,
       bio: profile.bio,
-    genres: profile.genre || [],
+      genres: profile.genre || [],
       followers: 0, // Default for new profiles
       verified: profile.is_verified,
-      successRate: 75 // Default for new profiles
+      successRate: 75, // Default for new profiles
+      social_links: profile.social_links || {},
   }));
 
   console.log('All artists (approved profiles only):', allArtists);
@@ -208,13 +209,6 @@ const BrowseArtists = () => {
                     showFollowButton={true}
                     onFollowChange={handleFollowChange}
                   />
-                  <div className="mt-3">
-                    <Link to={`/artist/${artist.id}`}>
-                      <Button variant="outline" size="sm" className="w-full border-blue-500 text-blue-300 hover:bg-blue-500/20">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
                 </div>
               ))
             )}

@@ -7,6 +7,11 @@ export interface Artist {
   followers: number;
   verified: boolean;
   successRate: number;
+  social_links?: {
+    youtube?: string;
+    spotify?: string;
+    instagram?: string;
+  };
 }
 
 export interface Project {

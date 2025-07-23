@@ -98,7 +98,6 @@ interface ArtistData {
   instagram_handle?: string;
   twitter_handle?: string;
   website_url?: string;
-  success_rate?: number;
   verified_status?: boolean;
 }
 
@@ -156,7 +155,6 @@ const ArtistProfile = () => {
             followers: 0, // Default for new profiles
             verified: foundProfile.is_verified || false,
             successRate: foundProfile.success_rate || 75, // Use actual success rate
-            success_rate: foundProfile.success_rate || 75,
             musical_style: foundProfile.musical_style || '',
             influences: foundProfile.influences || '',
             career_highlights: foundProfile.career_highlights || [],
@@ -170,7 +168,8 @@ const ArtistProfile = () => {
             youtube_channel_id: foundProfile.youtube_channel_id || '',
             instagram_handle: foundProfile.instagram_handle || '',
             twitter_handle: foundProfile.twitter_handle || '',
-            website_url: foundProfile.website_url || ''
+            website_url: foundProfile.website_url || '',
+            verified_status: foundProfile.is_verified || false
           };
           console.log('ArtistProfile: Created artist object from profile:', foundArtist);
           setArtist(foundArtist);
@@ -440,7 +439,7 @@ const ArtistProfile = () => {
       
       <main className="flex-1 pt-16">
         {/* Artist Header */}
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/50">
+        <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 border-b border-gray-700/50">
           <div className="container max-w-7xl mx-auto px-4 py-16">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* Artist Image */}
@@ -592,8 +591,8 @@ const ArtistProfile = () => {
           </div>
         </div>
         
-        {/* Artist Content */}
-        <div className="container max-w-7xl mx-auto px-4 py-12 bg-slate-950">
+                          {/* Artist Content */}
+                  <div className="container max-w-7xl mx-auto px-4 py-12">
           <Tabs defaultValue="projects" className="w-full">
             <TabsList className="mb-8">
               <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -661,10 +660,10 @@ const ArtistProfile = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                   {/* Artist Biography */}
-                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-slate-700/50 backdrop-blur-sm shadow-xl">
-                    <CardHeader className="border-b border-slate-700/30">
+                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-700/30">
                       <CardTitle className="text-white flex items-center gap-2">
-                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         Artist Biography
                       </CardTitle>
                     </CardHeader>
@@ -682,10 +681,10 @@ const ArtistProfile = () => {
                   </Card>
                   
                   {/* Musical Style & Influences */}
-                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-violet-700/50 backdrop-blur-sm shadow-xl">
-                    <CardHeader className="border-b border-violet-700/30">
+                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-700/30">
                       <CardTitle className="text-white flex items-center gap-2">
-                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         Musical Style & Influences
                       </CardTitle>
                     </CardHeader>
@@ -732,41 +731,41 @@ const ArtistProfile = () => {
                   </Card>
 
                   {/* Artist Statistics */}
-                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-emerald-700/50 backdrop-blur-sm shadow-xl">
-                    <CardHeader className="border-b border-emerald-700/30">
+                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-700/30">
                       <CardTitle className="text-white flex items-center gap-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         Artist Statistics
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-emerald-600/30 text-center hover:border-emerald-500/50 transition-colors">
-                          <div className="text-2xl font-bold text-emerald-400 mb-1">
+                        <div className="bg-gray-800/50 rounded-lg p-4 border border-blue-600/30 text-center hover:border-blue-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-blue-400 mb-1">
                             {artist.monthly_listeners?.toLocaleString() || '0'}
                           </div>
-                          <div className="text-xs text-emerald-300">Monthly Listeners</div>
+                          <div className="text-xs text-blue-300">Monthly Listeners</div>
                         </div>
                         
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-teal-600/30 text-center hover:border-teal-500/50 transition-colors">
-                          <div className="text-2xl font-bold text-teal-400 mb-1">
+                        <div className="bg-gray-800/50 rounded-lg p-4 border border-green-600/30 text-center hover:border-green-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-green-400 mb-1">
                             {artist.total_streams?.toLocaleString() || '0'}
                           </div>
-                          <div className="text-xs text-teal-300">Total Streams</div>
+                          <div className="text-xs text-green-300">Total Streams</div>
                         </div>
                         
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-cyan-600/30 text-center hover:border-cyan-500/50 transition-colors">
-                          <div className="text-2xl font-bold text-cyan-400 mb-1">
-                            {artist.success_rate || artist.successRate || '0'}%
+                        <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-600/30 text-center hover:border-purple-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-purple-400 mb-1">
+                            {artist.successRate || '0'}%
                           </div>
-                          <div className="text-xs text-cyan-300">Success Rate</div>
+                          <div className="text-xs text-purple-300">Success Rate</div>
                         </div>
                         
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-violet-600/30 text-center hover:border-violet-500/50 transition-colors">
-                          <div className="text-2xl font-bold text-violet-400 mb-1">
+                        <div className="bg-gray-800/50 rounded-lg p-4 border border-pink-600/30 text-center hover:border-pink-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-pink-400 mb-1">
                             {spotifyArtist?.followers?.total?.toLocaleString() || followersCount.toLocaleString()}
                           </div>
-                          <div className="text-xs text-violet-300">Followers</div>
+                          <div className="text-xs text-pink-300">Followers</div>
                         </div>
                       </div>
                     </CardContent>
@@ -827,10 +826,10 @@ const ArtistProfile = () => {
                 
                 <div className="space-y-6">
                   {/* Career Highlights */}
-                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-orange-700/50 backdrop-blur-sm shadow-xl">
-                    <CardHeader className="border-b border-orange-700/30">
+                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-700/30">
                       <CardTitle className="text-white flex items-center gap-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                         Career Highlights
                       </CardTitle>
                     </CardHeader>
@@ -838,7 +837,7 @@ const ArtistProfile = () => {
                       {artist.career_highlights && artist.career_highlights.length > 0 ? (
                         <div className="space-y-4">
                           {artist.career_highlights.map((highlight: any, index: number) => (
-                            <div key={index} className="bg-slate-800/50 rounded-lg p-3 border border-orange-600/30 hover:border-orange-500/50 transition-colors">
+                            <div key={index} className="bg-gray-800/50 rounded-lg p-3 border border-orange-600/30 hover:border-orange-500/50 transition-colors">
                               <div className="flex gap-3">
                                 <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">
                                   {highlight.year || highlight.date || 'N/A'}
@@ -892,10 +891,10 @@ const ArtistProfile = () => {
                   </Card>
                   
                   {/* Social Media Links */}
-                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-pink-700/50 backdrop-blur-sm shadow-xl">
-                    <CardHeader className="border-b border-pink-700/30">
+                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                    <CardHeader className="border-b border-gray-700/30">
                       <CardTitle className="text-white flex items-center gap-2">
-                        <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
                         Connect
                       </CardTitle>
                     </CardHeader>
@@ -916,7 +915,7 @@ const ArtistProfile = () => {
                           <a href={artist.social_links.spotify} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="w-full justify-start bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-600/50 text-emerald-300 hover:text-emerald-200 shadow-lg">
                               <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm3.5 8.5c0-1.933-1.566-3.5-3.5-3.5s-3.5 1.567-3.5 3.5c0 1.31.724 2.45 1.792 3.051-.022 1.146-.348 3.265-2.444 4.445-.145.066-.148.19.008.246 2.904 1.024 4.395-1.678 4.644-2.472.21.016.435.03.651.03 1.934 0 3.5-1.567 3.5-3.5"/>
+                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12S18.66 0 12 0zm3.5 8.5c0-1.933-1.566-3.5-3.5-3.5s-3.5 1.567-3.5 3.5c0 1.31.724 2.45 1.792 3.051-.022 1.146-.348 3.265-2.444 4.445-.145.066-.148.19.008.246 2.904 1.024 4.395-1.678 4.644-2.472.21.016.435.03.651.03 1.934 0 3.5-1.567 3.5-3.5"/>
                               </svg>
                               Spotify
                             </Button>
@@ -972,8 +971,8 @@ const ArtistProfile = () => {
 
                   {/* Future Releases */}
                   {artist.future_releases && artist.future_releases.length > 0 && (
-                    <Card className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-blue-700/50 backdrop-blur-sm">
-                      <CardHeader className="border-b border-blue-700/30">
+                    <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                      <CardHeader className="border-b border-gray-700/30">
                         <CardTitle className="text-white flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           Future Releases
@@ -1011,8 +1010,8 @@ const ArtistProfile = () => {
 
                   {/* Spotify Embeds */}
                   {artist.spotify_embed_urls && artist.spotify_embed_urls.length > 0 && (
-                    <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-700/50 backdrop-blur-sm">
-                      <CardHeader className="border-b border-green-700/30">
+                    <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+                      <CardHeader className="border-b border-gray-700/30">
                         <CardTitle className="text-white flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           Listen on Spotify

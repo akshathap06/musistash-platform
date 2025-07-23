@@ -313,7 +313,19 @@ const ArtistProfileManager = () => {
         career_highlights: profile.careerHighlights,
         musical_style: profile.musicalStyle,
         influences: profile.influences,
-        social_links: profile.socialLinks
+        social_links: profile.socialLinks,
+        // New stats fields
+        monthly_listeners: profile.monthlyListeners || 0,
+        total_streams: profile.totalStreams || 0,
+        success_rate: profile.successRate || 0,
+        future_releases: profile.futureReleases || [],
+        spotify_artist_id: profile.spotifyArtistId || '',
+        spotify_embed_urls: profile.spotifyEmbedUrls || [],
+        youtube_channel_id: profile.youtubeChannelId || '',
+        instagram_handle: profile.instagramHandle || '',
+        twitter_handle: profile.twitterHandle || '',
+        website_url: profile.websiteUrl || '',
+        is_verified: profile.verifiedStatus || false
       };
       console.log('Processed profile data:', profileData);
       console.log('Existing profile:', existingProfile);

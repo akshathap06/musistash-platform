@@ -120,13 +120,13 @@ const ViewArtistProfile = () => {
 
   if (!profile) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-gray-900">
         <Navbar />
         <div className="flex-1 flex items-center justify-center py-12 px-4">
-          <Card className="max-w-md w-full">
+          <Card className="max-w-md w-full bg-gray-800 border-gray-700">
             <CardHeader className="text-center">
-              <CardTitle>No Artist Profile Found</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">No Artist Profile Found</CardTitle>
+              <CardDescription className="text-gray-400">
                 You haven't created an artist profile yet.
               </CardDescription>
             </CardHeader>
@@ -143,7 +143,7 @@ const ViewArtistProfile = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-900">
       <Navbar />
       
       <div className="flex-1 pt-20">
@@ -153,10 +153,10 @@ const ViewArtistProfile = () => {
             <div className="mb-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">My Artist Profile</h1>
-                  <p className="text-muted-foreground">Manage your artist profile and track approval status</p>
+                  <h1 className="text-3xl font-bold mb-2 text-white">My Artist Profile</h1>
+                  <p className="text-gray-400">Manage your artist profile and track approval status</p>
                 </div>
-                <Button onClick={handleEditProfile} variant="outline">
+                <Button onClick={handleEditProfile} variant="outline" className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700">
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Profile
                 </Button>
@@ -187,47 +187,60 @@ const ViewArtistProfile = () => {
             {/* Profile Details */}
             <div className="grid gap-6 md:grid-cols-2">
               {/* Basic Information */}
-              <Card>
+              <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
+                  <CardTitle className="text-white">Basic Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-300">Artist Name</label>
-                    <p className="text-white">{profile.artist_name}</p>
+                    <p className="text-white">{profile.artist_name || 'Not specified'}</p>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-gray-300">Genre</label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {Array.isArray(profile.genre) ? profile.genre.map((g, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                      {Array.isArray(profile.genre) && profile.genre.length > 0 ? profile.genre.map((g, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs bg-blue-600/20 text-blue-300 border-blue-600/50">
                           {g}
                         </Badge>
                       )) : (
-                        <Badge variant="secondary" className="text-xs">
-                          {profile.genre || 'Not specified'}
-                        </Badge>
+                        <span className="text-gray-400">Not specified</span>
                       )}
                     </div>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-gray-300">Location</label>
-                    <p className="text-white">{profile.location}</p>
+                    <p className="text-white">{profile.location || 'Not specified'}</p>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-gray-300">Biography</label>
-                    <p className="text-white mt-1">{profile.bio}</p>
+                    <p className="text-white mt-1">{profile.bio || 'Not specified'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Detailed Biography</label>
+                    <p className="text-white mt-1">{profile.biography || 'Not specified'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Musical Style</label>
+                    <p className="text-white">{profile.musical_style || 'Not specified'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Influences</label>
+                    <p className="text-white">{profile.influences || 'Not specified'}</p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Profile Image */}
-              <Card>
+              <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle>Profile Image</CardTitle>
+                  <CardTitle className="text-white">Profile Image</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-center">
@@ -240,55 +253,161 @@ const ViewArtistProfile = () => {
                 </CardContent>
               </Card>
 
-              {/* Social Links */}
-              <Card className="md:col-span-2">
+              {/* Artist Statistics */}
+              <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle>Social Media Links</CardTitle>
+                  <CardTitle className="text-white">Artist Statistics</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {profile.social_links.spotify && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Spotify</label>
-                        <p className="text-blue-400 break-all">{profile.social_links.spotify}</p>
-                      </div>
-                    )}
-                    
-                    {profile.social_links.instagram && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Instagram</label>
-                        <p className="text-blue-400 break-all">{profile.social_links.instagram}</p>
-                      </div>
-                    )}
-                    
-                    {profile.social_links.twitter && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">Twitter/X</label>
-                        <p className="text-blue-400 break-all">{profile.social_links.twitter}</p>
-                      </div>
-                    )}
-                    
-                    {profile.social_links.youtube && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">YouTube</label>
-                        <p className="text-blue-400 break-all">{profile.social_links.youtube}</p>
-                      </div>
-                    )}
-                    
-                    {profile.social_links.website && (
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-gray-300">Website</label>
-                        <p className="text-blue-400 break-all">{profile.social_links.website}</p>
-                      </div>
-                    )}
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Monthly Listeners</label>
+                    <p className="text-white">{profile.monthly_listeners?.toLocaleString() || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Total Streams</label>
+                    <p className="text-white">{profile.total_streams?.toLocaleString() || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Success Rate</label>
+                    <p className="text-white">{profile.success_rate ? `${profile.success_rate}%` : 'Not specified'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Spotify Artist ID</label>
+                    <p className="text-white">{profile.spotify_artist_id || 'Not specified'}</p>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Social Media Links */}
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white">Social Media Links</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {profile.social_links.spotify && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Spotify</label>
+                      <p className="text-blue-400 break-all">{profile.social_links.spotify}</p>
+                    </div>
+                  )}
+                  
+                  {profile.social_links.instagram && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Instagram</label>
+                      <p className="text-blue-400 break-all">{profile.social_links.instagram}</p>
+                    </div>
+                  )}
+                  
+                  {profile.social_links.twitter && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Twitter/X</label>
+                      <p className="text-blue-400 break-all">{profile.social_links.twitter}</p>
+                    </div>
+                  )}
+                  
+                  {profile.social_links.youtube && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">YouTube</label>
+                      <p className="text-blue-400 break-all">{profile.social_links.youtube}</p>
+                    </div>
+                  )}
+                  
+                  {profile.social_links.website && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Website</label>
+                      <p className="text-blue-400 break-all">{profile.social_links.website}</p>
+                    </div>
+                  )}
+
+                  {profile.instagram_handle && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Instagram Handle</label>
+                      <p className="text-white">@{profile.instagram_handle}</p>
+                    </div>
+                  )}
+
+                  {profile.twitter_handle && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Twitter Handle</label>
+                      <p className="text-white">@{profile.twitter_handle}</p>
+                    </div>
+                  )}
+
+                  {profile.youtube_channel_id && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">YouTube Channel ID</label>
+                      <p className="text-white">{profile.youtube_channel_id}</p>
+                    </div>
+                  )}
+
+                  {profile.website_url && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Website URL</label>
+                      <p className="text-blue-400 break-all">{profile.website_url}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Spotify Integration */}
+              {profile.spotify_profile_url && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Spotify Integration</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Spotify Profile URL</label>
+                      <p className="text-blue-400 break-all">{profile.spotify_profile_url}</p>
+                    </div>
+                    
+                    {profile.spotify_data && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Imported Spotify Data</label>
+                        <div className="mt-2 p-3 bg-gray-700/50 rounded-lg">
+                          <p className="text-sm text-gray-300">
+                            Followers: {profile.spotify_data.followers?.toLocaleString() || 'N/A'}
+                          </p>
+                          <p className="text-sm text-gray-300">
+                            Popularity: {profile.spotify_data.popularity || 'N/A'}%
+                          </p>
+                          <p className="text-sm text-gray-300">
+                            Genres: {profile.spotify_data.genres?.slice(0, 3).join(', ') || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Future Releases */}
+              {profile.future_releases && profile.future_releases.length > 0 && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Future Releases</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {profile.future_releases.map((release: any, index: number) => (
+                        <div key={index} className="p-3 bg-gray-700/50 rounded-lg">
+                          <h4 className="font-medium text-white">{release.title}</h4>
+                          <p className="text-sm text-gray-300">{release.type} • {release.releaseDate}</p>
+                          <p className="text-sm text-gray-400 mt-1">{release.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-4 mt-8 justify-center">
-              <Button onClick={handleEditProfile} className="flex items-center gap-2">
+              <Button onClick={handleEditProfile} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
                 <Edit className="w-4 h-4" />
                 Edit Profile
               </Button>
@@ -297,7 +416,7 @@ const ViewArtistProfile = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => navigate(`/artist/${profile.id}`)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
                 >
                   View Public Profile
                 </Button>

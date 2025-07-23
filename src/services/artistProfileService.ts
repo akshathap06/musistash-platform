@@ -83,6 +83,20 @@ class ArtistProfileService {
         career_highlights: profileData.career_highlights || [],
         musical_style: profileData.musical_style || '',
         influences: profileData.influences || '',
+        // New stats fields
+        monthly_listeners: profileData.monthly_listeners,
+        total_streams: profileData.total_streams,
+        success_rate: profileData.success_rate,
+        spotify_artist_id: profileData.spotify_artist_id,
+        spotify_embed_urls: profileData.spotify_embed_urls,
+        youtube_channel_id: profileData.youtube_channel_id,
+        instagram_handle: profileData.instagram_handle,
+        twitter_handle: profileData.twitter_handle,
+        website_url: profileData.website_url,
+        future_releases: profileData.future_releases,
+        // Spotify integration
+        spotify_profile_url: profileData.spotify_profile_url,
+        spotify_data: profileData.spotify_data,
       });
       console.log('Profile created successfully:', profile);
       return profile;

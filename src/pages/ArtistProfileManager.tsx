@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Save, Eye, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Upload, Save, Eye, Clock, CheckCircle, XCircle, AlertCircle, Music } from "lucide-react";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,6 +36,35 @@ interface ArtistProfile {
     youtube?: string;
     website?: string;
   };
+  // New stats fields
+  monthlyListeners?: number;
+  totalStreams?: number;
+  futureReleases?: Array<{
+    title: string;
+    releaseDate: string;
+    description: string;
+    type: 'single' | 'ep' | 'album' | 'mixtape';
+  }>;
+  spotifyArtistId?: string;
+  spotifyEmbedUrls?: string[];
+  youtubeChannelId?: string;
+  instagramHandle?: string;
+  twitterHandle?: string;
+  websiteUrl?: string;
+  successRate?: number;
+  verifiedStatus?: boolean;
+  // Spotify integration
+  spotifyProfileUrl?: string;
+  spotifyData?: {
+    followers?: number;
+    popularity?: number;
+    genres?: string[];
+    topTracks?: Array<{
+      id: string;
+      name: string;
+      url: string;
+    }>;
+  };
 }
 
 const ArtistProfileManager = () => {
@@ -54,7 +83,19 @@ const ArtistProfileManager = () => {
     careerHighlights: [],
     musicalStyle: '',
     influences: '',
-    socialLinks: {}
+    socialLinks: {},
+    // New stats fields
+    monthlyListeners: 0,
+    totalStreams: 0,
+    futureReleases: [],
+    spotifyArtistId: '',
+    spotifyEmbedUrls: [],
+    youtubeChannelId: '',
+    instagramHandle: '',
+    twitterHandle: '',
+    websiteUrl: '',
+    successRate: 0,
+    verifiedStatus: false
   });
 
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -289,6 +330,7 @@ const ArtistProfileManager = () => {
         savedProfile = updated;
       } else {
         console.log('Creating new profile for user ID:', user.id);
+        // Ensure user_id is included in the payload
         savedProfile = await artistProfileService.createProfile(user.id, profileData);
         console.log('Create result:', savedProfile);
       }
@@ -320,6 +362,71 @@ const ArtistProfileManager = () => {
     }
   };
 
+  const handleImportSpotify = async () => {
+    if (!profile.spotifyProfileUrl) {
+      toast({
+        title: "Error",
+        description: "Please enter your Spotify profile URL first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Extract artist ID from URL
+      const urlMatch = profile.spotifyProfileUrl.match(/artist\/([a-zA-Z0-9]+)/);
+      if (!urlMatch) {
+        toast({
+          title: "Invalid URL",
+          description: "Please enter a valid Spotify artist profile URL",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const artistId = urlMatch[1];
+      
+      // Call backend to fetch Spotify data
+      const response = await fetch(`http://localhost:8000/spotify-artist/${artistId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Spotify data');
+      }
+
+      const spotifyData = await response.json();
+      
+      // Update profile with Spotify data
+      setProfile(prev => ({
+        ...prev,
+        spotifyArtistId: artistId,
+        spotifyData: {
+          followers: spotifyData.followers?.total || 0,
+          popularity: spotifyData.popularity || 0,
+          genres: spotifyData.genres || [],
+          topTracks: spotifyData.topTracks || []
+        },
+        // Auto-fill some fields if they're empty
+        name: prev.name || spotifyData.name || '',
+        bio: prev.bio || `Listen to ${spotifyData.name} on Spotify`,
+        genre: prev.genre.length === 0 ? spotifyData.genres || [] : prev.genre,
+        spotifyEmbedUrls: spotifyData.topTracks?.slice(0, 3).map((track: any) => track.external_urls?.spotify) || []
+      }));
+
+      toast({
+        title: "Success!",
+        description: "Spotify data imported successfully",
+        variant: "default"
+      });
+
+    } catch (error) {
+      console.error('Error importing Spotify data:', error);
+      toast({
+        title: "Import Failed",
+        description: "Could not import Spotify data. Please check your URL and try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handlePreview = () => {
     if (!profile.name.trim()) {
       toast({
@@ -348,8 +455,7 @@ const ArtistProfileManager = () => {
           social_links: profile.socialLinks
         };
 
-        let previewProfile: any; // Changed type to any as ServiceArtistProfile is removed
-        
+        let previewProfile: any;
         if (existingProfile) {
           const updated = artistProfileService.updateProfile(existingProfile.id, tempProfileData);
           if (!updated) {
@@ -357,6 +463,7 @@ const ArtistProfileManager = () => {
           }
           previewProfile = updated;
         } else {
+          // Ensure user_id is included for preview
           previewProfile = artistProfileService.createProfile(user.id, tempProfileData);
         }
 
@@ -387,23 +494,23 @@ const ArtistProfileManager = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0f1216]">
       <Navbar />
       
       <div className="flex-1 pt-20">
         <div className="container mx-auto py-8 px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Artist Profile Manager</h1>
-              <p className="text-muted-foreground">Create and manage your artist profile</p>
+              <h1 className="text-3xl font-bold mb-2 text-white">My Artist Profile</h1>
+              <p className="text-gray-400">Manage your artist profile and track approval status</p>
             </div>
 
             {/* Status Card - Only show if profile exists */}
             {existingProfile && (
-              <Card className="mb-8 bg-gray-800/50 border-gray-700/50">
+              <Card className="mb-8 bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Profile Status</CardTitle>
+                    <CardTitle className="text-white">Profile Status</CardTitle>
                     {existingProfile.status === 'pending' && (
                       <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 border-yellow-500/50">
                         <Clock className="w-3 h-3 mr-1" />
@@ -444,14 +551,14 @@ const ArtistProfileManager = () => {
 
             <div className="grid gap-6 md:grid-cols-2">
               {/* Basic Information */}
-              <Card>
+              <Card className="bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
-                  <CardDescription>Your essential artist details</CardDescription>
+                  <CardTitle className="text-white">Basic Information</CardTitle>
+                  <CardDescription className="text-gray-400">Your essential artist details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="name" className={`${validationErrors.name ? 'text-red-500' : ''}`}>
+                    <Label htmlFor="name" className={`${validationErrors.name ? 'text-red-500' : 'text-gray-300'}`}>
                       Artist Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -459,6 +566,7 @@ const ArtistProfileManager = () => {
                       value={profile.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="Enter your artist name"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                     />
                     {validationErrors.name && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>
@@ -466,7 +574,7 @@ const ArtistProfileManager = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="genre" className={`${validationErrors.genre ? 'text-red-500' : ''}`}>
+                    <Label htmlFor="genre" className={`${validationErrors.genre ? 'text-red-500' : 'text-gray-300'}`}>
                       Genre <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -474,6 +582,7 @@ const ArtistProfileManager = () => {
                       value={profile.genre.join(', ')}
                       onChange={(e) => handleGenreChange(e.target.value)}
                       placeholder="e.g., Hip-Hop, Pop, Rock"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                     />
                     {validationErrors.genre && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.genre}</p>
@@ -481,7 +590,7 @@ const ArtistProfileManager = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="location" className={`${validationErrors.location ? 'text-red-500' : ''}`}>
+                    <Label htmlFor="location" className={`${validationErrors.location ? 'text-red-500' : 'text-gray-300'}`}>
                       Location <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -489,6 +598,7 @@ const ArtistProfileManager = () => {
                       value={profile.location}
                       onChange={(e) => handleInputChange('location', e.target.value)}
                       placeholder="City, Country"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                     />
                     {validationErrors.location && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.location}</p>
@@ -496,7 +606,7 @@ const ArtistProfileManager = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="bio" className={`${validationErrors.bio ? 'text-red-500' : ''}`}>
+                    <Label htmlFor="bio" className={`${validationErrors.bio ? 'text-red-500' : 'text-gray-300'}`}>
                       Short Bio <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
@@ -505,6 +615,7 @@ const ArtistProfileManager = () => {
                       onChange={(e) => handleInputChange('bio', e.target.value)}
                       placeholder="A brief introduction (50+ characters)..."
                       rows={3}
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                     />
                     {validationErrors.bio && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.bio}</p>
@@ -512,7 +623,7 @@ const ArtistProfileManager = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor="biography">
+                    <Label htmlFor="biography" className="text-gray-300">
                       Detailed Biography
                     </Label>
                     <Textarea
@@ -521,6 +632,7 @@ const ArtistProfileManager = () => {
                       onChange={(e) => handleInputChange('biography', e.target.value)}
                       placeholder="Tell your complete story, musical journey, and background..."
                       rows={6}
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                     />
                     <p className="text-xs text-gray-400 mt-1">
                       This will be displayed in the "About" section of your profile
@@ -530,14 +642,14 @@ const ArtistProfileManager = () => {
               </Card>
 
               {/* Profile Image */}
-              <Card>
+              <Card className="bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Profile Image</CardTitle>
-                  <CardDescription>Upload your artist photo</CardDescription>
+                  <CardTitle className="text-white">Profile Image</CardTitle>
+                  <CardDescription className="text-gray-400">Upload your artist photo</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
                       {imagePreview ? (
                         <div className="space-y-4">
                           <img
@@ -545,12 +657,12 @@ const ArtistProfileManager = () => {
                             alt="Profile preview"
                             className="w-32 h-32 object-cover rounded-full mx-auto"
                           />
-                          <p className="text-sm text-muted-foreground">Image uploaded successfully</p>
+                          <p className="text-sm text-gray-400">Image uploaded successfully</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
-                          <p className="text-muted-foreground">
+                          <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                          <p className="text-gray-400">
                             Click to upload your profile image <span className="text-red-500">*</span>
                           </p>
                         </div>
@@ -561,7 +673,7 @@ const ArtistProfileManager = () => {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="cursor-pointer"
+                      className="cursor-pointer bg-gray-800 border-gray-600 text-white"
                     />
                     {validationErrors.profileImage && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.profileImage}</p>
@@ -569,16 +681,322 @@ const ArtistProfileManager = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
 
-              {/* Banner Image */}
-              <Card>
+            {/* Spotify Integration */}
+            <div className="mt-8">
+              <Card className="bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Banner Image</CardTitle>
-                  <CardDescription>Upload your artist banner photo</CardDescription>
+                  <CardTitle className="text-white">Connect Your Spotify</CardTitle>
+                  <CardDescription className="text-gray-400">Automatically import your music and stats from Spotify</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                    <div>
+                      <Label htmlFor="spotifyProfileUrl" className="text-gray-300">
+                        Spotify Artist Profile URL
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="spotifyProfileUrl"
+                          value={profile.spotifyProfileUrl || ''}
+                          onChange={(e) => handleInputChange('spotifyProfileUrl', e.target.value)}
+                          placeholder="https://open.spotify.com/artist/..."
+                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                        />
+                        <Button
+                          onClick={handleImportSpotify}
+                          disabled={!profile.spotifyProfileUrl}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Import
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Paste your Spotify artist profile URL and we'll automatically fetch your music, stats, and top tracks
+                      </p>
+                    </div>
+
+                    {/* Auto-imported data preview */}
+                    {profile.spotifyData && (
+                      <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <h4 className="text-white font-medium mb-3">Imported Data Preview</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-400">Followers:</span>
+                            <div className="text-white font-medium">
+                              {profile.spotifyData.followers?.toLocaleString() || 'N/A'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Popularity:</span>
+                            <div className="text-white font-medium">
+                              {profile.spotifyData.popularity || 'N/A'}%
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Genres:</span>
+                            <div className="text-white font-medium">
+                              {profile.spotifyData.genres?.slice(0, 2).join(', ') || 'N/A'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Top Tracks:</span>
+                            <div className="text-white font-medium">
+                              {profile.spotifyData.topTracks?.length || 0} tracks
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Manual override section */}
+                    <div className="border-t border-gray-700 pt-4">
+                      <h4 className="text-white font-medium mb-3">Manual Stats (Optional)</h4>
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div>
+                          <Label htmlFor="monthlyListeners" className="text-gray-300 text-sm">
+                            Monthly Listeners
+                          </Label>
+                          <Input
+                            id="monthlyListeners"
+                            type="number"
+                            value={profile.monthlyListeners || 0}
+                            onChange={(e) => handleInputChange('monthlyListeners', e.target.value)}
+                            placeholder="0"
+                            className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="totalStreams" className="text-gray-300 text-sm">
+                            Total Streams
+                          </Label>
+                          <Input
+                            id="totalStreams"
+                            type="number"
+                            value={profile.totalStreams || 0}
+                            onChange={(e) => handleInputChange('totalStreams', e.target.value)}
+                            placeholder="0"
+                            className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="successRate" className="text-gray-300 text-sm">
+                            Success Rate (%)
+                          </Label>
+                          <Input
+                            id="successRate"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            value={profile.successRate || 0}
+                            onChange={(e) => handleInputChange('successRate', e.target.value)}
+                            placeholder="0"
+                            className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Social Media & Future Releases */}
+            <div className="mt-8 grid gap-6 md:grid-cols-2">
+              {/* Social Media Links */}
+              <Card className="bg-[#181b2a] border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white">Social Media Links</CardTitle>
+                  <CardDescription className="text-gray-400">Connect your social media accounts</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="instagramHandle" className="text-gray-300">
+                      Instagram Handle
+                    </Label>
+                    <Input
+                      id="instagramHandle"
+                      value={profile.instagramHandle || ''}
+                      onChange={(e) => handleInputChange('instagramHandle', e.target.value)}
+                      placeholder="username (without @)"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="twitterHandle" className="text-gray-300">
+                      Twitter Handle
+                    </Label>
+                    <Input
+                      id="twitterHandle"
+                      value={profile.twitterHandle || ''}
+                      onChange={(e) => handleInputChange('twitterHandle', e.target.value)}
+                      placeholder="username (without @)"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="youtubeChannelId" className="text-gray-300">
+                      YouTube Channel ID
+                    </Label>
+                    <Input
+                      id="youtubeChannelId"
+                      value={profile.youtubeChannelId || ''}
+                      onChange={(e) => handleInputChange('youtubeChannelId', e.target.value)}
+                      placeholder="e.g., UC..."
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="websiteUrl" className="text-gray-300">
+                      Website URL
+                    </Label>
+                    <Input
+                      id="websiteUrl"
+                      value={profile.websiteUrl || ''}
+                      onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                      placeholder="https://yourwebsite.com"
+                      className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Future Releases */}
+              <Card className="bg-[#181b2a] border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white">Future Releases</CardTitle>
+                  <CardDescription className="text-gray-400">Share your upcoming music plans</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {profile.futureReleases && profile.futureReleases.length > 0 ? (
+                      <div className="space-y-4">
+                        {profile.futureReleases.map((release, index) => (
+                          <div key={index} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-gray-300 text-sm">Release Title</Label>
+                                <Input
+                                  value={release.title}
+                                  onChange={(e) => {
+                                    const newReleases = [...profile.futureReleases];
+                                    newReleases[index] = { ...newReleases[index], title: e.target.value };
+                                    setProfile(prev => ({ ...prev, futureReleases: newReleases }));
+                                  }}
+                                  placeholder="e.g., New Single"
+                                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-gray-300 text-sm">Release Type</Label>
+                                <select
+                                  value={release.type}
+                                  onChange={(e) => {
+                                    const newReleases = [...profile.futureReleases];
+                                    newReleases[index] = { ...newReleases[index], type: e.target.value as any };
+                                    setProfile(prev => ({ ...prev, futureReleases: newReleases }));
+                                  }}
+                                  className="w-full bg-gray-700 border-gray-600 text-white rounded-md px-3 py-2"
+                                >
+                                  <option value="single">Single</option>
+                                  <option value="ep">EP</option>
+                                  <option value="album">Album</option>
+                                  <option value="mixtape">Mixtape</option>
+                                </select>
+                              </div>
+                              <div>
+                                <Label className="text-gray-300 text-sm">Release Date</Label>
+                                <Input
+                                  type="date"
+                                  value={release.releaseDate}
+                                  onChange={(e) => {
+                                    const newReleases = [...profile.futureReleases];
+                                    newReleases[index] = { ...newReleases[index], releaseDate: e.target.value };
+                                    setProfile(prev => ({ ...prev, futureReleases: newReleases }));
+                                  }}
+                                  className="bg-gray-700 border-gray-600 text-white"
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <Label className="text-gray-300 text-sm">Description</Label>
+                                <Textarea
+                                  value={release.description}
+                                  onChange={(e) => {
+                                    const newReleases = [...profile.futureReleases];
+                                    newReleases[index] = { ...newReleases[index], description: e.target.value };
+                                    setProfile(prev => ({ ...prev, futureReleases: newReleases }));
+                                  }}
+                                  placeholder="Tell us about this release..."
+                                  rows={2}
+                                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newReleases = profile.futureReleases.filter((_, i) => i !== index);
+                                  setProfile(prev => ({ ...prev, futureReleases: newReleases }));
+                                }}
+                                className="bg-red-600/20 border-red-600 text-red-300 hover:bg-red-600/30"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-400">
+                        <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No future releases added yet</p>
+                        <p className="text-sm">Click "Add Release" to get started</p>
+                      </div>
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const newRelease = {
+                          title: '',
+                          releaseDate: '',
+                          description: '',
+                          type: 'single' as const
+                        };
+                        setProfile(prev => ({
+                          ...prev,
+                          futureReleases: [...(prev.futureReleases || []), newRelease]
+                        }));
+                      }}
+                      className="w-full bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+                    >
+                      <Music className="w-4 h-4 mr-2" />
+                      Add Release
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Banner Image */}
+            <div className="mt-8">
+              <Card className="bg-[#181b2a] border-gray-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white">Banner Image</CardTitle>
+                  <CardDescription className="text-gray-400">Upload your artist banner photo</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
                       {bannerPreview ? (
                         <div className="space-y-4">
                           <img
@@ -586,12 +1004,12 @@ const ArtistProfileManager = () => {
                             alt="Banner preview"
                             className="w-full h-32 object-cover rounded-md"
                           />
-                          <p className="text-sm text-muted-foreground">Banner image uploaded successfully</p>
+                          <p className="text-sm text-gray-400">Banner image uploaded successfully</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
-                          <p className="text-muted-foreground">
+                          <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                          <p className="text-gray-400">
                             Click to upload your banner image <span className="text-red-500">*</span>
                           </p>
                         </div>
@@ -602,7 +1020,7 @@ const ArtistProfileManager = () => {
                       type="file"
                       accept="image/*"
                       onChange={handleBannerUpload}
-                      className="cursor-pointer"
+                      className="cursor-pointer bg-gray-800 border-gray-600 text-white"
                     />
                     {validationErrors.bannerImage && (
                       <p className="text-red-500 text-xs mt-1">{validationErrors.bannerImage}</p>
@@ -610,12 +1028,14 @@ const ArtistProfileManager = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
 
-              {/* Career Highlights */}
-              <Card>
+            {/* Career Highlights */}
+            <div className="mt-8">
+              <Card className="bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Career Highlights</CardTitle>
-                  <CardDescription>Your major achievements and milestones</CardDescription>
+                  <CardTitle className="text-white">Career Highlights</CardTitle>
+                  <CardDescription className="text-gray-400">Your major achievements and milestones</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4">
@@ -630,6 +1050,7 @@ const ArtistProfileManager = () => {
                             setProfile(prev => ({ ...prev, careerHighlights: newHighlights }));
                           }}
                           placeholder="Year"
+                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                         />
                         <Input
                           type="text"
@@ -640,6 +1061,7 @@ const ArtistProfileManager = () => {
                             setProfile(prev => ({ ...prev, careerHighlights: newHighlights }));
                           }}
                           placeholder="Title"
+                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                         />
                         <Textarea
                           value={highlight.description}
@@ -650,13 +1072,14 @@ const ArtistProfileManager = () => {
                           }}
                           placeholder="Description"
                           rows={1}
+                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                         />
                       </div>
                     ))}
                     <Button
                       variant="outline"
                       onClick={() => setProfile(prev => ({ ...prev, careerHighlights: [...prev.careerHighlights, { year: '', title: '', description: '' }] }))}
-                      className="w-full"
+                      className="w-full bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
                     >
                       Add Career Highlight
                     </Button>
@@ -665,15 +1088,15 @@ const ArtistProfileManager = () => {
               </Card>
 
               {/* Musical Style & Influences */}
-              <Card>
+              <Card className="bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Musical Style & Influences</CardTitle>
-                  <CardDescription>Your musical preferences and influences</CardDescription>
+                  <CardTitle className="text-white">Musical Style & Influences</CardTitle>
+                  <CardDescription className="text-gray-400">Your musical preferences and influences</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4">
                     <div>
-                      <Label htmlFor="musicalStyle" className={`${validationErrors.musicalStyle ? 'text-red-500' : ''}`}>
+                      <Label htmlFor="musicalStyle" className={`${validationErrors.musicalStyle ? 'text-red-500' : 'text-gray-300'}`}>
                         Musical Style <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -681,13 +1104,14 @@ const ArtistProfileManager = () => {
                         value={profile.musicalStyle}
                         onChange={(e) => handleInputChange('musicalStyle', e.target.value)}
                         placeholder="e.g., Hip-Hop, Pop, Rock, Electronic"
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                       {validationErrors.musicalStyle && (
                         <p className="text-red-500 text-xs mt-1">{validationErrors.musicalStyle}</p>
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="influences" className={`${validationErrors.influences ? 'text-red-500' : ''}`}>
+                      <Label htmlFor="influences" className={`${validationErrors.influences ? 'text-red-500' : 'text-gray-300'}`}>
                         Influences <span className="text-red-500">*</span>
                       </Label>
                       <Textarea
@@ -696,6 +1120,7 @@ const ArtistProfileManager = () => {
                         onChange={(e) => handleInputChange('influences', e.target.value)}
                         placeholder="List your musical influences (e.g., artists, genres, styles)"
                         rows={3}
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                       {validationErrors.influences && (
                         <p className="text-red-500 text-xs mt-1">{validationErrors.influences}</p>
@@ -706,60 +1131,65 @@ const ArtistProfileManager = () => {
               </Card>
 
               {/* Social Links */}
-              <Card className="md:col-span-2">
+              <Card className="md:col-span-2 bg-[#181b2a] border-gray-700/50">
                 <CardHeader>
-                  <CardTitle>Social Media Links</CardTitle>
-                  <CardDescription>Connect your social media profiles</CardDescription>
+                  <CardTitle className="text-white">Social Media Links</CardTitle>
+                  <CardDescription className="text-gray-400">Connect your social media profiles</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="spotify">Spotify</Label>
+                      <Label htmlFor="spotify" className="text-gray-300">Spotify</Label>
                       <Input
                         id="spotify"
                         value={profile.socialLinks.spotify || ''}
                         onChange={(e) => handleSocialLinkChange('spotify', e.target.value)}
                         placeholder="https://open.spotify.com/artist/..."
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="instagram">Instagram</Label>
+                      <Label htmlFor="instagram" className="text-gray-300">Instagram</Label>
                       <Input
                         id="instagram"
                         value={profile.socialLinks.instagram || ''}
                         onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
                         placeholder="https://instagram.com/..."
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="twitter">Twitter/X</Label>
+                      <Label htmlFor="twitter" className="text-gray-300">Twitter/X</Label>
                       <Input
                         id="twitter"
                         value={profile.socialLinks.twitter || ''}
                         onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
                         placeholder="https://twitter.com/..."
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="youtube">YouTube</Label>
+                      <Label htmlFor="youtube" className="text-gray-300">YouTube</Label>
                       <Input
                         id="youtube"
                         value={profile.socialLinks.youtube || ''}
                         onChange={(e) => handleSocialLinkChange('youtube', e.target.value)}
                         placeholder="https://youtube.com/..."
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                     </div>
                     
                     <div className="md:col-span-2">
-                      <Label htmlFor="website">Website</Label>
+                      <Label htmlFor="website" className="text-gray-300">Website</Label>
                       <Input
                         id="website"
                         value={profile.socialLinks.website || ''}
                         onChange={(e) => handleSocialLinkChange('website', e.target.value)}
                         placeholder="https://yourwebsite.com"
+                        className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                       />
                     </div>
                   </div>
@@ -769,14 +1199,14 @@ const ArtistProfileManager = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-4 mt-8 justify-end">
-              <Button variant="outline" onClick={handlePreview} className="flex items-center gap-2">
+              <Button variant="outline" onClick={handlePreview} className="flex items-center gap-2 bg-gray-800 border-gray-600 text-white hover:bg-gray-700">
                 <Eye className="w-4 h-4" />
                 Preview
               </Button>
               <Button 
                 onClick={handleSave} 
                 disabled={isSaving || !isFormComplete()}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? 'Saving...' : 'Save Profile'}

@@ -65,6 +65,20 @@ export interface Database {
           updated_at: string
           approved_at: string | null
           approved_by: string | null
+          // New stats fields
+          monthly_listeners?: number
+          total_streams?: number
+          success_rate?: number
+          spotify_artist_id?: string
+          spotify_embed_urls?: string[]
+          youtube_channel_id?: string
+          instagram_handle?: string
+          twitter_handle?: string
+          website_url?: string
+          future_releases?: any[]
+          // Spotify integration
+          spotify_profile_url?: string
+          spotify_data?: any
         }
         Insert: {
           id?: string
@@ -87,6 +101,20 @@ export interface Database {
           updated_at?: string
           approved_at?: string | null
           approved_by?: string | null
+          // New stats fields
+          monthly_listeners?: number
+          total_streams?: number
+          success_rate?: number
+          spotify_artist_id?: string
+          spotify_embed_urls?: string[]
+          youtube_channel_id?: string
+          instagram_handle?: string
+          twitter_handle?: string
+          website_url?: string
+          future_releases?: any[]
+          // Spotify integration
+          spotify_profile_url?: string
+          spotify_data?: any
         }
         Update: {
           id?: string
@@ -109,6 +137,20 @@ export interface Database {
           updated_at?: string
           approved_at?: string | null
           approved_by?: string | null
+          // New stats fields
+          monthly_listeners?: number
+          total_streams?: number
+          success_rate?: number
+          spotify_artist_id?: string
+          spotify_embed_urls?: string[]
+          youtube_channel_id?: string
+          instagram_handle?: string
+          twitter_handle?: string
+          website_url?: string
+          future_releases?: any[]
+          // Spotify integration
+          spotify_profile_url?: string
+          spotify_data?: any
         }
       }
       follow_relationships: {
@@ -171,14 +213,22 @@ export interface Database {
           description: string
           detailed_description: string
           banner_image: string
-          project_type: 'album' | 'single' | 'ep' | 'mixtape'
+          project_type: 'album' | 'single' | 'ep' | 'mixtape' | 'live_show'
           genre: string[]
-          funding_goal: number
-          min_investment: number
-          max_investment: number
-          expected_roi: number
-          project_duration: string
-          deadline: string
+          number_of_songs?: number
+          total_duration?: number
+          youtube_links?: string[]
+          spotify_link?: string
+          mp3_files?: string[]
+          ticket_sale_link?: string
+          show_date?: string
+          show_location?: string
+          funding_goal?: number
+          min_investment?: number
+          max_investment?: number
+          expected_roi?: number
+          project_duration?: string
+          deadline?: string
           status: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
           created_at: string
           updated_at: string
@@ -190,14 +240,22 @@ export interface Database {
           description: string
           detailed_description?: string
           banner_image?: string
-          project_type?: 'album' | 'single' | 'ep' | 'mixtape'
+          project_type?: 'album' | 'single' | 'ep' | 'mixtape' | 'live_show'
           genre?: string[]
-          funding_goal: number
-          min_investment: number
-          max_investment: number
-          expected_roi: number
-          project_duration: string
-          deadline: string
+          number_of_songs?: number
+          total_duration?: number
+          youtube_links?: string[]
+          spotify_link?: string
+          mp3_files?: string[]
+          ticket_sale_link?: string
+          show_date?: string
+          show_location?: string
+          funding_goal?: number
+          min_investment?: number
+          max_investment?: number
+          expected_roi?: number
+          project_duration?: string
+          deadline?: string
           status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
           created_at?: string
           updated_at?: string
@@ -209,8 +267,16 @@ export interface Database {
           description?: string
           detailed_description?: string
           banner_image?: string
-          project_type?: 'album' | 'single' | 'ep' | 'mixtape'
+          project_type?: 'album' | 'single' | 'ep' | 'mixtape' | 'live_show'
           genre?: string[]
+          number_of_songs?: number
+          total_duration?: number
+          youtube_links?: string[]
+          spotify_link?: string
+          mp3_files?: string[]
+          ticket_sale_link?: string
+          show_date?: string
+          show_location?: string
           funding_goal?: number
           min_investment?: number
           max_investment?: number

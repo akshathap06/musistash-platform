@@ -125,6 +125,21 @@ export class SupabaseService {
     career_highlights?: any[]
     musical_style?: string
     influences?: string
+    // New stats fields
+    monthly_listeners?: number
+    total_streams?: number
+    future_releases?: any[]
+    spotify_artist_id?: string
+    spotify_embed_urls?: string[]
+    youtube_channel_id?: string
+    instagram_handle?: string
+    twitter_handle?: string
+    website_url?: string
+    success_rate?: number
+    verified_status?: boolean
+    // Spotify integration
+    spotify_profile_url?: string
+    spotify_data?: any
   }): Promise<ArtistProfile | null> {
     try {
       console.log('Supabase: Creating artist profile with data:', profileData);
@@ -548,14 +563,23 @@ export class SupabaseService {
     description: string
     detailed_description?: string
     banner_image?: string
-    project_type?: 'album' | 'single' | 'ep' | 'mixtape'
+    project_type?: 'album' | 'single' | 'ep' | 'mixtape' | 'live_show'
     genre?: string[]
-    funding_goal: number
-    min_investment: number
-    max_investment: number
-    expected_roi: number
-    project_duration: string
-    deadline: string
+    number_of_songs?: number
+    total_duration?: number
+    youtube_links?: string[]
+    spotify_link?: string
+    mp3_files?: any[] // File objects or URLs
+    ticket_sale_link?: string
+    show_date?: string
+    show_location?: string
+    // Legacy investment fields (optional for backward compatibility)
+    funding_goal?: number
+    min_investment?: number
+    max_investment?: number
+    expected_roi?: number
+    project_duration?: string
+    deadline?: string
     status?: 'draft' | 'pending' | 'active' | 'funded' | 'completed' | 'cancelled'
   }): Promise<Project | null> {
     try {
@@ -651,6 +675,32 @@ export class SupabaseService {
     }
   }
 
+  // Debug method to get all projects without filtering
+  async getAllProjectsDebug(): Promise<Project[]> {
+    try {
+      console.log('SupabaseService: Getting all projects (debug mode)');
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('SupabaseService: Error getting all projects (debug):', error);
+        return [];
+      }
+
+      console.log('SupabaseService: Found projects (debug):', data?.length || 0);
+      if (data && data.length > 0) {
+        console.log('SupabaseService: First project:', data[0]);
+      }
+      return data || [];
+    } catch (error) {
+      console.error('SupabaseService: Error getting all projects (debug):', error);
+      return [];
+    }
+  }
+
   async getPendingProjects(): Promise<Project[]> {
     try {
       // Get projects that are pending admin approval
@@ -733,8 +783,17 @@ export class SupabaseService {
     description?: string;
     detailed_description?: string;
     banner_image?: string;
-    project_type?: 'album' | 'single' | 'ep' | 'mixtape';
+    project_type?: 'album' | 'single' | 'ep' | 'mixtape' | 'live_show';
     genre?: string[];
+    number_of_songs?: number;
+    total_duration?: number;
+    youtube_links?: string[];
+    spotify_link?: string;
+    mp3_files?: any[];
+    ticket_sale_link?: string;
+    show_date?: string;
+    show_location?: string;
+    // Legacy investment fields (optional for backward compatibility)
     funding_goal?: number;
     min_investment?: number;
     max_investment?: number;
@@ -1512,16 +1571,55 @@ export class SupabaseService {
 
   async getProjectById(projectId: string): Promise<Project | null> {
     try {
-      const { data, error } = await supabase
+      console.log('SupabaseService: Getting project by ID:', projectId);
+      
+      // First, try to get the project with a simple query
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (projectError) {
+        console.error('SupabaseService: Error getting project:', projectError);
+        throw projectError;
+      }
+
+      if (!projectData) {
+        console.log('SupabaseService: No project found with ID:', projectId);
+        return null;
+      }
+
+      console.log('SupabaseService: Found project:', projectData);
+
+      // Then get the artist profile separately
+      console.log('SupabaseService: Getting artist profile for ID:', projectData.artist_id);
+      const { data: artistData, error: artistError } = await supabase
+        .from('artist_profiles')
+        .select('artist_name, profile_photo, bio, location')
+        .eq('id', projectData.artist_id)
+        .single();
+
+      if (artistError) {
+        console.error('SupabaseService: Error getting artist profile:', artistError);
+        // Don't fail the whole request if artist data is missing
+      } else {
+        console.log('SupabaseService: Found artist data:', artistData);
+      }
+
+      // Combine the data
+      const projectWithArtist = {
+        ...projectData,
+        artist_name: artistData?.artist_name || 'Unknown Artist',
+        artist_avatar: artistData?.profile_photo || '/assets/logo-cricle.png',
+        artist_bio: artistData?.bio || '',
+        artist_location: artistData?.location || '',
+      };
+      
+      console.log('SupabaseService: Final project data:', projectWithArtist);
+      return projectWithArtist;
     } catch (error) {
-      console.error('Error getting project by ID:', error);
+      console.error('SupabaseService: Error getting project by ID:', error);
       return null;
     }
   }

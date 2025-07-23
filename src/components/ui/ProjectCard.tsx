@@ -178,20 +178,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
         <div className="space-y-4">
           <div className="space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-white">${updatedFunding.toLocaleString()}</span>
-              <span className="text-gray-400">${project.fundingGoal.toLocaleString()}</span>
+              <span className="text-white">{updatedFunding.toLocaleString()} Tickets Sold</span>
+              <span className="text-gray-400">Goal: {project.fundingGoal.toLocaleString()}</span>
             </div>
             <Progress 
               value={fundingPercentage} 
               className="h-2 [&>div]:bg-blue-500 bg-gray-700" 
             />
             <div className="flex justify-between text-xs">
-              <span className="text-blue-400">{fundingPercentage}% Funded</span>
+              <span className="text-blue-400">{fundingPercentage}% Sold</span>
               <span className="text-gray-400">{timeLeft()} days left</span>
             </div>
           </div>
           
           <div className="grid grid-cols-3 gap-2">
+            {/* Rewards/Packages remain unchanged for now */}
             {isArtistProject ? (
               (project as ArtistProject).rewards.slice(0, 3).map((reward) => (
                 <Badge 
@@ -199,7 +200,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
                   variant="outline" 
                   className="justify-center truncate border-gray-700 text-gray-300 hover:bg-gray-800"
                 >
-                  ${reward.minInvestment}+
+                  {reward.title}
                 </Badge>
               ))
             ) : (
@@ -224,43 +225,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onInvestmentComplete
               View Project
             </Button>
           </Link>
-          {userInvestment ? (
-            <Button 
-              onClick={handleWithdrawClick}
-              className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white"
-              disabled={!isAuthenticated}
-            >
-              Withdraw
-            </Button>
-          ) : project.status === 'active' ? (
-            <Button 
-              onClick={handleInvestClick}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              disabled={!isAuthenticated}
-            >
-              Invest Now
-            </Button>
-          ) : null}
+          {/* Hide Invest Now and Withdraw buttons for now */}
         </div>
       </CardFooter>
 
-      {/* Investment Modal */}
-      <InvestmentModal
-        isOpen={isInvestmentModalOpen}
-        onClose={() => setIsInvestmentModalOpen(false)}
-        project={compatibleProject}
-        onInvestmentComplete={handleInvestmentComplete}
-      />
-
-      {/* Withdrawal Modal */}
-      {userInvestment && (
-        <WithdrawalModal
-          isOpen={isWithdrawalModalOpen}
-          onClose={() => setIsWithdrawalModalOpen(false)}
-          investment={userInvestment}
-          onWithdrawalComplete={handleWithdrawalComplete}
-        />
-      )}
+      {/* Hide Investment Modal and Withdrawal Modal for now */}
+      {/* <InvestmentModal ... /> */}
+      {/* <WithdrawalModal ... /> */}
     </Card>
   );
 };

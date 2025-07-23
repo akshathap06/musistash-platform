@@ -35,10 +35,10 @@ const ConnectLinks: React.FC<ConnectLinksProps> = ({ socialLinks, className }) =
   if (!hasAnyLinks) return null;
   
   return (
-    <div className={`flex flex-wrap gap-2 justify-center ${className || ''}`}>
+    <div className={`flex flex-wrap gap-2 justify-start ${className || ''}`}>
       {socialLinks.youtube && (
         <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="outline" className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700">
+          <Button size="sm" variant="outline" className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 shadow-lg">
             <svg className="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
@@ -48,7 +48,7 @@ const ConnectLinks: React.FC<ConnectLinksProps> = ({ socialLinks, className }) =
       )}
       {socialLinks.spotify && (
         <a href={socialLinks.spotify} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="outline" className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700">
+          <Button size="sm" variant="outline" className="bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 hover:border-emerald-700 shadow-lg">
             <svg className="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
             </svg>
@@ -58,7 +58,7 @@ const ConnectLinks: React.FC<ConnectLinksProps> = ({ socialLinks, className }) =
       )}
       {socialLinks.instagram && (
         <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="outline" className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white border-transparent">
+          <Button size="sm" variant="outline" className="bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 hover:from-pink-600 hover:via-purple-600 hover:to-orange-600 text-white border-transparent shadow-lg">
             <svg className="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
             </svg>
@@ -88,6 +88,18 @@ interface ArtistData {
     spotify?: string;
     instagram?: string;
   };
+  // New stats fields
+  monthly_listeners?: number;
+  total_streams?: number;
+  future_releases?: any[];
+  spotify_artist_id?: string;
+  spotify_embed_urls?: string[];
+  youtube_channel_id?: string;
+  instagram_handle?: string;
+  twitter_handle?: string;
+  website_url?: string;
+  success_rate?: number;
+  verified_status?: boolean;
 }
 
 const ArtistProfile = () => {
@@ -120,6 +132,15 @@ const ArtistProfile = () => {
         // First try to get from approved profiles
         let foundProfile = await artistProfileService.getProfileById(id);
         console.log('ArtistProfile: Found profile:', foundProfile);
+        console.log('ArtistProfile: Profile details:', {
+          id: foundProfile?.id,
+          name: foundProfile?.artist_name,
+          monthly_listeners: foundProfile?.monthly_listeners,
+          total_streams: foundProfile?.total_streams,
+          career_highlights: foundProfile?.career_highlights,
+          spotify_artist_id: foundProfile?.spotify_artist_id,
+          future_releases: foundProfile?.future_releases
+        });
         
         let foundArtist: any;
         
@@ -134,11 +155,22 @@ const ArtistProfile = () => {
             genres: Array.isArray(foundProfile.genre) ? foundProfile.genre : [],
             followers: 0, // Default for new profiles
             verified: foundProfile.is_verified || false,
-            successRate: 75, // Default for new profiles
+            successRate: foundProfile.success_rate || 75, // Use actual success rate
+            success_rate: foundProfile.success_rate || 75,
             musical_style: foundProfile.musical_style || '',
             influences: foundProfile.influences || '',
             career_highlights: foundProfile.career_highlights || [],
-            social_links: foundProfile.social_links || {}
+            social_links: foundProfile.social_links || {},
+            // New stats fields
+            monthly_listeners: foundProfile.monthly_listeners || 0,
+            total_streams: foundProfile.total_streams || 0,
+            future_releases: foundProfile.future_releases || [],
+            spotify_artist_id: foundProfile.spotify_artist_id || '',
+            spotify_embed_urls: foundProfile.spotify_embed_urls || [],
+            youtube_channel_id: foundProfile.youtube_channel_id || '',
+            instagram_handle: foundProfile.instagram_handle || '',
+            twitter_handle: foundProfile.twitter_handle || '',
+            website_url: foundProfile.website_url || ''
           };
           console.log('ArtistProfile: Created artist object from profile:', foundArtist);
           setArtist(foundArtist);
@@ -408,11 +440,11 @@ const ArtistProfile = () => {
       
       <main className="flex-1 pt-16">
         {/* Artist Header */}
-        <div className="bg-primary/5 border-b">
+        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/50">
           <div className="container max-w-7xl mx-auto px-4 py-16">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* Artist Image */}
-              <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background shadow-xl">
+              <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-600/50 shadow-2xl bg-gradient-to-br from-gray-700 to-gray-800">
                 <img 
                   src={spotifyImage || artist.avatar} 
                   alt={artist.name}
@@ -464,67 +496,104 @@ const ArtistProfile = () => {
                   )}
                 </div>
                 
-                <p className="text-muted-foreground max-w-2xl mb-6">{artist.bio}</p>
+                <p className="text-gray-300 max-w-2xl mb-6 leading-relaxed">{artist.bio}</p>
                 
                 {/* Social Links */}
                 {artist.social_links && (
-                  <div className="mb-6">
+                  <div className="mb-6 flex justify-start">
                     <ConnectLinks socialLinks={artist.social_links} />
                   </div>
                 )}
                 
-                <div className="flex flex-wrap gap-6 justify-center md:justify-start">
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-primary" />
-                    <span className="font-semibold">
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  <div className="flex items-center bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-700/30">
+                    <Users className="h-4 w-4 mr-2 text-blue-300" />
+                    <span className="font-semibold text-blue-200">
                       {spotifyArtist && spotifyArtist.followers ? 
-                        `${spotifyArtist.followers.total.toLocaleString()} Followers` : 
-                        `${followersCount} Followers`}
+                        `${spotifyArtist.followers.total.toLocaleString()}` : 
+                        `${followersCount.toLocaleString()}`}
                     </span>
+                    <span className="text-blue-100 ml-1 text-sm">Followers</span>
                   </div>
-                  <div className="flex items-center">
-                    <Music className="h-5 w-5 mr-2 text-primary" />
-                    <span className="font-semibold">{artistProjects.length} Projects</span>
+                  
+                  <div className="flex items-center bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-700/30">
+                    <Music className="h-4 w-4 mr-2 text-purple-300" />
+                    <span className="font-semibold text-purple-200">{artistProjects.length}</span>
+                    <span className="text-purple-100 ml-1 text-sm">Projects</span>
                   </div>
-                  <div className="flex items-center">
-                    <Sparkles className="h-5 w-5 mr-2 text-primary" />
-                    <span className="font-semibold">
+                  
+                  <div className="flex items-center bg-green-900/20 px-3 py-2 rounded-lg border border-green-700/30">
+                    <Sparkles className="h-4 w-4 mr-2 text-green-300" />
+                    <span className="font-semibold text-green-200">
                       {spotifyArtist ? 
-                        `${spotifyArtist.popularity}% Popularity` : 
-                        `${artist.successRate}% Success Rate`}
+                        `${spotifyArtist.popularity}%` : 
+                        `${artist.successRate}%`}
+                    </span>
+                    <span className="text-green-100 ml-1 text-sm">
+                      {spotifyArtist ? 'Popularity' : 'Success Rate'}
                     </span>
                   </div>
+                  
+                  {/* New Stats */}
+                  {artist.monthly_listeners && (
+                    <div className="flex items-center bg-emerald-900/20 px-3 py-2 rounded-lg border border-emerald-700/30">
+                      <BarChart className="h-4 w-4 mr-2 text-emerald-300" />
+                      <span className="font-semibold text-emerald-200">
+                        {artist.monthly_listeners.toLocaleString()}
+                      </span>
+                      <span className="text-emerald-100 ml-1 text-sm">Monthly Listeners</span>
+                    </div>
+                  )}
+                  
+                  {artist.total_streams && (
+                    <div className="flex items-center bg-cyan-900/20 px-3 py-2 rounded-lg border border-cyan-700/30">
+                      <Music className="h-4 w-4 mr-2 text-cyan-300" />
+                      <span className="font-semibold text-cyan-200">
+                        {artist.total_streams.toLocaleString()}
+                      </span>
+                      <span className="text-cyan-100 ml-1 text-sm">Total Streams</span>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 w-full md:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {user && isAuthenticated && user.id !== artist.id && (
-                  <Button 
-                      onClick={handleFollow}
-                    variant={isFollowing ? "outline" : "default"}
-                      className={isFollowing ? "border-green-500 text-green-400 hover:bg-green-500/20" : "bg-blue-600 hover:bg-blue-700"}
-                  >
-                      {isFollowing ? 'Following' : 'Follow'}
-                  </Button>
-                )}
-                  <Button onClick={handleViewLatestProject} variant="outline" className="border-blue-500 text-blue-300 hover:bg-blue-500/20">
-                    View Latest Project
-                  </Button>
-                  {isProjectOwner && (
                     <Button 
-                      onClick={handleViewProjectDashboard}
-                      className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      onClick={handleFollow}
+                      variant={isFollowing ? "outline" : "default"}
+                      className={isFollowing ? 
+                        "border-emerald-500 text-emerald-400 hover:bg-emerald-500/20 bg-emerald-500/10 w-full sm:w-auto" : 
+                        "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg w-full sm:w-auto"
+                      }
                     >
-                      View Project Dashboard
+                      {isFollowing ? '✓ Following' : '+ Follow'}
                     </Button>
                   )}
+                  <Button 
+                    onClick={handleViewLatestProject} 
+                    variant="outline" 
+                    className="border-slate-500/50 text-slate-300 hover:bg-slate-500/20 bg-slate-500/10 backdrop-blur-sm w-full sm:w-auto"
+                  >
+                    View Latest Project
+                  </Button>
+                </div>
+                {isProjectOwner && (
+                  <Button 
+                    onClick={handleViewProjectDashboard}
+                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg text-white w-full sm:w-auto"
+                  >
+                    View Project Dashboard
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </div>
         
         {/* Artist Content */}
-        <div className="container max-w-7xl mx-auto px-4 py-12">
+        <div className="container max-w-7xl mx-auto px-4 py-12 bg-slate-950">
           <Tabs defaultValue="projects" className="w-full">
             <TabsList className="mb-8">
               <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -591,145 +660,382 @@ const ArtistProfile = () => {
             <TabsContent value="about" className="animate-fade-in">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Artist Biography</CardTitle>
+                  {/* Artist Biography */}
+                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-slate-700/50 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="border-b border-slate-700/30">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                        Artist Biography
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 pt-6">
                       {artist.biography ? (
-                        <p className="text-muted-foreground whitespace-pre-wrap">
+                        <p className="text-white whitespace-pre-wrap leading-relaxed">
                           {artist.biography}
-                      </p>
+                        </p>
                       ) : (
-                      <p className="text-muted-foreground">
+                        <p className="text-gray-300 italic">
                           {artist.bio || "No biography available yet."}
                         </p>
                       )}
                     </CardContent>
                   </Card>
                   
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Musical Style & Influences</CardTitle>
+                  {/* Musical Style & Influences */}
+                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-violet-700/50 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="border-b border-violet-700/30">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
+                        Musical Style & Influences
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-6 pt-6">
                       {artist.musical_style ? (
-                        <div>
-                          <h4 className="font-medium mb-2">Musical Style</h4>
-                          <p className="text-muted-foreground mb-4">
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-violet-600/30">
+                          <h4 className="font-semibold mb-3 text-violet-300 flex items-center gap-2">
+                            <Music className="w-4 h-4" />
+                            Musical Style
+                          </h4>
+                          <p className="text-white leading-relaxed">
                             {artist.musical_style}
                           </p>
                         </div>
                       ) : (
-                      <p className="text-muted-foreground">
-                        {artist.name}'s music blends traditional elements of {
-                          spotifyArtist && spotifyArtist.genres ? 
-                            spotifyArtist.genres.slice(0, 2).join(' and ') : 
-                            artist.genres.join(' and ')
-                        } with innovative production techniques. Their sound is characterized by emotional depth
-                        and meticulous attention to sonic detail.
-                      </p>
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-violet-600/30">
+                          <h4 className="font-semibold mb-3 text-violet-300 flex items-center gap-2">
+                            <Music className="w-4 h-4" />
+                            Musical Style
+                          </h4>
+                          <p className="text-white leading-relaxed">
+                            {artist.name}'s music blends traditional elements of {
+                              spotifyArtist && spotifyArtist.genres ? 
+                                spotifyArtist.genres.slice(0, 2).join(' and ') : 
+                                artist.genres.join(' and ')
+                            } with innovative production techniques. Their sound is characterized by emotional depth
+                            and meticulous attention to sonic detail.
+                          </p>
+                        </div>
                       )}
                       
                       {artist.influences && (
-                        <div>
-                          <h4 className="font-medium mb-2">Influences</h4>
-                      <p className="text-muted-foreground">
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-indigo-600/30">
+                          <h4 className="font-semibold mb-3 text-indigo-300 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            Influences
+                          </h4>
+                          <p className="text-white leading-relaxed">
                             {artist.influences}
                           </p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Artist Statistics */}
+                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-emerald-700/50 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="border-b border-emerald-700/30">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        Artist Statistics
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-emerald-600/30 text-center hover:border-emerald-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-emerald-400 mb-1">
+                            {artist.monthly_listeners?.toLocaleString() || '0'}
+                          </div>
+                          <div className="text-xs text-emerald-300">Monthly Listeners</div>
+                        </div>
+                        
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-teal-600/30 text-center hover:border-teal-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-teal-400 mb-1">
+                            {artist.total_streams?.toLocaleString() || '0'}
+                          </div>
+                          <div className="text-xs text-teal-300">Total Streams</div>
+                        </div>
+                        
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-cyan-600/30 text-center hover:border-cyan-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-cyan-400 mb-1">
+                            {artist.success_rate || artist.successRate || '0'}%
+                          </div>
+                          <div className="text-xs text-cyan-300">Success Rate</div>
+                        </div>
+                        
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-violet-600/30 text-center hover:border-violet-500/50 transition-colors">
+                          <div className="text-2xl font-bold text-violet-400 mb-1">
+                            {spotifyArtist?.followers?.total?.toLocaleString() || followersCount.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-violet-300">Followers</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Spotify Integration */}
+                  {artist.spotify_artist_id && (
+                    <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-700/50 backdrop-blur-sm">
+                      <CardHeader className="border-b border-green-700/30">
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Spotify Integration
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
+                            <h4 className="font-semibold mb-2 text-green-200">Spotify Artist ID</h4>
+                            <p className="text-white font-mono text-sm">{artist.spotify_artist_id}</p>
+                          </div>
+                          
+                          {spotifyArtist && (
+                            <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
+                              <h4 className="font-semibold mb-3 text-green-200">Spotify Data</h4>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-lg font-bold text-green-300">
+                                    {spotifyArtist.followers?.total?.toLocaleString() || '0'}
+                                  </div>
+                                  <div className="text-xs text-green-200">Followers</div>
+                                </div>
+                                <div>
+                                  <div className="text-lg font-bold text-green-300">
+                                    {spotifyArtist.popularity || '0'}%
+                                  </div>
+                                  <div className="text-xs text-green-200">Popularity</div>
+                                </div>
+                              </div>
+                              {spotifyArtist.genres && (
+                                <div className="mt-3">
+                                  <div className="text-xs text-green-200 mb-2">Top Genres</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {spotifyArtist.genres.slice(0, 5).map((genre, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs bg-green-600/20 text-green-200 border-green-600/50">
+                                        {genre}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
                 
                 <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Career Highlights</CardTitle>
+                  {/* Career Highlights */}
+                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-orange-700/50 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="border-b border-orange-700/30">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                        Career Highlights
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                       {artist.career_highlights && artist.career_highlights.length > 0 ? (
                         <div className="space-y-4">
                           {artist.career_highlights.map((highlight: any, index: number) => (
-                            <div key={index} className="flex gap-3">
-                              <div className="text-sm font-medium text-primary">
-                                {highlight.year || 'N/A'}
-                              </div>
-                              <div>
-                                <div className="font-medium">{highlight.title || highlight.achievement}</div>
-                                <p className="text-sm text-muted-foreground">
-                                  {highlight.description || highlight.details}
-                                </p>
+                            <div key={index} className="bg-slate-800/50 rounded-lg p-3 border border-orange-600/30 hover:border-orange-500/50 transition-colors">
+                              <div className="flex gap-3">
+                                <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">
+                                  {highlight.year || highlight.date || 'N/A'}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-semibold text-white mb-1">
+                                    {highlight.title || highlight.achievement || highlight.name || 'Achievement'}
+                                  </div>
+                                  <p className="text-sm text-orange-200">
+                                    {highlight.description || highlight.details || highlight.summary || 'No description available'}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                      <div className="space-y-4">
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2023</div>
-                          <div>
-                            <div className="font-medium">Released 'Reflections' EP</div>
-                            <p className="text-sm text-muted-foreground">
-                              Reached top 50 on streaming charts
-                            </p>
+                        <div className="space-y-4">
+                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
+                            <div className="flex gap-3">
+                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2023</div>
+                              <div className="flex-1">
+                                <div className="font-semibold text-white mb-1">Released 'Reflections' EP</div>
+                                <p className="text-sm text-orange-100">Reached top 50 on streaming charts</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
+                            <div className="flex gap-3">
+                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2022</div>
+                              <div className="flex-1">
+                                <div className="font-semibold text-white mb-1">Collaborated with top producers</div>
+                                <p className="text-sm text-orange-100">Worked with industry veterans</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
+                            <div className="flex gap-3">
+                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2021</div>
+                              <div className="flex-1">
+                                <div className="font-semibold text-white mb-1">Debut single release</div>
+                                <p className="text-sm text-orange-100">First major industry recognition</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2022</div>
-                          <div>
-                            <div className="font-medium">Collaborated with top producers</div>
-                            <p className="text-sm text-muted-foreground">
-                              Worked with industry veterans
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-3">
-                          <div className="text-sm font-medium text-primary">2021</div>
-                          <div>
-                            <div className="font-medium">Debut single release</div>
-                            <p className="text-sm text-muted-foreground">
-                              First major industry recognition
-                            </p>
-                          </div>
-                        </div>
-                      </div>
                       )}
                     </CardContent>
                   </Card>
                   
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Connect</CardTitle>
+                  {/* Social Media Links */}
+                  <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-pink-700/50 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="border-b border-pink-700/30">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></div>
+                        Connect
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <Button variant="outline" className="w-full justify-start text-foreground">
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.441 16.892c-2.102.144-6.784.144-8.883 0-2.276-.156-2.541-1.27-2.558-4.892.017-3.629.285-4.736 2.558-4.892 2.099-.144 6.782-.144 8.883 0 2.277.156 2.541 1.27 2.559 4.892-.018 3.629-.285 4.736-2.559 4.892zm-6.441-7.234l4.917 2.338-4.917 2.346v-4.684z"/>
-                          </svg>
-                          YouTube
-                        </Button>
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        {artist.social_links?.youtube && (
+                          <a href={artist.social_links.youtube} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-red-600/20 hover:bg-red-600/30 border-red-600/50 text-red-300 hover:text-red-200 shadow-lg">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.441 16.892c-2.102.144-6.784.144-8.883 0-2.276-.156-2.541-1.27-2.558-4.892.017-3.629.285-4.736 2.558-4.892 2.099-.144 6.782-.144 8.883 0 2.277.156 2.541 1.27 2.559 4.892-.018 3.629-.285 4.736-2.559 4.892zm-6.441-7.234l4.917 2.338-4.917 2.346v-4.684z"/>
+                              </svg>
+                              YouTube
+                            </Button>
+                          </a>
+                        )}
                         
-                        <Button variant="outline" className="w-full justify-start text-foreground">
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm3.5 8.5c0-1.933-1.566-3.5-3.5-3.5s-3.5 1.567-3.5 3.5c0 1.31.724 2.45 1.792 3.051-.022 1.146-.348 3.265-2.444 4.445-.145.066-.148.19.008.246 2.904 1.024 4.395-1.678 4.644-2.472.21.016.435.03.651.03 1.934 0 3.5-1.567 3.5-3.5"/>
-                          </svg>
-                          Spotify
-                        </Button>
+                        {artist.social_links?.spotify && (
+                          <a href={artist.social_links.spotify} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-600/50 text-emerald-300 hover:text-emerald-200 shadow-lg">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm3.5 8.5c0-1.933-1.566-3.5-3.5-3.5s-3.5 1.567-3.5 3.5c0 1.31.724 2.45 1.792 3.051-.022 1.146-.348 3.265-2.444 4.445-.145.066-.148.19.008.246 2.904 1.024 4.395-1.678 4.644-2.472.21.016.435.03.651.03 1.934 0 3.5-1.567 3.5-3.5"/>
+                              </svg>
+                              Spotify
+                            </Button>
+                          </a>
+                        )}
                         
-                        <Button variant="outline" className="w-full justify-start text-foreground">
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
-                          </svg>
-                          Instagram
-                        </Button>
+                        {artist.social_links?.instagram && (
+                          <a href={artist.social_links.instagram} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-gradient-to-r from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 border-pink-600/50 text-pink-300 hover:text-pink-200 shadow-lg">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
+                              </svg>
+                              Instagram
+                            </Button>
+                          </a>
+                        )}
+
+                        {artist.instagram_handle && (
+                          <a href={`https://instagram.com/${artist.instagram_handle}`} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border-purple-600/50 text-purple-300 hover:text-purple-200">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                              </svg>
+                              @{artist.instagram_handle}
+                            </Button>
+                          </a>
+                        )}
+
+                        {artist.twitter_handle && (
+                          <a href={`https://twitter.com/${artist.twitter_handle}`} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-blue-600/20 hover:bg-blue-600/30 border-blue-600/50 text-blue-300 hover:text-blue-200">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                              </svg>
+                              @{artist.twitter_handle}
+                            </Button>
+                          </a>
+                        )}
+
+                        {artist.website_url && (
+                          <a href={artist.website_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full justify-start bg-gray-600/20 hover:bg-gray-600/30 border-gray-600/50 text-gray-300 hover:text-gray-200">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2v3.057c1.836-.211 3.5-1.172 4.5-2.648 1.5-2.172 1.5-5.172 0-7.172-1.5-2.172-4.5-2.172-6 0-1.5 2.172-1.5 5.172 0 7.172 1 1.476 2.664 2.437 4.5 2.648zm-1-5.057c0-.552.448-1 1-1s1 .448 1 1-.448 1-1 1-1-.448-1-1z"/>
+                              </svg>
+                              Website
+                            </Button>
+                          </a>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Future Releases */}
+                  {artist.future_releases && artist.future_releases.length > 0 && (
+                    <Card className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-blue-700/50 backdrop-blur-sm">
+                      <CardHeader className="border-b border-blue-700/30">
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          Future Releases
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          {artist.future_releases.map((release: any, index: number) => (
+                            <div key={index} className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/30">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-semibold text-white">{release.title}</h4>
+                                <Badge variant="secondary" className="capitalize bg-blue-600/20 text-blue-200 border-blue-600/50">
+                                  {release.type}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
+                                <p className="text-sm text-blue-200 font-medium">
+                                  {new Date(release.releaseDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                              <p className="text-sm text-blue-100 leading-relaxed">
+                                {release.description}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Spotify Embeds */}
+                  {artist.spotify_embed_urls && artist.spotify_embed_urls.length > 0 && (
+                    <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-700/50 backdrop-blur-sm">
+                      <CardHeader className="border-b border-green-700/30">
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Listen on Spotify
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          {artist.spotify_embed_urls.map((url: string, index: number) => (
+                            <div key={index} className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
+                              <iframe
+                                src={url.replace('open.spotify.com', 'open.spotify.com/embed')} 
+                                width="100%" 
+                                height="152" 
+                                frameBorder="0" 
+                                allow="encrypted-media"
+                                className="rounded"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </TabsContent>

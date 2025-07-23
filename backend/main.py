@@ -6118,6 +6118,47 @@ async def generate_real_musical_compatibility_data(artist1_name: str, artist2_na
             "data_quality": "fallback"
         }
 
+@app.get("/spotify-artist/{artist_id}")
+async def get_spotify_artist_data(artist_id: str):
+    """
+    Get Spotify artist data by ID for profile import
+    """
+    try:
+        # Initialize Spotify client
+        if not spotify_client_id or not spotify_client_secret:
+            raise HTTPException(status_code=500, detail="Spotify credentials not configured")
+        
+        sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(
+            client_id=spotify_client_id,
+            client_secret=spotify_client_secret
+        ))
+        
+        # Get artist data
+        artist = sp.artist(artist_id)
+        
+        # Get top tracks
+        top_tracks = sp.artist_top_tracks(artist_id, country='US')
+        
+        # Get albums
+        albums = sp.artist_albums(artist_id, album_type='album,single,ep', limit=10)
+        
+        return {
+            "id": artist["id"],
+            "name": artist["name"],
+            "followers": artist["followers"],
+            "popularity": artist["popularity"],
+            "genres": artist["genres"],
+            "images": artist["images"],
+            "external_urls": artist["external_urls"],
+            "topTracks": top_tracks["tracks"][:5],  # Top 5 tracks
+            "albums": albums["items"][:5],  # Top 5 albums
+            "spotify_url": artist["external_urls"]["spotify"]
+        }
+        
+    except Exception as e:
+        print(f"Error fetching Spotify artist data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Spotify data")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

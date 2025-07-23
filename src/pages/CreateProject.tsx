@@ -16,19 +16,46 @@ import Footer from '@/components/layout/Footer';
 import { supabaseService } from '@/services/supabaseService';
 import { artistProfileService } from '@/services/artistProfileService';
 
+// Update all usages of project_type to include 'live_show'
+type ProjectType = 'album' | 'single' | 'ep' | 'mixtape' | 'live_show';
+
 interface FormData {
   title: string;
   description: string;
   detailedDescription: string;
-  projectType: 'album' | 'single' | 'ep' | 'mixtape' | '';
+  projectType: ProjectType | '';
   genre: string[];
-  fundingGoal: string;
-  minInvestment: string;
-  maxInvestment: string;
-  expectedROI: string;
-  projectDuration: string;
-  deadline: string;
+  numberOfSongs?: string;
+  totalDuration?: string;
+  youtubeLinks: string[];
+  spotifyLink: string;
+  mp3Files: File[];
+  ticketSaleLink?: string;
+  showDate?: string;
+  showLocation?: string;
   bannerImage: File | null;
+}
+
+// 1. Add a type for loaded project data that includes new fields
+interface LoadedProject {
+  id: string;
+  artist_id: string;
+  title: string;
+  description: string;
+  detailed_description: string;
+  banner_image: string;
+  project_type: ProjectType;
+  genre: string[];
+  number_of_songs?: number;
+  total_duration?: number;
+  youtube_links?: string[];
+  spotify_link?: string;
+  mp3_files?: string[];
+  ticket_sale_link?: string;
+  show_date?: string;
+  show_location?: string;
+  status: string;
+  [key: string]: any;
 }
 
 export default function CreateProject() {
@@ -45,12 +72,14 @@ export default function CreateProject() {
     detailedDescription: '',
     projectType: '',
     genre: [],
-    fundingGoal: '',
-    minInvestment: '',
-    maxInvestment: '',
-    expectedROI: '',
-    projectDuration: '',
-    deadline: '',
+    numberOfSongs: '',
+    totalDuration: '',
+    youtubeLinks: [''],
+    spotifyLink: '',
+    mp3Files: [],
+    ticketSaleLink: '',
+    showDate: '',
+    showLocation: '',
     bannerImage: null,
   });
   const [saveAsDraft, setSaveAsDraft] = useState(false);
@@ -63,7 +92,7 @@ export default function CreateProject() {
       
       setIsLoading(true);
       try {
-        const project = await supabaseService.getProjectById(projectId);
+        const project = await supabaseService.getProjectById(projectId) as LoadedProject;
         if (project) {
           setFormData({
             title: project.title || '',
@@ -71,13 +100,15 @@ export default function CreateProject() {
             detailedDescription: project.detailed_description || '',
             projectType: project.project_type || '',
             genre: project.genre || [],
-            fundingGoal: project.funding_goal?.toString() || '',
-            minInvestment: project.min_investment?.toString() || '',
-            maxInvestment: project.max_investment?.toString() || '',
-            expectedROI: project.expected_roi?.toString() || '',
-            projectDuration: project.project_duration || '',
-            deadline: project.deadline || '',
-            bannerImage: null, // We'll handle image separately
+            numberOfSongs: project.number_of_songs?.toString() || '',
+            totalDuration: project.total_duration?.toString() || '',
+            youtubeLinks: Array.isArray(project.youtube_links) ? project.youtube_links : [''],
+            spotifyLink: project.spotify_link || '',
+            mp3Files: [], // We'll handle uploads separately
+            ticketSaleLink: project.ticket_sale_link || '',
+            showDate: project.show_date || '',
+            showLocation: project.show_location || '',
+            bannerImage: null,
           });
           setSaveAsDraft(project.status === 'draft');
         } else {
@@ -109,14 +140,16 @@ export default function CreateProject() {
     'Folk', 'Classical', 'Reggae', 'Blues', 'Alternative', 'Indie'
   ];
 
-  const projectIcons = {
+  // Update projectIcons to Record<string, any> to fix linter error
+  const projectIcons: Record<string, any> = {
     album: Album,
     single: Music,
     ep: Play,
     mixtape: Mic,
+    live_show: Mic,
   };
 
-  const handleInputChange = (field: keyof FormData, value: string | string[] | File | null) => {
+  const handleInputChange = (field: keyof FormData, value: string | string[] | File | File[] | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -136,6 +169,12 @@ export default function CreateProject() {
     }
   };
 
+  // 4. Fix File[] assignment for mp3Files
+  const handleMp3FilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    handleInputChange('mp3Files', files);
+  };
+
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
@@ -143,8 +182,7 @@ export default function CreateProject() {
       case 2:
         return !!(formData.detailedDescription && formData.genre.length > 0);
       case 3:
-        return !!(formData.fundingGoal && formData.minInvestment && formData.maxInvestment && 
-                 formData.expectedROI && formData.projectDuration && formData.deadline);
+        return !!(formData.projectType !== 'live_show' ? (formData.numberOfSongs && formData.totalDuration) : (formData.ticketSaleLink && formData.showDate && formData.showLocation));
       default:
         return true;
     }
@@ -210,23 +248,47 @@ export default function CreateProject() {
       
       if (isEditing && projectId) {
         // Update existing project
-        const updatedProject = await supabaseService.updateProject(projectId, {
+        const updatePayload: any = {
           title: formData.title,
           description: formData.description,
           detailed_description: formData.detailedDescription,
-          banner_image: formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : '/placeholder.svg',
-          project_type: formData.projectType as 'album' | 'single' | 'ep' | 'mixtape',
+          project_type: formData.projectType as ProjectType,
           genre: formData.genre,
-          funding_goal: parseFloat(formData.fundingGoal),
-          min_investment: parseFloat(formData.minInvestment),
-          max_investment: parseFloat(formData.maxInvestment),
-          expected_roi: parseFloat(formData.expectedROI),
-          project_duration: formData.projectDuration,
-          deadline: formData.deadline,
+          youtube_links: formData.youtubeLinks.length > 0 ? formData.youtubeLinks : null,
+          spotify_link: formData.spotifyLink || null,
+          mp3_files: formData.mp3Files.length > 0 ? formData.mp3Files.map(file => file.name) : null,
           status: 'draft' // Temporarily use 'draft' for both until database migration is applied
-        });
+        };
+
+        // Add project type specific fields
+        if (formData.projectType !== 'live_show') {
+          updatePayload.number_of_songs = formData.numberOfSongs ? parseInt(formData.numberOfSongs) : null;
+          updatePayload.total_duration = formData.totalDuration ? parseInt(formData.totalDuration) : null;
+        } else {
+          updatePayload.ticket_sale_link = formData.ticketSaleLink || null;
+          updatePayload.show_date = formData.showDate || null;
+          updatePayload.show_location = formData.showLocation || null;
+        }
+
+        const updatedProject = await supabaseService.updateProject(projectId, updatePayload);
         
         if (updatedProject) {
+          // Upload banner image if provided
+          if (formData.bannerImage) {
+            try {
+              console.log('CreateProject: Uploading banner image for update...');
+              const imageUrl = await supabaseService.uploadProjectImage(formData.bannerImage, projectId);
+              if (imageUrl) {
+                console.log('CreateProject: Image uploaded successfully:', imageUrl);
+                // Update the project with the new image URL
+                await supabaseService.updateProject(projectId, { banner_image: imageUrl });
+              }
+            } catch (imageError) {
+              console.error('CreateProject: Error uploading image:', imageError);
+              // Don't fail the project update if image upload fails
+            }
+          }
+
           toast({
             title: "Project Updated!",
             description: `Your ${formData.projectType} project "${formData.title}" has been updated and saved as a draft.`,
@@ -237,24 +299,57 @@ export default function CreateProject() {
         }
       } else {
         // Create new project
-        const project = await supabaseService.createProject({
+        const projectPayload: any = {
           artist_id: artistProfile.id,
           title: formData.title,
           description: formData.description,
           detailed_description: formData.detailedDescription,
-          banner_image: formData.bannerImage ? URL.createObjectURL(formData.bannerImage) : '/placeholder.svg',
-          project_type: formData.projectType as 'album' | 'single' | 'ep' | 'mixtape',
+          banner_image: '/placeholder.svg', // We'll update this after project creation if there's an image
+          project_type: formData.projectType,
           genre: formData.genre,
-          funding_goal: parseFloat(formData.fundingGoal),
-          min_investment: parseFloat(formData.minInvestment),
-          max_investment: parseFloat(formData.maxInvestment),
-          expected_roi: parseFloat(formData.expectedROI),
-          project_duration: formData.projectDuration,
-          deadline: formData.deadline,
-          status: 'draft' // Temporarily use 'draft' for both until database migration is applied
-        });
+          youtube_links: formData.youtubeLinks.length > 0 ? formData.youtubeLinks : null,
+          spotify_link: formData.spotifyLink || null,
+          // For now, we'll store MP3 file names as strings - actual file upload would need separate handling
+          mp3_files: formData.mp3Files.length > 0 ? formData.mp3Files.map(file => file.name) : null,
+        };
+        
+        // Add project type specific fields
+        if (formData.projectType !== 'live_show') {
+          projectPayload.number_of_songs = formData.numberOfSongs ? parseInt(formData.numberOfSongs) : null;
+          projectPayload.total_duration = formData.totalDuration ? parseInt(formData.totalDuration) : null;
+        } else {
+          projectPayload.ticket_sale_link = formData.ticketSaleLink || null;
+          projectPayload.show_date = formData.showDate || null;
+          projectPayload.show_location = formData.showLocation || null;
+        }
+        
+        // Add legacy fields with default values for backward compatibility
+        projectPayload.funding_goal = 0;
+        projectPayload.min_investment = 0;
+        projectPayload.max_investment = 0;
+        projectPayload.expected_roi = 0;
+        projectPayload.project_duration = 'TBD';
+        projectPayload.deadline = '2025-12-31';
+
+        const project = await supabaseService.createProject(projectPayload);
 
         if (project) {
+          // Upload banner image if provided
+          if (formData.bannerImage) {
+            try {
+              console.log('CreateProject: Uploading banner image...');
+              const imageUrl = await supabaseService.uploadProjectImage(formData.bannerImage, project.id);
+              if (imageUrl) {
+                console.log('CreateProject: Image uploaded successfully:', imageUrl);
+                // Update the project with the new image URL
+                await supabaseService.updateProject(project.id, { banner_image: imageUrl });
+              }
+            } catch (imageError) {
+              console.error('CreateProject: Error uploading image:', imageError);
+              // Don't fail the project creation if image upload fails
+            }
+          }
+
           toast({
             title: "Project Saved as Draft!",
             description: `Your ${formData.projectType} project "${formData.title}" has been saved as a draft. You can edit it later.`,
@@ -313,7 +408,7 @@ export default function CreateProject() {
             <div>
               <Label className="text-white">Project Type *</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                {(['album', 'single', 'ep', 'mixtape'] as const).map((type) => {
+                {(['album', 'single', 'ep', 'mixtape', 'live_show'] as const).map((type) => {
                   const Icon = projectIcons[type];
                   return (
                     <Button
@@ -328,7 +423,7 @@ export default function CreateProject() {
                       onClick={() => handleInputChange('projectType', type)}
                     >
                       <Icon className="h-6 w-6" />
-                      <span className="capitalize">{type}</span>
+                      <span className="capitalize">{type === 'live_show' ? 'Live Show' : type}</span>
                     </Button>
                   );
                 })}
@@ -399,104 +494,116 @@ export default function CreateProject() {
       case 3:
         return (
           <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fundingGoal" className="text-white">Funding Goal ($) *</Label>
-                <div className="relative mt-2">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            {formData.projectType !== 'live_show' && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="numberOfSongs" className="text-white">Number of Songs *</Label>
                   <Input
-                    id="fundingGoal"
+                    id="numberOfSongs"
                     type="number"
-                    value={formData.fundingGoal}
-                    onChange={(e) => handleInputChange('fundingGoal', e.target.value)}
-                    placeholder="50000"
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400"
+                    value={formData.numberOfSongs}
+                    onChange={(e) => handleInputChange('numberOfSongs', e.target.value)}
+                    placeholder="10"
+                    className="bg-white/5 border-white/10 text-white placeholder-gray-400"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="totalDuration" className="text-white">Total Duration (min) *</Label>
+                  <Input
+                    id="totalDuration"
+                    type="text"
+                    value={formData.totalDuration}
+                    onChange={(e) => handleInputChange('totalDuration', e.target.value)}
+                    placeholder="45"
+                    className="bg-white/5 border-white/10 text-white placeholder-gray-400"
                   />
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="expectedROI" className="text-white">Expected ROI (%) *</Label>
-                <div className="relative mt-2">
-                  <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            )}
+            {formData.projectType === 'live_show' && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="ticketSaleLink" className="text-white">Ticket Sale Link *</Label>
                   <Input
-                    id="expectedROI"
-                    type="number"
-                    value={formData.expectedROI}
-                    onChange={(e) => handleInputChange('expectedROI', e.target.value)}
-                    placeholder="15"
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400"
+                    id="ticketSaleLink"
+                    type="text"
+                    value={formData.ticketSaleLink}
+                    onChange={(e) => handleInputChange('ticketSaleLink', e.target.value)}
+                    placeholder="https://tickets.example.com"
+                    className="bg-white/5 border-white/10 text-white placeholder-gray-400"
                   />
                 </div>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="minInvestment" className="text-white">Minimum Investment ($) *</Label>
-                <div className="relative mt-2">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <div>
+                  <Label htmlFor="showDate" className="text-white">Show Date *</Label>
                   <Input
-                    id="minInvestment"
-                    type="number"
-                    value={formData.minInvestment}
-                    onChange={(e) => handleInputChange('minInvestment', e.target.value)}
-                    placeholder="100"
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="maxInvestment" className="text-white">Maximum Investment ($) *</Label>
-                <div className="relative mt-2">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="maxInvestment"
-                    type="number"
-                    value={formData.maxInvestment}
-                    onChange={(e) => handleInputChange('maxInvestment', e.target.value)}
-                    placeholder="10000"
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder-gray-400"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="projectDuration" className="text-white">Project Duration *</Label>
-                <div className="relative mt-2">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Select value={formData.projectDuration} onValueChange={(value) => handleInputChange('projectDuration', value)}>
-                    <SelectTrigger className="pl-10 bg-white/5 border-white/10 text-white">
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="3-months">3 Months</SelectItem>
-                      <SelectItem value="6-months">6 Months</SelectItem>
-                      <SelectItem value="9-months">9 Months</SelectItem>
-                      <SelectItem value="12-months">12 Months</SelectItem>
-                      <SelectItem value="18-months">18 Months</SelectItem>
-                      <SelectItem value="24-months">24 Months</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="deadline" className="text-white">Funding Deadline *</Label>
-                <div className="relative mt-2">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="deadline"
+                    id="showDate"
                     type="date"
-                    value={formData.deadline}
-                    onChange={(e) => handleInputChange('deadline', e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white"
+                    value={formData.showDate}
+                    onChange={(e) => handleInputChange('showDate', e.target.value)}
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="showLocation" className="text-white">Show Location *</Label>
+                  <Input
+                    id="showLocation"
+                    type="text"
+                    value={formData.showLocation}
+                    onChange={(e) => handleInputChange('showLocation', e.target.value)}
+                    placeholder="Venue, City, Country"
+                    className="bg-white/5 border-white/10 text-white placeholder-gray-400"
                   />
                 </div>
               </div>
+            )}
+            <div>
+              <Label className="text-white">YouTube Links *</Label>
+              {formData.youtubeLinks.map((link, idx) => (
+                <div key={idx} className="flex items-center gap-2 mt-2">
+                  <Input
+                    type="text"
+                    value={link}
+                    onChange={(e) => {
+                      const newLinks = [...formData.youtubeLinks];
+                      newLinks[idx] = e.target.value;
+                      handleInputChange('youtubeLinks', newLinks);
+                    }}
+                    placeholder="https://youtube.com/..."
+                    className="bg-white/5 border-white/10 text-white placeholder-gray-400 flex-1"
+                  />
+                  <Button type="button" variant="outline" onClick={() => handleInputChange('youtubeLinks', formData.youtubeLinks.filter((_, i) => i !== idx))} className="border-white/20 text-gray-300 hover:bg-white/10">Remove</Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={() => handleInputChange('youtubeLinks', [...formData.youtubeLinks, ''])} className="mt-2 border-white/20 text-gray-300 hover:bg-white/10">Add Link</Button>
+            </div>
+            <div>
+              <Label htmlFor="spotifyLink" className="text-white">Spotify Link *</Label>
+              <Input
+                id="spotifyLink"
+                type="text"
+                value={formData.spotifyLink}
+                onChange={(e) => handleInputChange('spotifyLink', e.target.value)}
+                placeholder="https://open.spotify.com/album/..."
+                className="bg-white/5 border-white/10 text-white placeholder-gray-400"
+              />
+            </div>
+            <div>
+              <Label htmlFor="mp3Files" className="text-white">Upload MP3 Files *</Label>
+              <Input
+                id="mp3Files"
+                type="file"
+                accept="audio/mp3"
+                multiple
+                onChange={handleMp3FilesChange}
+                className="bg-white/5 border-white/10 text-white"
+              />
+              {formData.mp3Files.length > 0 && (
+                <ul className="mt-2 text-gray-400 text-sm">
+                  {formData.mp3Files.map((file, idx) => (
+                    <li key={idx}>{file.name}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         );
@@ -512,7 +619,8 @@ export default function CreateProject() {
             <Card className="bg-white/5 border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
-                  {formData.projectType && React.createElement(projectIcons[formData.projectType as keyof typeof projectIcons], { className: "h-5 w-5" })}
+                  {formData.projectType && projectIcons[formData.projectType as string] &&
+                    React.createElement(projectIcons[formData.projectType as string], { className: "h-5 w-5" })}
                   {formData.title}
                 </CardTitle>
                 <CardDescription className="text-gray-400">{formData.description}</CardDescription>
@@ -534,19 +642,16 @@ export default function CreateProject() {
 
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="text-gray-300">
-                    <span className="font-semibold text-white">Funding Goal:</span> ${parseInt(formData.fundingGoal || '0').toLocaleString()}
+                    <span className="font-semibold text-white">Project Type:</span> {formData.projectType === 'live_show' ? 'Live Show' : formData.projectType}
                   </div>
                   <div className="text-gray-300">
-                    <span className="font-semibold text-white">Expected ROI:</span> {formData.expectedROI}%
+                    <span className="font-semibold text-white">Duration:</span> {formData.projectType === 'live_show' ? 'N/A' : `${formData.numberOfSongs || '0'} songs, ${formData.totalDuration || '0'} min`}
                   </div>
                   <div className="text-gray-300">
-                    <span className="font-semibold text-white">Investment Range:</span> ${parseInt(formData.minInvestment || '0').toLocaleString()} - ${parseInt(formData.maxInvestment || '0').toLocaleString()}
+                    <span className="font-semibold text-white">Show Date:</span> {formData.projectType === 'live_show' ? new Date(formData.showDate || '').toLocaleDateString() : 'N/A'}
                   </div>
                   <div className="text-gray-300">
-                    <span className="font-semibold text-white">Duration:</span> {formData.projectDuration}
-                  </div>
-                  <div className="text-gray-300">
-                    <span className="font-semibold text-white">Deadline:</span> {new Date(formData.deadline).toLocaleDateString()}
+                    <span className="font-semibold text-white">Location:</span> {formData.projectType === 'live_show' ? formData.showLocation || 'N/A' : 'N/A'}
                   </div>
                 </div>
               </CardContent>

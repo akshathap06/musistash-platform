@@ -439,11 +439,11 @@ const ArtistProfile = () => {
       
       <main className="flex-1 pt-16">
         {/* Artist Header */}
-        <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 border-b border-gray-700/50">
+        <div className="bg-gray-900 border-b border-gray-700">
           <div className="container max-w-7xl mx-auto px-4 py-16">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* Artist Image */}
-              <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-600/50 shadow-2xl bg-gradient-to-br from-gray-700 to-gray-800">
+              <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-600 shadow-2xl bg-gray-800">
                 <img 
                   src={spotifyImage || artist.avatar} 
                   alt={artist.name}
@@ -660,8 +660,8 @@ const ArtistProfile = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                   {/* Artist Biography */}
-                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                    <CardHeader className="border-b border-gray-700/30">
+                  <Card className="bg-gray-900 border border-gray-700">
+                    <CardHeader className="border-b border-gray-700">
                       <CardTitle className="text-white flex items-center gap-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         Artist Biography
@@ -681,8 +681,8 @@ const ArtistProfile = () => {
                   </Card>
                   
                   {/* Musical Style & Influences */}
-                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                    <CardHeader className="border-b border-gray-700/30">
+                  <Card className="bg-gray-900 border border-gray-700">
+                    <CardHeader className="border-b border-gray-700">
                       <CardTitle className="text-white flex items-center gap-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         Musical Style & Influences
@@ -690,8 +690,8 @@ const ArtistProfile = () => {
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
                       {artist.musical_style ? (
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-violet-600/30">
-                          <h4 className="font-semibold mb-3 text-violet-300 flex items-center gap-2">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-purple-600/30">
+                          <h4 className="font-semibold mb-3 text-purple-300 flex items-center gap-2">
                             <Music className="w-4 h-4" />
                             Musical Style
                           </h4>
@@ -717,7 +717,7 @@ const ArtistProfile = () => {
                       )}
                       
                       {artist.influences && (
-                        <div className="bg-slate-800/50 rounded-lg p-4 border border-indigo-600/30">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-indigo-600/30">
                           <h4 className="font-semibold mb-3 text-indigo-300 flex items-center gap-2">
                             <Sparkles className="w-4 h-4" />
                             Influences
@@ -731,8 +731,8 @@ const ArtistProfile = () => {
                   </Card>
 
                   {/* Artist Statistics */}
-                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                    <CardHeader className="border-b border-gray-700/30">
+                  <Card className="bg-gray-900 border border-gray-700">
+                    <CardHeader className="border-b border-gray-700">
                       <CardTitle className="text-white flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         Artist Statistics
@@ -740,30 +740,30 @@ const ArtistProfile = () => {
                     </CardHeader>
                     <CardContent className="pt-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-blue-600/30 text-center hover:border-blue-500/50 transition-colors">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-blue-600/30 text-center hover:border-blue-500/50 transition-colors">
                           <div className="text-2xl font-bold text-blue-400 mb-1">
                             {artist.monthly_listeners?.toLocaleString() || '0'}
                           </div>
                           <div className="text-xs text-blue-300">Monthly Listeners</div>
                         </div>
                         
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-green-600/30 text-center hover:border-green-500/50 transition-colors">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-green-600/30 text-center hover:border-green-500/50 transition-colors">
                           <div className="text-2xl font-bold text-green-400 mb-1">
                             {artist.total_streams?.toLocaleString() || '0'}
                           </div>
                           <div className="text-xs text-green-300">Total Streams</div>
                         </div>
                         
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-purple-600/30 text-center hover:border-purple-500/50 transition-colors">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-purple-600/30 text-center hover:border-purple-500/50 transition-colors">
                           <div className="text-2xl font-bold text-purple-400 mb-1">
                             {artist.successRate || '0'}%
                           </div>
                           <div className="text-xs text-purple-300">Success Rate</div>
                         </div>
                         
-                        <div className="bg-gray-800/50 rounded-lg p-4 border border-pink-600/30 text-center hover:border-pink-500/50 transition-colors">
+                        <div className="bg-gray-800 rounded-lg p-4 border border-pink-600/30 text-center hover:border-pink-500/50 transition-colors">
                           <div className="text-2xl font-bold text-pink-400 mb-1">
-                            {spotifyArtist?.followers?.total?.toLocaleString() || followersCount.toLocaleString()}
+                            {followersCount.toLocaleString()}
                           </div>
                           <div className="text-xs text-pink-300">Followers</div>
                         </div>
@@ -771,63 +771,9 @@ const ArtistProfile = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Spotify Integration */}
-                  {artist.spotify_artist_id && (
-                    <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-700/50 backdrop-blur-sm">
-                      <CardHeader className="border-b border-green-700/30">
-                        <CardTitle className="text-white flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          Spotify Integration
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-6">
-                        <div className="space-y-4">
-                          <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
-                            <h4 className="font-semibold mb-2 text-green-200">Spotify Artist ID</h4>
-                            <p className="text-white font-mono text-sm">{artist.spotify_artist_id}</p>
-                          </div>
-                          
-                          {spotifyArtist && (
-                            <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
-                              <h4 className="font-semibold mb-3 text-green-200">Spotify Data</h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <div className="text-lg font-bold text-green-300">
-                                    {spotifyArtist.followers?.total?.toLocaleString() || '0'}
-                                  </div>
-                                  <div className="text-xs text-green-200">Followers</div>
-                                </div>
-                                <div>
-                                  <div className="text-lg font-bold text-green-300">
-                                    {spotifyArtist.popularity || '0'}%
-                                  </div>
-                                  <div className="text-xs text-green-200">Popularity</div>
-                                </div>
-                              </div>
-                              {spotifyArtist.genres && (
-                                <div className="mt-3">
-                                  <div className="text-xs text-green-200 mb-2">Top Genres</div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {spotifyArtist.genres.slice(0, 5).map((genre, index) => (
-                                      <Badge key={index} variant="secondary" className="text-xs bg-green-600/20 text-green-200 border-green-600/50">
-                                        {genre}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-                
-                <div className="space-y-6">
                   {/* Career Highlights */}
-                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                    <CardHeader className="border-b border-gray-700/30">
+                  <Card className="bg-gray-900 border border-gray-700">
+                    <CardHeader className="border-b border-gray-700">
                       <CardTitle className="text-white flex items-center gap-2">
                         <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                         Career Highlights
@@ -855,44 +801,18 @@ const ArtistProfile = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
-                            <div className="flex gap-3">
-                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2023</div>
-                              <div className="flex-1">
-                                <div className="font-semibold text-white mb-1">Released 'Reflections' EP</div>
-                                <p className="text-sm text-orange-100">Reached top 50 on streaming charts</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
-                            <div className="flex gap-3">
-                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2022</div>
-                              <div className="flex-1">
-                                <div className="font-semibold text-white mb-1">Collaborated with top producers</div>
-                                <p className="text-sm text-orange-100">Worked with industry veterans</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
-                            <div className="flex gap-3">
-                              <div className="text-sm font-bold text-orange-300 bg-orange-900/50 px-2 py-1 rounded">2021</div>
-                              <div className="flex-1">
-                                <div className="font-semibold text-white mb-1">Debut single release</div>
-                                <p className="text-sm text-orange-100">First major industry recognition</p>
-                              </div>
-                            </div>
-                          </div>
+                        <div className="text-gray-400 text-center py-8">
+                          <p>No career highlights available yet.</p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                  
+                </div>
+                
+                <div className="space-y-6">
                   {/* Social Media Links */}
-                  <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                    <CardHeader className="border-b border-gray-700/30">
+                  <Card className="bg-gray-900 border border-gray-700">
+                    <CardHeader className="border-b border-gray-700">
                       <CardTitle className="text-white flex items-center gap-2">
                         <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
                         Connect
@@ -932,38 +852,11 @@ const ArtistProfile = () => {
                             </Button>
                           </a>
                         )}
-
-                        {artist.instagram_handle && (
-                          <a href={`https://instagram.com/${artist.instagram_handle}`} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border-purple-600/50 text-purple-300 hover:text-purple-200">
-                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                              </svg>
-                              @{artist.instagram_handle}
-                            </Button>
-                          </a>
-                        )}
-
-                        {artist.twitter_handle && (
-                          <a href={`https://twitter.com/${artist.twitter_handle}`} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-blue-600/20 hover:bg-blue-600/30 border-blue-600/50 text-blue-300 hover:text-blue-200">
-                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                              </svg>
-                              @{artist.twitter_handle}
-                            </Button>
-                          </a>
-                        )}
-
-                        {artist.website_url && (
-                          <a href={artist.website_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-gray-600/20 hover:bg-gray-600/30 border-gray-600/50 text-gray-300 hover:text-gray-200">
-                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2v3.057c1.836-.211 3.5-1.172 4.5-2.648 1.5-2.172 1.5-5.172 0-7.172-1.5-2.172-4.5-2.172-6 0-1.5 2.172-1.5 5.172 0 7.172 1 1.476 2.664 2.437 4.5 2.648zm-1-5.057c0-.552.448-1 1-1s1 .448 1 1-.448 1-1 1-1-.448-1-1z"/>
-                              </svg>
-                              Website
-                            </Button>
-                          </a>
+                        
+                        {!artist.social_links?.youtube && !artist.social_links?.spotify && !artist.social_links?.instagram && (
+                          <div className="text-gray-400 text-center py-4">
+                            <p>No social media links available.</p>
+                          </div>
                         )}
                       </div>
                     </CardContent>
@@ -971,8 +864,8 @@ const ArtistProfile = () => {
 
                   {/* Future Releases */}
                   {artist.future_releases && artist.future_releases.length > 0 && (
-                    <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                      <CardHeader className="border-b border-gray-700/30">
+                    <Card className="bg-gray-900 border border-gray-700">
+                      <CardHeader className="border-b border-gray-700">
                         <CardTitle className="text-white flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           Future Releases
@@ -1010,8 +903,8 @@ const ArtistProfile = () => {
 
                   {/* Spotify Embeds */}
                   {artist.spotify_embed_urls && artist.spotify_embed_urls.length > 0 && (
-                    <Card className="bg-gradient-to-br from-gray-900/70 to-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
-                      <CardHeader className="border-b border-gray-700/30">
+                    <Card className="bg-gray-900 border border-gray-700">
+                      <CardHeader className="border-b border-gray-700">
                         <CardTitle className="text-white flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           Listen on Spotify
@@ -1020,7 +913,7 @@ const ArtistProfile = () => {
                       <CardContent className="pt-6">
                         <div className="space-y-4">
                           {artist.spotify_embed_urls.map((url: string, index: number) => (
-                            <div key={index} className="bg-green-900/20 rounded-lg p-4 border border-green-700/30">
+                            <div key={index} className="bg-gray-800 rounded-lg p-4 border border-green-600/30">
                               <iframe
                                 src={url.replace('open.spotify.com', 'open.spotify.com/embed')} 
                                 width="100%" 

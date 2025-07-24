@@ -12,6 +12,8 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { artistProfileService } from '@/services/artistProfileService';
+import { EfficientArtistProfileService } from '@/services/efficientArtistProfileService';
+import { CareerHighlightsService } from '@/services/careerHighlightsService';
 import { useToast } from '@/hooks/use-toast';
 
 interface ArtistProfile {
@@ -169,8 +171,21 @@ const ArtistProfileManager = () => {
       const loadExistingProfile = async () => {
         try {
           const existing = await artistProfileService.getProfileByUserId(user.id);
+          console.log('Loaded existing profile:', existing);
           if (existing) {
             setExistingProfile(existing);
+            
+            // Load career highlights from the separate table
+            let careerHighlights = [];
+            try {
+              const careerHighlightsService = new CareerHighlightsService();
+              careerHighlights = await careerHighlightsService.getCareerHighlights(existing.id);
+              console.log('Loaded career highlights:', careerHighlights);
+            } catch (error) {
+              console.error('Error loading career highlights:', error);
+              careerHighlights = [];
+            }
+            
             setProfile({
               name: existing.artist_name,
               bio: existing.bio,
@@ -179,10 +194,24 @@ const ArtistProfileManager = () => {
               location: existing.location,
               profileImage: existing.profile_photo,
               bannerImage: existing.banner_photo,
-              careerHighlights: (existing as any).career_highlights || [],
+              careerHighlights: careerHighlights,
               musicalStyle: (existing as any).musical_style || '',
               influences: (existing as any).influences || '',
-              socialLinks: existing.social_links
+              socialLinks: existing.social_links,
+              // Load all the new fields
+              monthlyListeners: (existing as any).monthly_listeners || 0,
+              totalStreams: (existing as any).total_streams || 0,
+              successRate: (existing as any).success_rate || 0,
+              futureReleases: (existing as any).future_releases || [],
+              spotifyArtistId: (existing as any).spotify_artist_id || '',
+              spotifyEmbedUrls: (existing as any).spotify_embed_urls || [],
+              spotifyProfileUrl: (existing as any).spotify_profile_url || '',
+              spotifyData: (existing as any).spotify_data || {},
+              youtubeChannelId: (existing as any).youtube_channel_id || '',
+              instagramHandle: (existing as any).instagram_handle || '',
+              twitterHandle: (existing as any).twitter_handle || '',
+              websiteUrl: (existing as any).website_url || '',
+              verifiedStatus: (existing as any).verified_status || false
             });
             setImagePreview(existing.profile_photo);
             setBannerPreview(existing.banner_photo);
@@ -276,6 +305,22 @@ const ArtistProfileManager = () => {
     }
   };
 
+  // Helper function to get only changed fields
+  const getChangedFields = (existingProfile: any, newData: any) => {
+    const changedFields: any = {};
+    
+    for (const [key, newValue] of Object.entries(newData)) {
+      const existingValue = existingProfile[key];
+      
+      // Deep comparison for objects and arrays
+      if (JSON.stringify(existingValue) !== JSON.stringify(newValue)) {
+        changedFields[key] = newValue;
+      }
+    }
+    
+    return changedFields;
+  };
+
   const handleSave = async () => {
     if (!user) {
       toast({
@@ -301,49 +346,104 @@ const ArtistProfileManager = () => {
       console.log('Saving profile data:', profile);
       console.log('User data:', user);
       
+      // Clean and prepare the profile data, removing undefined/null values
       const profileData = {
-        artist_name: profile.name,
+        artist_name: profile.name || '',
         email: user.email,
-        bio: profile.bio,
-        biography: profile.biography,
-        genre: profile.genre,
-        location: profile.location,
+        bio: profile.bio || '',
+        biography: profile.biography || '',
+        genre: profile.genre || [],
+        location: profile.location || '',
         profile_photo: profile.profileImage || imagePreview || '/placeholder.svg',
         banner_photo: profile.bannerImage || bannerPreview || '/placeholder.svg',
-        career_highlights: profile.careerHighlights,
-        musical_style: profile.musicalStyle,
-        influences: profile.influences,
-        social_links: profile.socialLinks,
-        // New stats fields
+        career_highlights: profile.careerHighlights || [],
+        musical_style: profile.musicalStyle || '',
+        influences: profile.influences || '',
+        social_links: profile.socialLinks || {},
+        // Stats fields - match exact database column names
         monthly_listeners: profile.monthlyListeners || 0,
         total_streams: profile.totalStreams || 0,
         success_rate: profile.successRate || 0,
         future_releases: profile.futureReleases || [],
         spotify_artist_id: profile.spotifyArtistId || '',
         spotify_embed_urls: profile.spotifyEmbedUrls || [],
+        spotify_profile_url: profile.spotifyProfileUrl || '',
+        spotify_data: profile.spotifyData || {},
         youtube_channel_id: profile.youtubeChannelId || '',
         instagram_handle: profile.instagramHandle || '',
         twitter_handle: profile.twitterHandle || '',
         website_url: profile.websiteUrl || '',
-        is_verified: profile.verifiedStatus || false
+        verified_status: profile.verifiedStatus || false
       };
-      console.log('Processed profile data:', profileData);
+
+      // Remove any undefined or null values
+      const cleanProfileData = Object.fromEntries(
+        Object.entries(profileData).filter(([_, value]) => {
+          if (value === undefined || value === null) return false;
+          if (Array.isArray(value) && value.length === 0) return true; // Keep empty arrays
+          if (typeof value === 'object' && Object.keys(value).length === 0) return true; // Keep empty objects
+          return true;
+        })
+      );
+      console.log('Processed profile data:', cleanProfileData);
       console.log('Existing profile:', existingProfile);
 
       let savedProfile: any;
       
       if (existingProfile) {
         console.log('Updating existing profile with ID:', existingProfile.id);
-        const updated = await artistProfileService.updateProfile(existingProfile.id, profileData);
-        console.log('Update result:', updated);
-        if (!updated) {
-          throw new Error('Failed to update profile');
-        }
-        savedProfile = updated;
+        
+        const efficientService = new EfficientArtistProfileService();
+        
+        // Single efficient update with all data
+        const updateData = {
+          // Basic profile info
+          artist_name: profile.name || '',
+          bio: profile.bio || '',
+          biography: profile.biography || '',
+          genre: profile.genre || [],
+          location: profile.location || '',
+          musical_style: profile.musicalStyle || '',
+          influences: profile.influences || '',
+          
+          // Images
+          profile_photo: profile.profileImage || imagePreview || '/placeholder.svg',
+          banner_photo: profile.bannerImage || bannerPreview || '/placeholder.svg',
+          
+          // Social media
+          social_links: profile.socialLinks || {},
+          spotify_profile_url: profile.spotifyProfileUrl || '',
+          spotify_artist_id: profile.spotifyArtistId || '',
+          instagram_handle: profile.instagramHandle || '',
+          twitter_handle: profile.twitterHandle || '',
+          youtube_channel_id: profile.youtubeChannelId || '',
+          website_url: profile.websiteUrl || '',
+          
+          // Stats and career
+          monthly_listeners: profile.monthlyListeners || 0,
+          total_streams: profile.totalStreams || 0,
+          success_rate: profile.successRate || 0,
+          career_highlights: profile.careerHighlights || [],
+          future_releases: profile.futureReleases || [],
+          spotify_embed_urls: profile.spotifyEmbedUrls || [],
+          spotify_data: profile.spotifyData || {},
+          
+          // Verification
+          verified_status: profile.verifiedStatus || false
+        };
+
+        console.log('Efficient update: Single database call with all data');
+        savedProfile = await efficientService.updateProfile(existingProfile.id, updateData);
       } else {
         console.log('Creating new profile for user ID:', user.id);
-        // Ensure user_id is included in the payload
-        savedProfile = await artistProfileService.createProfile(user.id, profileData);
+        const efficientService = new EfficientArtistProfileService();
+        // Single efficient create with all data
+        const createData = {
+          artist_name: profile.name || '',
+          email: user.email,
+          ...cleanProfileData
+        };
+        savedProfile = await efficientService.createProfile(user.id, createData);
         console.log('Create result:', savedProfile);
       }
 
@@ -353,7 +453,7 @@ const ArtistProfileManager = () => {
         
         toast({
           title: "Success",
-          description: "Artist profile saved successfully!",
+          description: "Artist profile saved successfully! All data updated efficiently.",
         });
 
         // Navigate to the view profile page
@@ -407,8 +507,8 @@ const ArtistProfileManager = () => {
       const spotifyData = await response.json();
       
       // Update profile with Spotify data
-      setProfile(prev => ({
-        ...prev,
+      const updatedProfile = {
+        ...profile,
         spotifyArtistId: artistId,
         spotifyData: {
           followers: spotifyData.followers?.total || 0,
@@ -417,15 +517,39 @@ const ArtistProfileManager = () => {
           topTracks: spotifyData.topTracks || []
         },
         // Auto-fill some fields if they're empty
-        name: prev.name || spotifyData.name || '',
-        bio: prev.bio || `Listen to ${spotifyData.name} on Spotify`,
-        genre: prev.genre.length === 0 ? spotifyData.genres || [] : prev.genre,
+        name: profile.name || spotifyData.name || '',
+        bio: profile.bio || `Listen to ${spotifyData.name} on Spotify`,
+        genre: profile.genre.length === 0 ? spotifyData.genres || [] : profile.genre,
         spotifyEmbedUrls: spotifyData.topTracks?.slice(0, 3).map((track: any) => track.external_urls?.spotify) || []
-      }));
+      };
+
+      setProfile(updatedProfile);
+
+      // If we have an existing profile, save the Spotify data immediately
+      if (existingProfile) {
+        const efficientService = new EfficientArtistProfileService();
+        
+        // Single efficient update with Spotify data
+        await efficientService.updateProfile(existingProfile.id, {
+          artist_name: updatedProfile.name,
+          bio: updatedProfile.bio,
+          genre: updatedProfile.genre,
+          spotify_artist_id: artistId,
+          spotify_profile_url: profile.spotifyProfileUrl,
+          monthly_listeners: spotifyData.followers?.total || 0,
+          total_streams: profile.totalStreams || 0,
+          success_rate: profile.successRate || 0,
+          spotify_embed_urls: updatedProfile.spotifyEmbedUrls,
+        });
+
+        // Update the existing profile state
+        const finalProfile = await efficientService.getProfileById(existingProfile.id);
+        setExistingProfile(finalProfile);
+      }
 
       toast({
         title: "Success!",
-        description: "Spotify data imported successfully",
+        description: "Spotify data imported and saved successfully",
         variant: "default"
       });
 
@@ -439,7 +563,7 @@ const ArtistProfileManager = () => {
     }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (!profile.name.trim()) {
       toast({
         title: "Validation Error",
@@ -468,15 +592,21 @@ const ArtistProfileManager = () => {
         };
 
         let previewProfile: any;
+        const efficientService = new EfficientArtistProfileService();
         if (existingProfile) {
-          const updated = artistProfileService.updateProfile(existingProfile.id, tempProfileData);
+          const updated = await efficientService.updateProfile(existingProfile.id, tempProfileData);
           if (!updated) {
             throw new Error('Failed to update profile for preview');
           }
           previewProfile = updated;
         } else {
           // Ensure user_id is included for preview
-          previewProfile = artistProfileService.createProfile(user.id, tempProfileData);
+          const createData = {
+            artist_name: profile.name || '',
+            email: user.email,
+            ...tempProfileData
+          };
+          previewProfile = await efficientService.createProfile(user.id, createData);
         }
 
         navigate(`/artist/${previewProfile.id}`);
@@ -1052,7 +1182,7 @@ const ArtistProfileManager = () => {
                 <CardContent>
                   <div className="grid gap-4">
                     {profile.careerHighlights.map((highlight, index) => (
-                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
                         <Input
                           type="text"
                           value={highlight.year}
@@ -1075,17 +1205,31 @@ const ArtistProfileManager = () => {
                           placeholder="Title"
                           className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                         />
-                        <Textarea
-                          value={highlight.description}
-                          onChange={(e) => {
-                            const newHighlights = [...profile.careerHighlights];
-                            newHighlights[index] = { ...newHighlights[index], description: e.target.value };
-                            setProfile(prev => ({ ...prev, careerHighlights: newHighlights }));
-                          }}
-                          placeholder="Description"
-                          rows={1}
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                        />
+                        <div className="flex gap-2">
+                          <Textarea
+                            value={highlight.description}
+                            onChange={(e) => {
+                              const newHighlights = [...profile.careerHighlights];
+                              newHighlights[index] = { ...newHighlights[index], description: e.target.value };
+                              setProfile(prev => ({ ...prev, careerHighlights: newHighlights }));
+                            }}
+                            placeholder="Description"
+                            rows={1}
+                            className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newHighlights = profile.careerHighlights.filter((_, i) => i !== index);
+                              setProfile(prev => ({ ...prev, careerHighlights: newHighlights }));
+                            }}
+                            className="bg-red-600/20 border-red-600 text-red-300 hover:bg-red-600/30 px-3 py-2"
+                            title="Remove this career highlight"
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     <Button

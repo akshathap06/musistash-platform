@@ -119,13 +119,14 @@ export class SupabaseService {
     profile_photo?: string
     banner_photo?: string
     bio?: string
+    biography?: string
     genre?: string[]
     location?: string
     social_links?: Record<string, string>
     career_highlights?: any[]
     musical_style?: string
     influences?: string
-    // New stats fields
+    // Stats fields - match exact database column names
     monthly_listeners?: number
     total_streams?: number
     future_releases?: any[]
@@ -206,23 +207,126 @@ export class SupabaseService {
   }
 
   async updateArtistProfile(profileId: string, updates: Partial<ArtistProfile>): Promise<ArtistProfile | null> {
-    try {
-      const { data, error } = await supabase
-        .from('artist_profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profileId)
-        .select()
-        .single()
+    const maxRetries = 3;
+    let lastError: any = null;
 
-      if (error) throw error
-      return data
-    } catch (error) {
-      console.error('Error updating artist profile:', error)
-      return null
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Remove any undefined or null values to prevent database issues
+        const cleanUpdates = Object.fromEntries(
+          Object.entries(updates).filter(([_, value]) => value !== undefined && value !== null)
+        );
+
+        console.log(`Attempt ${attempt}: Updating artist profile with data:`, cleanUpdates);
+
+        // Try updating only essential fields first
+        const essentialFields: Record<string, any> = {
+          updated_at: new Date().toISOString(),
+        };
+
+        // Only add fields that exist in cleanUpdates
+        if (cleanUpdates.artist_name !== undefined) essentialFields.artist_name = cleanUpdates.artist_name;
+        if (cleanUpdates.bio !== undefined) essentialFields.bio = cleanUpdates.bio;
+        if (cleanUpdates.biography !== undefined) essentialFields.biography = cleanUpdates.biography;
+        if (cleanUpdates.genre !== undefined) essentialFields.genre = cleanUpdates.genre;
+        if (cleanUpdates.location !== undefined) essentialFields.location = cleanUpdates.location;
+        if (cleanUpdates.musical_style !== undefined) essentialFields.musical_style = cleanUpdates.musical_style;
+        if (cleanUpdates.influences !== undefined) essentialFields.influences = cleanUpdates.influences;
+
+        console.log(`Attempting essential fields update:`, essentialFields);
+
+        const { data, error } = await supabase
+          .from('artist_profiles')
+          .update(essentialFields)
+          .eq('id', profileId)
+          .select()
+          .single()
+
+        if (error) {
+          console.error(`Supabase error on attempt ${attempt}:`, error);
+          throw error;
+        }
+        
+        console.log(`Essential fields updated successfully on attempt ${attempt}:`, data);
+
+        // If essential fields succeeded, try updating the rest in a separate call
+        const remainingFields = {
+          ...cleanUpdates,
+          updated_at: new Date().toISOString(),
+        };
+        
+        // Remove essential fields from remaining fields
+        delete remainingFields.artist_name;
+        delete remainingFields.bio;
+        delete remainingFields.biography;
+        delete remainingFields.genre;
+        delete remainingFields.location;
+        delete remainingFields.musical_style;
+        delete remainingFields.influences;
+
+        if (Object.keys(remainingFields).length > 0) {
+          console.log(`Updating remaining fields:`, remainingFields);
+          
+          const { data: finalData, error: finalError } = await supabase
+            .from('artist_profiles')
+            .update(remainingFields)
+            .eq('id', profileId)
+            .select()
+            .single()
+
+          if (finalError) {
+            console.error(`Error updating remaining fields:`, finalError);
+            // Don't throw here, the essential fields were saved
+          } else {
+            console.log(`All fields updated successfully:`, finalData);
+            return finalData;
+          }
+        }
+
+        return data;
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Attempt ${attempt} failed:`, error);
+        
+        // If it's a timeout error and we have more attempts, wait before retrying
+        if (attempt < maxRetries && (error.message?.includes('timeout') || error.code === '57014')) {
+          const waitTime = attempt * 1000; // Exponential backoff: 1s, 2s, 3s
+          console.log(`Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        } else if (attempt === maxRetries) {
+          console.error('All retry attempts failed');
+          break;
+        }
+      }
     }
+    
+    console.error('Error updating artist profile after all retries:', lastError);
+    return null;
+  }
+
+  private splitLargeUpdate(updates: any): any[] {
+    // If the update is small enough, return it as a single chunk
+    const updateSize = JSON.stringify(updates).length;
+    if (updateSize < 10000) { // 10KB threshold
+      return [updates];
+    }
+
+    // Split large updates into smaller chunks
+    const chunks = [];
+    const keys = Object.keys(updates);
+    const chunkSize = Math.ceil(keys.length / 3); // Split into max 3 chunks
+
+    for (let i = 0; i < keys.length; i += chunkSize) {
+      const chunk = {};
+      keys.slice(i, i + chunkSize).forEach(key => {
+        chunk[key] = updates[key];
+      });
+      chunks.push(chunk);
+    }
+
+    console.log(`Split large update into ${chunks.length} chunks`);
+    return chunks;
   }
 
   async getAllArtistProfiles(): Promise<ArtistProfile[]> {

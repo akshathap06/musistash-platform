@@ -11,6 +11,7 @@ import ProjectCard from '@/components/ui/ProjectCard';
 import ArtistInfo from '@/components/ui/ArtistInfo';
 import { projects, artists, similarityData } from '@/lib/mockData';
 import { artistProfileService } from '@/services/artistProfileService';
+import { EfficientArtistProfileService } from '@/services/efficientArtistProfileService';
 import { followingService } from '@/services/followingService';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/hooks/useAuth';
@@ -128,8 +129,9 @@ const ArtistProfile = () => {
           return;
         }
 
-        // First try to get from approved profiles
-        let foundProfile = await artistProfileService.getProfileById(id);
+        // First try to get from approved profiles using efficient service
+        const efficientService = new EfficientArtistProfileService();
+        let foundProfile = await efficientService.getProfileById(id);
         console.log('ArtistProfile: Found profile:', foundProfile);
         console.log('ArtistProfile: Profile details:', {
           id: foundProfile?.id,
@@ -137,6 +139,7 @@ const ArtistProfile = () => {
           monthly_listeners: foundProfile?.monthly_listeners,
           total_streams: foundProfile?.total_streams,
           career_highlights: foundProfile?.career_highlights,
+          career_highlights_length: foundProfile?.career_highlights?.length,
           spotify_artist_id: foundProfile?.spotify_artist_id,
           future_releases: foundProfile?.future_releases
         });

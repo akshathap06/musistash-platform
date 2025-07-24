@@ -185,16 +185,23 @@ const ViewArtistProfile = () => {
             </Card>
 
             {/* Profile Details */}
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
               {/* Basic Information */}
-              <Card className="bg-gray-800 border-gray-700">
+              <Card className="bg-gray-800 border-gray-700 md:col-span-2">
                 <CardHeader>
                   <CardTitle className="text-white">Basic Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Artist Name</label>
-                    <p className="text-white">{profile.artist_name || 'Not specified'}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Artist Name</label>
+                      <p className="text-white">{profile.artist_name || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Location</label>
+                      <p className="text-white">{profile.location || 'Not specified'}</p>
+                    </div>
                   </div>
                   
                   <div>
@@ -211,11 +218,6 @@ const ViewArtistProfile = () => {
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-gray-300">Location</label>
-                    <p className="text-white">{profile.location || 'Not specified'}</p>
-                  </div>
-                  
-                  <div>
                     <label className="text-sm font-medium text-gray-300">Biography</label>
                     <p className="text-white mt-1">{profile.bio || 'Not specified'}</p>
                   </div>
@@ -225,33 +227,69 @@ const ViewArtistProfile = () => {
                     <p className="text-white mt-1">{profile.biography || 'Not specified'}</p>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Musical Style</label>
-                    <p className="text-white">{profile.musical_style || 'Not specified'}</p>
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Musical Style</label>
+                      <p className="text-white">{profile.musical_style || 'Not specified'}</p>
+                    </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Influences</label>
-                    <p className="text-white">{profile.influences || 'Not specified'}</p>
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">Influences</label>
+                      <p className="text-white">{profile.influences || 'Not specified'}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Profile Image */}
-              <Card className="bg-gray-800 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Profile Image</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-center">
-                    <img
-                      src={profile.profile_photo}
-                      alt={profile.artist_name}
-                      className="w-32 h-32 object-cover rounded-full"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Profile Image & Quick Stats */}
+              <div className="space-y-6">
+                {/* Profile Image */}
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Profile Image</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-center">
+                      <img
+                        src={profile.profile_photo}
+                        alt={profile.artist_name}
+                        className="w-24 h-24 object-cover rounded-full"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Quick Stats */}
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Quick Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-300">Monthly Listeners</span>
+                      <span className="text-white font-medium">{profile.monthly_listeners?.toLocaleString() || '0'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-300">Total Streams</span>
+                      <span className="text-white font-medium">{profile.total_streams?.toLocaleString() || '0'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-300">Success Rate</span>
+                      <span className="text-white font-medium">{profile.success_rate ? `${profile.success_rate}%` : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-300">Status</span>
+                      <span className={`text-sm font-medium ${
+                        profile.status === 'approved' ? 'text-green-400' : 
+                        profile.status === 'pending' ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {profile.status === 'approved' ? 'Approved' : 
+                         profile.status === 'pending' ? 'Pending' : 'Rejected'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Artist Statistics */}
               <Card className="bg-gray-800 border-gray-700">
@@ -260,23 +298,13 @@ const ViewArtistProfile = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-300">Monthly Listeners</label>
-                    <p className="text-white">{profile.monthly_listeners?.toLocaleString() || 'Not specified'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Total Streams</label>
-                    <p className="text-white">{profile.total_streams?.toLocaleString() || 'Not specified'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Success Rate</label>
-                    <p className="text-white">{profile.success_rate ? `${profile.success_rate}%` : 'Not specified'}</p>
-                  </div>
-
-                  <div>
                     <label className="text-sm font-medium text-gray-300">Spotify Artist ID</label>
                     <p className="text-white">{profile.spotify_artist_id || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">Verification Status</label>
+                    <p className="text-white">{profile.is_verified ? 'Verified' : 'Not verified'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -286,69 +314,75 @@ const ViewArtistProfile = () => {
                 <CardHeader>
                   <CardTitle className="text-white">Social Media Links</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile.social_links.spotify && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Spotify</label>
-                      <p className="text-blue-400 break-all">{profile.social_links.spotify}</p>
-                    </div>
-                  )}
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {profile.social_links.spotify && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Spotify</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.social_links.spotify}</p>
+                      </div>
+                    )}
+                    
+                    {profile.social_links.instagram && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Instagram</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.social_links.instagram}</p>
+                      </div>
+                    )}
+                    
+                    {profile.social_links.twitter && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Twitter/X</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.social_links.twitter}</p>
+                      </div>
+                    )}
+                    
+                    {profile.social_links.youtube && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">YouTube</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.social_links.youtube}</p>
+                      </div>
+                    )}
+                  </div>
                   
-                  {profile.social_links.instagram && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Instagram</label>
-                      <p className="text-blue-400 break-all">{profile.social_links.instagram}</p>
-                    </div>
-                  )}
-                  
-                  {profile.social_links.twitter && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Twitter/X</label>
-                      <p className="text-blue-400 break-all">{profile.social_links.twitter}</p>
-                    </div>
-                  )}
-                  
-                  {profile.social_links.youtube && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">YouTube</label>
-                      <p className="text-blue-400 break-all">{profile.social_links.youtube}</p>
-                    </div>
-                  )}
-                  
-                  {profile.social_links.website && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Website</label>
-                      <p className="text-blue-400 break-all">{profile.social_links.website}</p>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {profile.social_links.website && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Website</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.social_links.website}</p>
+                      </div>
+                    )}
 
-                  {profile.instagram_handle && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Instagram Handle</label>
-                      <p className="text-white">@{profile.instagram_handle}</p>
-                    </div>
-                  )}
+                    {profile.website_url && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Website URL</label>
+                        <p className="text-blue-400 break-all text-sm">{profile.website_url}</p>
+                      </div>
+                    )}
+                  </div>
 
-                  {profile.twitter_handle && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Twitter Handle</label>
-                      <p className="text-white">@{profile.twitter_handle}</p>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {profile.instagram_handle && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Instagram Handle</label>
+                        <p className="text-white text-sm">@{profile.instagram_handle}</p>
+                      </div>
+                    )}
 
-                  {profile.youtube_channel_id && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">YouTube Channel ID</label>
-                      <p className="text-white">{profile.youtube_channel_id}</p>
-                    </div>
-                  )}
+                    {profile.twitter_handle && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">Twitter Handle</label>
+                        <p className="text-white text-sm">@{profile.twitter_handle}</p>
+                      </div>
+                    )}
 
-                  {profile.website_url && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Website URL</label>
-                      <p className="text-blue-400 break-all">{profile.website_url}</p>
-                    </div>
-                  )}
+                    {profile.youtube_channel_id && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">YouTube Channel ID</label>
+                        <p className="text-white text-sm">{profile.youtube_channel_id}</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
 
@@ -399,6 +433,66 @@ const ViewArtistProfile = () => {
                           <p className="text-sm text-gray-400 mt-1">{release.description}</p>
                         </div>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Career Highlights */}
+              {profile.career_highlights && profile.career_highlights.length > 0 && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Career Highlights</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {profile.career_highlights.map((highlight: any, index: number) => (
+                        <div key={index} className="p-3 bg-gray-700/50 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-orange-300 bg-orange-900/50 px-2 py-1 rounded">
+                              {highlight.year || highlight.date || 'N/A'}
+                            </span>
+                            <h4 className="font-medium text-white">{highlight.title || highlight.achievement || 'Achievement'}</h4>
+                          </div>
+                          <p className="text-sm text-gray-300">{highlight.description || highlight.details || 'No description available'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Spotify Embed URLs */}
+              {profile.spotify_embed_urls && profile.spotify_embed_urls.length > 0 && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Spotify Embeds</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {profile.spotify_embed_urls.map((url: string, index: number) => (
+                        <div key={index} className="p-3 bg-gray-700/50 rounded-lg">
+                          <p className="text-sm text-blue-400 break-all">{url}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Banner Image */}
+              {profile.banner_photo && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Banner Image</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-center">
+                      <img
+                        src={profile.banner_photo}
+                        alt="Banner"
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
                     </div>
                   </CardContent>
                 </Card>

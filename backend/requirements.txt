@@ -4,11 +4,9 @@ python-dotenv
 openai
 requests
 httpx
-billboard.py
 spotipy
 numpy
 scikit-learn
-soundcharts
 google-generativeai>=0.8.0
 google-auth
 google-auth-oauthlib

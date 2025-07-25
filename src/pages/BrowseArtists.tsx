@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import ArtistInfo from '@/components/ui/ArtistInfo';
+import ArtistProfileCard from '@/components/ui/ArtistProfileCard';
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,33 +81,23 @@ const BrowseArtists = () => {
     loadProfiles(false);
   };
 
-  // Combine mock artists with approved profiles
-  const allArtists = approvedProfiles.map(profile => ({
-      id: profile.id,
-      name: profile.artist_name,
-      avatar: profile.profile_photo,
-      bio: profile.bio,
-      genres: profile.genre || [],
-      followers: 0, // Default for new profiles
-      verified: profile.is_verified,
-      successRate: 75, // Default for new profiles
-      social_links: profile.social_links || {},
-  }));
+  // Use approved profiles directly (they already have the correct structure)
+  const allArtists = approvedProfiles;
 
   console.log('All artists (approved profiles only):', allArtists);
   console.log('Approved profiles:', approvedProfiles);
 
   // Get all unique genres
-  const allGenres = ['all', ...new Set(allArtists.flatMap(artist => artist.genres))];
+  const allGenres = ['all', ...new Set(allArtists.flatMap(artist => artist.genre || []))];
 
   // Filter artists based on search and genre
   const filteredArtists = allArtists.filter(artist => {
-    const matchesSearch = artist.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = artist.artist_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          artist.bio.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (selectedGenre === 'all') return matchesSearch;
     
-    return matchesSearch && artist.genres.includes(selectedGenre);
+    return matchesSearch && artist.genre && artist.genre.includes(selectedGenre);
   });
 
   // Handle follow change to refresh data
@@ -187,7 +177,7 @@ const BrowseArtists = () => {
           </div>
 
           {/* Artists Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <Loader2 className="h-12 w-12 text-gray-400 mx-auto mb-3 animate-spin" />
@@ -202,12 +192,12 @@ const BrowseArtists = () => {
               </div>
             ) : (
               filteredArtists.map((artist) => (
-                <div key={artist.id} className="bg-gray-900/80 backdrop-blur-xl rounded-xl p-4 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300">
-                  <ArtistInfo 
+                <div key={artist.id}>
+                  <ArtistProfileCard 
                     artist={artist} 
-                    expanded={true} 
                     showFollowButton={true}
                     onFollowChange={handleFollowChange}
+                    className="w-full"
                   />
                 </div>
               ))

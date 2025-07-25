@@ -1,19 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { artists, projects } from '@/lib/mockData';
+import { projects } from '@/lib/mockData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
 import { Search, Star, TrendingUp, Users, ArrowRight } from 'lucide-react';
+import ArtistProfileCard from './ArtistProfileCard';
+import { artistProfileService } from '@/services/artistProfileService';
+import type { Database } from '@/lib/supabase';
+
+type ArtistProfile = Database['public']['Tables']['artist_profiles']['Row'];
 
 const FeaturedSection = () => {
-  // Get featured artists (first 3)
-  const featuredArtists = artists.slice(0, 3);
+  const [featuredArtists, setFeaturedArtists] = useState<ArtistProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Get active projects
   const activeProjects = projects.filter(project => project.status === 'active');
+
+  useEffect(() => {
+    const loadFeaturedArtists = async () => {
+      try {
+        setIsLoading(true);
+        const allProfiles = await artistProfileService.getAllProfiles();
+        // Get first 3 approved artists
+        const approvedArtists = allProfiles.filter(profile => profile.status === 'approved').slice(0, 3);
+        setFeaturedArtists(approvedArtists);
+      } catch (error) {
+        console.error('Error loading featured artists:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFeaturedArtists();
+  }, []);
 
   return (
     <div className="space-y-32">
@@ -175,56 +198,32 @@ const FeaturedSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {featuredArtists.map((artist) => (
-            <motion.div
-              key={artist.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card className="bg-[#1a1b26]/50 backdrop-blur-sm border-[#2a2b36] p-6 hover:border-blue-500/50 transition-all duration-300">
-                <div className="flex items-center gap-4 mb-4">
-                  <img 
-                    src={artist.avatar} 
-                    alt={artist.name}
-                    className="w-12 h-12 rounded-full border-2 border-blue-500/20"
-                  />
-                  <div>
-                    <h3 className="text-white font-semibold">{artist.name}</h3>
-                    <p className="text-gray-400 text-sm">{artist.genres.join(', ')}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-yellow-400" />
-                    <span className="text-white">Resonance Score: {artist.successRate}%</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-blue-400" />
-                    <span className="text-gray-400">{artist.followers.toLocaleString()} Monthly Listeners</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-400" />
-                    <span className="text-gray-400">Trending +{Math.floor(Math.random() * 30 + 20)}% this month</span>
-                  </div>
-
-                  <Link to={`/artist/${artist.id}`} className="block mt-6">
-                    <Button 
-                      variant="outline"
-                      className="w-full border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
-                    >
-                      View Profile
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-800/50 rounded-2xl h-96"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {featuredArtists.map((artist) => (
+              <motion.div
+                key={artist.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <ArtistProfileCard 
+                  artist={artist}
+                  showFollowButton={true}
+                  className="w-full"
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Explore All Artists Button */}
         <div className="flex justify-center mb-32">

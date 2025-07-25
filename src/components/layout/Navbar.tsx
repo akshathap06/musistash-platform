@@ -248,6 +248,12 @@ const Navbar = () => {
                         <span>My Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/agentic-manager" className="flex items-center cursor-pointer text-cyan-300 hover:text-white hover:bg-cyan-900/20">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>Agentic Manager</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-700" />
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-gray-300 hover:text-white hover:bg-gray-800">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -345,6 +351,12 @@ const Navbar = () => {
                       <Button variant="ghost" className="w-full text-left justify-start text-white">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         My Dashboard
+                      </Button>
+                    </Link>
+                    <Link to="/agentic-manager" onClick={closeMobileMenu}>
+                      <Button variant="ghost" className="w-full text-left justify-start text-cyan-300 hover:text-white hover:bg-cyan-900/20">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Agentic Manager
                       </Button>
                     </Link>
                     <Button 

@@ -41,6 +41,7 @@ import AdminViewProfile from "./pages/AdminViewProfile";
 import SupabaseTest from "./components/SupabaseTest";
 import ScrollToTop from "./components/ScrollToTop";
 import ArtistProjectDashboard from "./pages/ArtistProjectDashboard";
+import AgenticManagerDashboard from "./pages/AgenticManagerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const AppContent = () => {
               <Route path="/admin/profile/:profileId" element={<AdminViewProfile />} />
               <Route path="/supabase-test" element={<SupabaseTest />} />
               <Route path="/artist-project-dashboard" element={<ArtistProjectDashboard />} />
+              <Route path="/agentic-manager" element={<AgenticManagerDashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -105,60 +105,39 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right Column - AI Tool */}
+            {/* Right Column - Featured Artists */}
             <div className="lg:col-span-6 flex items-start">
-              <div className="w-full mt-2 lg:mt-4" ref={aiToolRef}>
-                {/* Vibrant container with glow effects */}
+              <div className="w-full">
+                <div className="text-center mb-4">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Featured Artists</h2>
+                  <p className="text-gray-400 text-sm">Discover the amazing artists on our platform</p>
+                </div>
                 <div className="relative">
-                  {/* Animated background glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-2xl blur-xl animate-pulse"></div>
-                  <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-75 animate-pulse"></div>
-                  
-                  {/* Main container */}
-                  <div className="relative bg-gradient-to-br from-[#1a1b26] via-[#1e2030] to-[#1a1b26] rounded-2xl p-6 border border-blue-500/30 shadow-2xl backdrop-blur-sm">
-                    {/* Header with enhanced styling */}
-                    <div className="mb-6 text-center">
-                      <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
-                        <Sparkles className="h-4 w-4 text-blue-400 animate-pulse" />
-                        <span className="text-blue-400 font-medium text-sm">AI-Powered Analysis</span>
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-                        AI Recommendation Tool
-                      </h3>
-                      <p className="text-gray-300 text-sm">Analyze artist compatibility and market potential with AI-driven insights</p>
-                    </div>
-                    
-                    {/* Enhanced AI Tool component */}
-                    <div className="relative">
-                      <AIRecommendationTool />
-                    </div>
-                    
-                    {/* Bottom accent */}
-                    <div className="mt-4 pt-4 border-t border-gray-700/50">
-                      <div className="flex items-center justify-center gap-3 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          Live Data
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
-                          AI Analysis
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
-                          Real-time Results
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <RotatingArtistShowcase />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Rotating Artist Showcase */}
-        <RotatingArtistShowcase />
+        {/* AI Recommendation Tool Section - full width below hero */}
+        <section className="py-24 px-4 md:px-6 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto relative">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+                AI-Powered Analysis
+              </h2>
+              <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
+                Analyze artist compatibility and market potential with our advanced AI tools
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <div className="w-full max-w-xl mx-auto bg-gradient-to-br from-[#181c24] via-[#1e2030] to-[#181c24] rounded-2xl p-8 shadow-2xl border border-blue-500/20">
+                <AIRecommendationTool />
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* How It Works Section */}
         <section className="py-24 px-4 md:px-6 relative overflow-hidden">
@@ -561,189 +540,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Featured Artists */}
-        <section className="py-24 px-4 md:px-6 relative overflow-hidden">
-          {/* Background Elements */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-          </div>
 
-          <div className="max-w-7xl mx-auto relative">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white">
-                Featured Artists
-              </h2>
-              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                Discover trending artists already using Musi$tash to connect with fans and fund their projects
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-              {/* Artist Card 1 */}
-              <div className="group relative">
-                <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="relative">
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
-                        <img 
-                          src="https://images.unsplash.com/photo-1494790108377-be9c29b29330"
-                          alt="Aria Luna"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold text-white">Aria Luna</h3>
-                      <p className="text-gray-400 text-sm md:text-base">Electro-Pop, Alternative</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 md:space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 92%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                      <span className="text-gray-300 text-sm md:text-base">15.2K Monthly Listeners</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Trending: +127% this month</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <Link to="/artist/aria-luna">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Artist Card 2 */}
-              <div className="group relative">
-                <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="relative">
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
-                        <img 
-                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d"
-                          alt="Nexus Rhythm"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold text-white">Nexus Rhythm</h3>
-                      <p className="text-gray-400 text-sm md:text-base">Hip-Hop, R&B</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 md:space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 88%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                      <span className="text-gray-300 text-sm md:text-base">22.8K Monthly Listeners</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Trending: +95% this month</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <Link to="/artist/nexus-rhythm">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Artist Card 3 */}
-              <div className="group relative">
-                <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-[#151823] rounded-xl p-4 md:p-6 h-full border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300">
-                  <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="relative">
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
-                        <img 
-                          src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6"
-                          alt="Echo Horizon"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                        <svg className="w-2 h-2 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold text-white">Echo Horizon</h3>
-                      <p className="text-gray-400 text-sm md:text-base">Indie Rock, Shoegaze</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 md:space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Resonance Score: 85%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                      <span className="text-gray-300 text-sm md:text-base">18.5K Monthly Listeners</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-                      <span className="text-gray-300 text-sm md:text-base">Trending: +82% this month</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <Link to="/artist/echo-horizon">
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition-opacity text-xs md:text-sm py-2 md:py-3">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12 text-center">
-              <Link to="/artists">
-                <Button 
-                  size="lg"
-                  className="bg-transparent border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 px-8 py-6 text-lg transition-all duration-300 transform hover:scale-105"
-                >
-                  Explore All Artists
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />

@@ -15,8 +15,9 @@ load_dotenv()
 
 class SupabaseManager:
     def __init__(self):
-        self.supabase_url = os.getenv('SUPABASE_URL')
-        self.supabase_key = os.getenv('SUPABASE_ANON_KEY')
+        # Use the same fallback values as the frontend for consistency [[memory:4296231]]
+        self.supabase_url = os.getenv('SUPABASE_URL') or 'https://dwbetxanfumneukrqodd.supabase.co'
+        self.supabase_key = os.getenv('SUPABASE_ANON_KEY') or 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3YmV0eGFuZnVtbmV1a3Jxb2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4MDI2MzYsImV4cCI6MjA2ODM3ODYzNn0.CO3oIID2omAwuex2qE_dXbOYbtA_v9bC38VQizuXVJc'
         
         if not self.supabase_url or not self.supabase_key:
             raise ValueError("Supabase URL and key must be set in environment variables")

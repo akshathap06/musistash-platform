@@ -13,7 +13,7 @@ import { InvestmentService, UserInvestment } from '@/services/investmentService'
 import { artistProfileService } from '@/services/artistProfileService';
 import { followingService } from '@/services/followingService';
 import { supabaseService } from '@/services/supabaseService';
-import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X } from 'lucide-react';
+import { PlusCircle, ChevronRight, LineChart, DollarSign, TrendingUp, Zap, Music, User, Users, Heart, X, Star } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import ThemeSelector from '@/components/ui/ThemeSelector';
 import ProfitProjectionChart from '@/components/ui/ProfitProjectionChart';
@@ -255,39 +255,25 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
   setShowFollowersModal 
 }) => {
   const { user } = useAuth();
-  const [investmentStats, setInvestmentStats] = useState({
-    totalInvested: 0,
-    totalProjects: 0,
-    potentialReturns: 0,
-    averageROI: 0,
-    investments: [] as UserInvestment[]
-  });
+  const [followedArtists, setFollowedArtists] = useState<any[]>([]);
   const [recentFollowing, setRecentFollowing] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [recentFollowers, setRecentFollowers] = useState<any[]>([]);
-  const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [allArtists, setAllArtists] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       if (user) {
         try {
-          const stats = await InvestmentService.getUserInvestmentStats(user.id);
-          setInvestmentStats(stats);
-          
-          // Load all projects from database
-          const dbProjects = await supabaseService.getAllProjects();
-          const artistProjects = await Promise.all(
-            dbProjects.map(async (project) => {
-              const artistProject = await artistProfileService.getProjectById(project.id);
-              return artistProject;
-            })
-          );
-          const validProjects = artistProjects.filter(p => p !== null);
-          setAllProjects([...projects, ...validProjects]); // Combine mock and real projects
-        
-          // Load following data
+          // Load followed artists
           const following = await followingService.getRecentFollowing(user.id);
           setRecentFollowing(following);
+          setFollowedArtists(following);
+          
+          // Load all artists for discovery
+          const allProfiles = await artistProfileService.getAllProfiles();
+          const approvedArtists = allProfiles.filter(profile => profile.status === 'approved');
+          setAllArtists(approvedArtists);
           
           // Load user profile and followers data
           const profile = await artistProfileService.getProfileByUserId(user.id);
@@ -307,63 +293,30 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
   }, [user]);
 
   const handleInvestmentComplete = async () => {
-    if (user) {
-      try {
-        const stats = await InvestmentService.getUserInvestmentStats(user.id);
-      setInvestmentStats(stats);
-      } catch (error) {
-        console.error('Error refreshing investment stats:', error);
-      }
-    }
+    // This function is kept for compatibility but not used for followed profiles
     onInvestmentComplete();
   };
 
-
-
-  // Get projects that the user has invested in
-  const investedProjectIds = investmentStats.investments.map(inv => inv.projectId);
-  const investedProjects = allProjects.filter(project => investedProjectIds.includes(project.id));
-  
   return (
     <div className="space-y-6 sm:space-y-8 animate-fade-in">
-      {/* Stats Grid */}
+      {/* Stats Grid - Changed to Followed Artists Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-300">
-                Total Invested
-              </CardTitle>
-              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-green-400" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">${investmentStats.totalInvested.toLocaleString()}</div>
-            <p className="text-xs text-gray-400 mt-1 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              Across {investmentStats.totalProjects} projects
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-300">
-                Potential Returns
+                Artists Followed
               </CardTitle>
               <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                <LineChart className="w-4 h-4 text-blue-400" />
+                <Heart className="w-4 h-4 text-blue-400" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${investmentStats.potentialReturns.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">{followedArtists.length}</div>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
-              <Zap className="w-3 h-3 mr-1" />
-              Based on project ROI estimates
+              <Users className="w-3 h-3 mr-1" />
+              Artists in your collection
             </p>
           </CardContent>
         </Card>
@@ -372,7 +325,29 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-300">
-                Average ROI
+                Total Streams
+              </CardTitle>
+              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                <Music className="w-4 h-4 text-green-400" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              {followedArtists.reduce((total, artist) => total + (artist.total_streams || 0), 0).toLocaleString()}
+            </div>
+            <p className="text-xs text-gray-400 mt-1 flex items-center">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              From followed artists
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-gray-300">
+                Average Popularity
               </CardTitle>
               <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-purple-400" />
@@ -381,56 +356,82 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {investmentStats.averageROI > 0 ? `${investmentStats.averageROI}%` : '0%'}
+              {followedArtists.length > 0 
+                ? Math.round(followedArtists.reduce((total, artist) => total + (artist.popularity || 0), 0) / followedArtists.length)
+                : 0}%
             </div>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
-              <Music className="w-3 h-3 mr-1" />
-              Across all investments
+              <Star className="w-3 h-3 mr-1" />
+              Across followed artists
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Profit Projection Chart */}
-      {investmentStats.totalInvested > 0 && (
-        <ProfitProjectionChart
-          totalInvested={investmentStats.totalInvested}
-          potentialReturns={investmentStats.potentialReturns}
-          averageROI={investmentStats.averageROI}
-          investments={investmentStats.investments}
-        />
-        )}
-
-      {/* Content Tabs */}
-      <Tabs defaultValue="portfolio" className="w-full">
+      {/* Content Tabs - Changed to Followed Artists and Discover Artists */}
+      <Tabs defaultValue="followed" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gray-800/50 border border-gray-700/50">
           <TabsTrigger 
-            value="portfolio" 
+            value="followed" 
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white"
           >
-            My Portfolio
+            Followed Artists
           </TabsTrigger>
           <TabsTrigger 
             value="discover"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white"
           >
-            Discover Projects
+            Discover Artists
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="portfolio" className="space-y-6 mt-6">
+        <TabsContent value="followed" className="space-y-6 mt-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-white">Your Investments</h2>
+            <h2 className="text-2xl font-bold text-white">Your Followed Artists</h2>
             <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
-              {investmentStats.totalProjects} Active
+              {followedArtists.length} Artists
             </Badge>
           </div>
           
-          {investedProjects.length > 0 ? (
+          {followedArtists.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {investedProjects.map((project) => (
-                <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                  <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />
+              {followedArtists.map((artist) => (
+                <div key={artist.artistId} className="transform hover:scale-105 transition-all duration-300">
+                  <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <img
+                          src={artist.artistAvatar || '/placeholder.svg'}
+                          alt={artist.artistName}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white truncate">{artist.artistName}</h3>
+                          <p className="text-xs text-gray-400">
+                            Followed {new Date(artist.followedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link to={`/artist/${artist.artistId}`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            View Profile
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-xs border-red-500/50 text-red-400 hover:bg-red-500/20"
+                          onClick={() => {
+                            // Handle unfollow logic here
+                            console.log('Unfollow artist:', artist.artistId);
+                          }}
+                        >
+                          Unfollow
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               ))}
             </div>
@@ -438,15 +439,15 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
             <Card className="bg-gray-800/30 border-gray-700/50 backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mb-4">
-                  <Music className="w-8 h-8 text-gray-400" />
+                  <Heart className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">No investments yet</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">Not following any artists yet</h3>
                 <p className="text-gray-400 text-center mb-6 max-w-md">
-                  Start building your music investment portfolio by discovering and investing in promising projects.
+                  Start building your artist collection by discovering and following your favorite musicians.
                 </p>
-                <Link to="/discover-projects">
+                <Link to="/browse-artists">
                   <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    Discover Projects
+                    Discover Artists
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -457,8 +458,8 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
         
         <TabsContent value="discover" className="space-y-6 mt-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-white">Trending Projects</h2>
-            <Link to="/discover-projects">
+            <h2 className="text-2xl font-bold text-white">Trending Artists</h2>
+            <Link to="/browse-artists">
               <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
                 View All
                 <ChevronRight className="ml-2 h-4 w-4" />
@@ -467,9 +468,42 @@ const ListenerDashboard: React.FC<DashboardProps> = ({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allProjects.slice(0, 6).map((project) => (
-              <div key={project.id} className="transform hover:scale-105 transition-all duration-300">
-                <ProjectCard project={project} onInvestmentComplete={handleInvestmentComplete} />
+            {allArtists.slice(0, 6).map((artist) => (
+              <div key={artist.id} className="transform hover:scale-105 transition-all duration-300">
+                <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={artist.profile_photo || '/placeholder.svg'}
+                        alt={artist.artist_name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white truncate">{artist.artist_name}</h3>
+                        <p className="text-xs text-gray-400">
+                          {artist.genre?.slice(0, 2).join(', ')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link to={`/artist/${artist.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full text-xs">
+                          View Profile
+                        </Button>
+                      </Link>
+                      <Button 
+                        size="sm" 
+                        className="text-xs bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          // Handle follow logic here
+                          console.log('Follow artist:', artist.id);
+                        }}
+                      >
+                        Follow
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             ))}
           </div>

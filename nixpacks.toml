@@ -1,6 +1,5 @@
 [providers]
-python = true
-nodejs = false
+python = "3.11"
 
 [phases.setup]
 nixPkgs = ["python311"]

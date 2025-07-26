@@ -3,7 +3,7 @@ nixPkgs = ["python311", "gcc"]
 
 [phases.install]
 cmds = [
-    "pip install --no-cache-dir -r backend/requirements.txt"
+    "pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
@@ -12,9 +12,9 @@ cmds = [
 ]
 
 [start]
-cmd = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+cmd = "python start.py"
 
 [variables]
 AUDIO_ANALYSIS_MODE = "simplified"
 ENABLE_FULL_AUDIO_ANALYSIS = "false"
-PYTHONPATH = "/app" 
+PYTHONPATH = "/app/backend" 

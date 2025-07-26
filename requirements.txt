@@ -1,0 +1,39 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+requests
+httpx
+spotipy
+numpy
+scikit-learn
+google-generativeai>=0.8.0
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pyjwt
+python-jose[cryptography]
+pytrends
+yfinance
+lyricsgenius
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+scipy
+textblob
+nltk
+pandas
+xgboost
+# Removed problematic packages that require system audio libraries:
+# librosa - requires system audio libraries
+# audioread - requires system audio libraries  
+# soundfile - requires system audio libraries
+# mutagen - requires system audio libraries
+# aubio - requires gcc and system audio libraries
+# pyAudioAnalysis - requires system audio libraries
+# eyed3 - requires system audio libraries
+# pydub - requires system audio libraries
+# hmmlearn - requires system audio libraries
+# music21 - requires system audio libraries
+# matplotlib - not needed for core functionality
+# seaborn - not needed for core functionality 

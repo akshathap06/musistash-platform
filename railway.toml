@@ -1,8 +1,10 @@
 [deploy]
 startCommand = "python start.py"
 healthcheckPath = "/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 30
+healthcheckInterval = 10
 
 [env]
 AUDIO_ANALYSIS_MODE = "simplified"
-ENABLE_FULL_AUDIO_ANALYSIS = "false" 
+ENABLE_FULL_AUDIO_ANALYSIS = "false"
+PORT = "8000" 

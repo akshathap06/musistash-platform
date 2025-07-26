@@ -31,14 +31,15 @@ if __name__ == "__main__":
         from main import app
         print("✅ FastAPI app imported successfully!")
         
-        # Start the server
+        # Start the server with faster startup
         print(f"🌐 Starting server on 0.0.0.0:{port}")
         uvicorn.run(
             app,
             host="0.0.0.0",
             port=port,
             log_level="info",
-            access_log=True
+            access_log=True,
+            loop="asyncio"
         )
     except Exception as e:
         print(f"❌ Error starting server: {e}")

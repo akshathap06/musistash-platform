@@ -5,52 +5,158 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Tuple
 import os
 from dotenv import load_dotenv
-import openai
-import requests
-import httpx
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 import json
 from pathlib import Path
 import random
 import asyncio
 import math
 from datetime import datetime, timedelta
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-import jwt
-from jose import JWTError, jwt as jose_jwt
-import yfinance as yf
-import statistics
-import lyricsgenius
-import googleapiclient.discovery
-import googleapiclient.errors
-from scipy import stats
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from textblob import TextBlob
-import re
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-import ssl
-from urllib.parse import quote
 import time
 from functools import lru_cache
 from fastapi import UploadFile, File, Form
-import librosa
 import tempfile
 import shutil
 from fastapi import Request
 
+# Optional imports with graceful fallbacks
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("⚠️ OpenAI not available")
+
+try:
+    import requests
+    import httpx
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    print("⚠️ Requests/httpx not available")
+
+try:
+    import spotipy
+    from spotipy.oauth2 import SpotifyClientCredentials
+    SPOTIFY_AVAILABLE = True
+except ImportError:
+    SPOTIFY_AVAILABLE = False
+    print("⚠️ Spotify not available")
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    print("⚠️ NumPy not available")
+
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.cluster import KMeans
+    from sklearn.decomposition import PCA
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("⚠️ Scikit-learn not available")
+
+try:
+    import google.generativeai as genai
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("⚠️ Google Gemini not available")
+
+try:
+    import jwt
+    from jose import JWTError, jwt as jose_jwt
+    JWT_AVAILABLE = True
+except ImportError:
+    JWT_AVAILABLE = False
+    print("⚠️ JWT not available")
+
+try:
+    import yfinance as yf
+    YFINANCE_AVAILABLE = True
+except ImportError:
+    YFINANCE_AVAILABLE = False
+    print("⚠️ YFinance not available")
+
+try:
+    import statistics
+    STATISTICS_AVAILABLE = True
+except ImportError:
+    STATISTICS_AVAILABLE = False
+    print("⚠️ Statistics not available")
+
+try:
+    import lyricsgenius
+    LYRICSGENIUS_AVAILABLE = True
+except ImportError:
+    LYRICSGENIUS_AVAILABLE = False
+    print("⚠️ LyricsGenius not available")
+
+try:
+    import googleapiclient.discovery
+    import googleapiclient.errors
+    GOOGLEAPI_AVAILABLE = True
+except ImportError:
+    GOOGLEAPI_AVAILABLE = False
+    print("⚠️ Google API not available")
+
+try:
+    from scipy import stats
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+    print("⚠️ SciPy not available")
+
+try:
+    from textblob import TextBlob
+    TEXTBLOB_AVAILABLE = True
+except ImportError:
+    TEXTBLOB_AVAILABLE = False
+    print("⚠️ TextBlob not available")
+
+try:
+    import re
+    from collections import Counter
+    RE_AVAILABLE = True
+except ImportError:
+    RE_AVAILABLE = False
+    print("⚠️ Regex not available")
+
+try:
+    import nltk
+    from nltk.corpus import stopwords
+    from nltk.tokenize import word_tokenize
+    NLTK_AVAILABLE = True
+except ImportError:
+    NLTK_AVAILABLE = False
+    print("⚠️ NLTK not available")
+
+try:
+    import ssl
+    from urllib.parse import quote
+    SSL_AVAILABLE = True
+except ImportError:
+    SSL_AVAILABLE = False
+    print("⚠️ SSL not available")
+
+try:
+    import librosa
+    LIBROSA_AVAILABLE = True
+except ImportError:
+    LIBROSA_AVAILABLE = False
+    print("⚠️ Librosa not available")
+
 def convert_numpy_types(obj):
     """Convert numpy types to JSON-serializable Python types"""
+    if not NUMPY_AVAILABLE:
+        return obj
+    
     if isinstance(obj, np.integer):
         return int(obj)
     elif isinstance(obj, np.floating):
@@ -123,7 +229,10 @@ spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID", "dummy_key")
 spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET", "dummy_key")
 
 # Initialize Spotify client
-if not spotify_client_id or spotify_client_id == "dummy_key":
+if not SPOTIFY_AVAILABLE:
+    print("❌ Spotify library not available. Using mock data.")
+    sp = None
+elif not spotify_client_id or spotify_client_id == "dummy_key":
     print("❌ Warning: Spotify credentials not found. Using mock data.")
     sp = None
 else:
@@ -147,7 +256,9 @@ JWT_EXPIRATION_TIME = timedelta(days=7)
 GOOGLE_CLIENT_ID = "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com"
 
 # Initialize Gemini
-if gemini_api_key and gemini_api_key != "dummy_key":
+if not GEMINI_AVAILABLE:
+    print("❌ Gemini library not available")
+elif gemini_api_key and gemini_api_key != "dummy_key":
     try:
         genai.configure(api_key=gemini_api_key)
         print("✅ Gemini configured successfully")
@@ -232,6 +343,9 @@ class AuthResponse(BaseModel):
 # --- Authentication Helper Functions ---
 def create_access_token(data: dict):
     """Create a JWT access token"""
+    if not JWT_AVAILABLE:
+        return "mock_token"
+    
     to_encode = data.copy()
     expire = datetime.utcnow() + JWT_EXPIRATION_TIME
     to_encode.update({"exp": expire})
@@ -240,6 +354,9 @@ def create_access_token(data: dict):
 
 def verify_token(token: str):
     """Verify JWT token"""
+    if not JWT_AVAILABLE:
+        return {"user_id": "mock_user"}
+    
     try:
         payload = jose_jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
@@ -248,6 +365,9 @@ def verify_token(token: str):
 
 async def verify_google_token(token: str) -> Optional[Dict]:
     """Verify Google OAuth token"""
+    if not GEMINI_AVAILABLE:
+        return {"sub": "mock_user", "email": "mock@example.com"}
+    
     try:
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
         
@@ -279,7 +399,16 @@ async def health_check():
         "message": "Backend server is running successfully",
         "services": {
             "core": True,
-            "api": True
+            "api": True,
+            "spotify": SPOTIFY_AVAILABLE,
+            "supabase": SUPABASE_AVAILABLE,
+            "ml": ML_AVAILABLE,
+            "audio_analysis": ENHANCED_AUDIO_AVAILABLE,
+            "gemini": GEMINI_AVAILABLE,
+            "jwt": JWT_AVAILABLE,
+            "numpy": NUMPY_AVAILABLE,
+            "sklearn": SKLEARN_AVAILABLE,
+            "librosa": LIBROSA_AVAILABLE
         },
         "timestamp": datetime.utcnow().isoformat()
     }

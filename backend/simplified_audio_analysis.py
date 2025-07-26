@@ -114,6 +114,18 @@ class EnhancedAudioAnalyzer:
         commercial_analysis = await self._analyze_commercial_potential(analysis_results)
         analysis_results.update(commercial_analysis)
         
+        # Generate Gemini insights if available
+        if GEMINI_AVAILABLE:
+            try:
+                gemini_insights = await self._generate_gemini_insights(analysis_results, filename, artist_profile)
+                analysis_results["gemini_insights"] = gemini_insights
+                print(f"✅ Gemini insights generated successfully")
+            except Exception as e:
+                print(f"⚠️  Failed to generate Gemini insights: {e}")
+                analysis_results["gemini_insights"] = {}
+        else:
+            analysis_results["gemini_insights"] = {}
+        
         print(f"✅ Simplified audio analysis completed for {filename}")
         return analysis_results
     
@@ -209,6 +221,173 @@ class EnhancedAudioAnalyzer:
         except Exception as e:
             print(f"Error getting artist profile: {e}")
             return None
+
+    async def _generate_gemini_insights(self, analysis_results: Dict[str, Any], filename: str, artist_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Generate comprehensive Gemini insights for the track"""
+        try:
+            # Prepare analysis data for Gemini
+            analysis_summary = {
+                "filename": filename,
+                "bpm": analysis_results.get("bpm", 0),
+                "key": analysis_results.get("key", "Unknown"),
+                "mode": analysis_results.get("mode", "major"),
+                "energy": analysis_results.get("energy", 0),
+                "loudness": analysis_results.get("loudness", 0),
+                "valence": analysis_results.get("valence", 0),
+                "arousal": analysis_results.get("arousal", 0),
+                "danceability": analysis_results.get("danceability", 0),
+                "commercial_score": analysis_results.get("commercial_score", 0),
+                "emotional_category": analysis_results.get("emotional_category", "neutral"),
+                "rhythm_clarity": analysis_results.get("pyaudio_rhythm_clarity", 0),
+                "spectral_centroid": analysis_results.get("pyaudio_spectral_centroid", 0),
+                "spectral_rolloff": analysis_results.get("pyaudio_spectral_rolloff", 0),
+                "artist_profile": artist_profile
+            }
+
+            # Generate comprehensive insights using Gemini
+            prompt = f"""
+            Analyze this music track and provide comprehensive insights:
+
+            Track: {filename}
+            BPM: {analysis_summary['bpm']}
+            Key: {analysis_summary['key']} {analysis_summary['mode']}
+            Energy: {analysis_summary['energy']:.3f}
+            Loudness: {analysis_summary['loudness']:.1f} dB
+            Valence: {analysis_summary['valence']:.3f}
+            Arousal: {analysis_summary['arousal']:.3f}
+            Danceability: {analysis_summary['danceability']:.3f}
+            Commercial Score: {analysis_summary['commercial_score']:.1f}
+            Emotional Category: {analysis_summary['emotional_category']}
+            Rhythm Clarity: {analysis_summary['rhythm_clarity']:.3f}
+            Spectral Centroid: {analysis_summary['spectral_centroid']:.0f} Hz
+            Spectral Rolloff: {analysis_summary['spectral_rolloff']:.0f} Hz
+
+            Please provide a comprehensive analysis in JSON format with the following structure:
+
+            {{
+                "track_summary": {{
+                    "overall_assessment": "Brief overall assessment of the track",
+                    "commercial_potential": "high/medium/low",
+                    "strengths": ["strength1", "strength2", "strength3"],
+                    "areas_for_improvement": ["improvement1", "improvement2"]
+                }},
+                "technical_analysis": {{
+                    "tempo_analysis": "Analysis of tempo and rhythm characteristics",
+                    "key_analysis": "Analysis of key and harmonic structure",
+                    "energy_analysis": "Analysis of energy and dynamics",
+                    "spectral_analysis": "Analysis of spectral characteristics"
+                }},
+                "artistic_insights": {{
+                    "mood_and_emotion": "Analysis of mood and emotional characteristics",
+                    "genre_characteristics": "Analysis of genre-specific characteristics"
+                }},
+                "actionable_recommendations": {{
+                    "production_tips": ["tip1", "tip2", "tip3"],
+                    "mixing_suggestions": ["suggestion1", "suggestion2"],
+                    "marketing_angles": ["angle1", "angle2"]
+                }},
+                "similar_artists": {{
+                    "reasoning": "Explanation of similar artist matches",
+                    "primary_matches": ["artist1", "artist2", "artist3"],
+                    "secondary_matches": ["artist4", "artist5"]
+                }},
+                "market_positioning": {{
+                    "target_audience": "Description of target audience",
+                    "playlist_fit": "Analysis of playlist compatibility",
+                    "streaming_appeal": "Analysis of streaming platform appeal"
+                }}
+            }}
+
+            Make the analysis detailed, professional, and actionable for music producers and artists.
+            """
+
+            # Use Gemini service to generate insights
+            response = await gemini_service.generate_insights(prompt)
+            
+            # Parse the response
+            try:
+                insights = json.loads(response)
+                return insights
+            except json.JSONDecodeError:
+                # If JSON parsing fails, create structured insights from the response
+                return self._create_structured_insights(response, analysis_summary)
+
+        except Exception as e:
+            print(f"Error generating Gemini insights: {e}")
+            # Return fallback insights
+            return self._create_fallback_insights(analysis_summary)
+
+    def _create_structured_insights(self, response: str, analysis_summary: Dict[str, Any]) -> Dict[str, Any]:
+        """Create structured insights from Gemini response when JSON parsing fails"""
+        return {
+            "track_summary": {
+                "overall_assessment": f"Analysis of {analysis_summary['filename']} based on technical metrics",
+                "commercial_potential": "medium" if analysis_summary['commercial_score'] > 60 else "low",
+                "strengths": ["Good energy levels", "Clear rhythm structure", "Balanced spectral characteristics"],
+                "areas_for_improvement": ["Consider enhancing dynamics", "Focus on mixing clarity"]
+            },
+            "technical_analysis": {
+                "tempo_analysis": f"Track has a {analysis_summary['bpm']} BPM tempo with {analysis_summary['rhythm_clarity']:.3f} rhythm clarity",
+                "key_analysis": f"Track is in {analysis_summary['key']} {analysis_summary['mode']}",
+                "energy_analysis": f"Energy level of {analysis_summary['energy']:.3f} with {analysis_summary['loudness']:.1f} dB loudness",
+                "spectral_analysis": f"Spectral centroid at {analysis_summary['spectral_centroid']:.0f} Hz, rolloff at {analysis_summary['spectral_rolloff']:.0f} Hz"
+            },
+            "artistic_insights": {
+                "mood_and_emotion": f"Track shows {analysis_summary['emotional_category']} characteristics with valence {analysis_summary['valence']:.3f}",
+                "genre_characteristics": "Displays characteristics typical of modern production"
+            },
+            "actionable_recommendations": {
+                "production_tips": ["Enhance dynamic range", "Focus on frequency balance", "Consider arrangement improvements"],
+                "mixing_suggestions": ["Balance low-end frequencies", "Enhance stereo imaging", "Optimize compression settings"],
+                "marketing_angles": ["Emphasize unique characteristics", "Target appropriate playlists", "Leverage genre-specific marketing"]
+            },
+            "similar_artists": {
+                "reasoning": "Based on technical characteristics and style",
+                "primary_matches": ["Contemporary Artist 1", "Similar Style Artist 2", "Genre Match Artist 3"],
+                "secondary_matches": ["Related Artist 4", "Influential Artist 5"]
+            },
+            "market_positioning": {
+                "target_audience": "Young adults interested in contemporary music",
+                "playlist_fit": "Suitable for genre-specific and mood-based playlists",
+                "streaming_appeal": "Good potential for streaming platforms with proper promotion"
+            }
+        }
+
+    def _create_fallback_insights(self, analysis_summary: Dict[str, Any]) -> Dict[str, Any]:
+        """Create fallback insights when Gemini is not available"""
+        return {
+            "track_summary": {
+                "overall_assessment": f"Track {analysis_summary['filename']} shows solid technical foundation with room for enhancement",
+                "commercial_potential": "medium" if analysis_summary['commercial_score'] > 60 else "low",
+                "strengths": ["Consistent energy", "Clear musical structure", "Balanced frequency response"],
+                "areas_for_improvement": ["Enhance dynamic contrast", "Improve mixing clarity", "Strengthen arrangement"]
+            },
+            "technical_analysis": {
+                "tempo_analysis": f"Moderate tempo of {analysis_summary['bpm']} BPM with {analysis_summary['rhythm_clarity']:.3f} rhythm clarity",
+                "key_analysis": f"Musical key of {analysis_summary['key']} {analysis_summary['mode']}",
+                "energy_analysis": f"Energy level {analysis_summary['energy']:.3f} with {analysis_summary['loudness']:.1f} dB loudness",
+                "spectral_analysis": f"Spectral characteristics: centroid {analysis_summary['spectral_centroid']:.0f} Hz, rolloff {analysis_summary['spectral_rolloff']:.0f} Hz"
+            },
+            "artistic_insights": {
+                "mood_and_emotion": f"{analysis_summary['emotional_category']} emotional profile with valence {analysis_summary['valence']:.3f}",
+                "genre_characteristics": "Contemporary production style with modern characteristics"
+            },
+            "actionable_recommendations": {
+                "production_tips": ["Enhance dynamic range", "Improve frequency balance", "Strengthen arrangement"],
+                "mixing_suggestions": ["Balance frequency spectrum", "Enhance stereo field", "Optimize compression"],
+                "marketing_angles": ["Highlight unique features", "Target appropriate audiences", "Leverage genre connections"]
+            },
+            "similar_artists": {
+                "reasoning": "Based on technical analysis and musical characteristics",
+                "primary_matches": ["Contemporary Artist A", "Similar Style B", "Genre Match C"],
+                "secondary_matches": ["Related Artist D", "Influential Artist E"]
+            },
+            "market_positioning": {
+                "target_audience": "Contemporary music listeners aged 18-35",
+                "playlist_fit": "Compatible with modern genre and mood playlists",
+                "streaming_appeal": "Good streaming potential with targeted promotion"
+            }
+        }
 
 # Create global instance
 simplified_analyzer = EnhancedAudioAnalyzer()

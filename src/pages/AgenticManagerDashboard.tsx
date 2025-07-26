@@ -1,5 +1,6 @@
 // /agentic-manager
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Upload, Music, TrendingUp, Users, Zap, Volume2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Upload, Music, TrendingUp, Users, Zap, Volume2, ArrowLeft, Home, Target, MessageSquare, MapPin, Mail } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/hooks/useAuth";
+
+import { CircularProgress } from "@/components/ui/AIRecommendationTool";
+import { MetricBar } from "@/components/ui/AIRecommendationTool";
+import { BACKEND_URL } from "@/config/api";
+import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/lib/supabase";
+import PyAudioAnalysisDisplay from "@/components/ui/PyAudioAnalysisDisplay";
+import { favoriteVenuesService } from "@/services/favoriteVenuesService";
+import GeminiInsightsDisplay from "@/components/ui/GeminiInsightsDisplay";
+import CompleteAnalysisDisplay from "@/components/ui/CompleteAnalysisDisplay";
+import SimilarArtistsDisplay from "@/components/ui/SimilarArtistsDisplay";
+import TargetVenuesDisplay from "@/components/ui/TargetVenuesDisplay";
+import EmailPitchAssistant from "@/components/ui/EmailPitchAssistant";
 // Temporarily removed useAuth import - using UUID generation instead
 
 const TABS = [
@@ -20,13 +38,58 @@ const TABS = [
   { key: "email", label: "Email Pitch Assistant" },
 ];
 
+// Utility to round and beautify numbers
+const formatNumber = (num, decimals = 2) => {
+  if (typeof num !== 'number' || isNaN(num)) return 'N/A';
+  return Number(num).toFixed(decimals);
+};
+
+// Generate detailed actionable insights (stub for Gemini, can be replaced with API call)
+const generateActionableInsights = (analysis, similarArtist) => {
+  const insights = [];
+  if (!analysis) return insights;
+  if (analysis.energy < 0.5) {
+    insights.push('Increase the energy of your track to match top commercial songs in your genre.');
+  } else {
+    insights.push('Your track has good energy for commercial appeal.');
+  }
+  if (analysis.loudness && analysis.loudness < -10) {
+    insights.push('Consider mastering your track to increase loudness for streaming platforms.');
+  }
+  if (analysis.valence < 0.3) {
+    insights.push('Try to add more positive or uplifting elements to increase valence.');
+  }
+  if (similarArtist) {
+    insights.push(`Compare your track to ${similarArtist.artist.name} for arrangement and mixing ideas.`);
+  }
+  return insights;
+};
+
 const AgenticManagerDashboard = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   // Generate a proper UUID for artist_id to fix the database UUID validation error
-  const [activeTab, setActiveTab] = useState("summary");
+  const [activeTab, setActiveTab] = useState("audio");
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  
+  // Email Assistant state for venue integration
+  const [emailAssistantData, setEmailAssistantData] = useState<any>(null);
+  
+  // Venue search state - moved from TargetVenuesDisplay for persistence
+  const [venues, setVenues] = useState<any[]>([]);
+  const [favoriteVenues, setFavoriteVenues] = useState<any[]>([]);
+  const [venuesLoading, setVenuesLoading] = useState(false);
+  const [venuesError, setVenuesError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useState({
+    location: '',
+    venueTypes: 'all',
+    artistGenre: '',
+    capacityRange: 'any'
+  });
   
   // MP3 Analysis State
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -45,47 +108,132 @@ const AgenticManagerDashboard = () => {
     goals: ""
   });
 
-  // Generate a proper UUID format to fix the database validation error
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [savedReports, setSavedReports] = useState<any[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [fetchReportsLoading, setFetchReportsLoading] = useState(false);
+  const [fetchReportsError, setFetchReportsError] = useState<string | null>(null);
+  const [artistProfile, setArtistProfile] = useState<any>(null);
+
+  // Generate a consistent UUID that persists across page loads
+  const getArtistId = () => {
+    if (user && user.id) {
+      // Optionally, store in localStorage for consistency
+      localStorage.setItem('musistash_artist_id', user.id);
+      return user.id;
+    }
+    // Fallback to UUID for anonymous/legacy users
+    let artistId = localStorage.getItem('musistash_artist_id');
+    if (!artistId) {
+      artistId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+      localStorage.setItem('musistash_artist_id', artistId);
+    }
+    return artistId;
+  };
+  const ARTIST_ID = getArtistId();
+
+  // Use only the imported supabase from @/lib/supabase
+
+  // Fetch saved reports for the user
+  const fetchSavedReports = async () => {
+    setFetchReportsLoading(true);
+    setFetchReportsError(null);
+    try {
+      const artistId = getArtistId();
+      const { data, error } = await supabase
+        .from("uploaded_tracks")
+        .select("*")
+        .eq("artist_id", artistId)
+        .eq("is_saved", true)  // Only get saved reports
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      setSavedReports(data || []);
+      setFetchReportsLoading(false);
+    } catch (err: any) {
+      setFetchReportsError(err.message || "Failed to fetch reports");
+      setFetchReportsLoading(false);
+    }
   };
 
-  const ARTIST_ID = generateUUID();
-
   // Check if user has completed onboarding
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      try {
-        console.log('Checking onboarding status for artist:', ARTIST_ID);
-        const response = await fetch(`http://localhost:8000/api/agent/profile/${ARTIST_ID}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (data.status === "success" && data.has_profile) {
+  const checkOnboardingStatus = async () => {
+    try {
+      const artistId = getArtistId();
+      const response = await fetch(`${BACKEND_URL}/api/agent/profile/${artistId}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === "success" && result.has_profile) {
           setHasCompletedOnboarding(true);
-        } else {
-          setHasCompletedOnboarding(false);
+          // Also populate the form with existing data if needed
+          if (result.data) {
+            setOnboardingData({
+              location: result.data.location || "",
+              instagram_handle: result.data.instagram_handle || "",
+              twitter_handle: result.data.twitter_handle || "",
+              youtube_channel: result.data.youtube_channel || "",
+              genre: result.data.genre || "",
+              career_stage: result.data.career_stage || "",
+              goals: result.data.goals || ""
+            });
+          }
         }
-      } catch (error) {
-        console.error("Error checking onboarding status:", error);
-        setHasCompletedOnboarding(false);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Error checking onboarding status:", error);
+      // If there's an error, we'll assume onboarding is not completed
+      setHasCompletedOnboarding(false);
+    }
+  };
 
-    checkOnboardingStatus();
+  // Load last analysis and fetch saved reports on mount
+  const loadLastAnalysis = async () => {
+    try {
+      const artistId = getArtistId();
+      const response = await fetch(`${BACKEND_URL}/api/agent/last-analysis/${artistId}`);
+      const result = await response.json();
+      
+      if (result.status === 'success' && result.has_analysis) {
+        // Set the analysis results to display
+        const analysisData = result.analysis;
+        const flattenedResults = {
+          ...analysisData.complete_analysis.basic_info,
+          ...analysisData.complete_analysis.commercial_analysis,
+          ...analysisData.complete_analysis.similarity_analysis,
+          ...analysisData.complete_analysis.resonance_prediction,
+          ...analysisData.complete_analysis.enhanced_features,
+          gemini_insights: analysisData.gemini_insights || {},
+          is_saved: analysisData.is_saved,
+          analysis_id: analysisData.id
+        };
+        setAnalysisResults(flattenedResults);
+      }
+    } catch (error) {
+      console.error('Error loading last analysis:', error);
+    }
+  };
+
+  // Call fetchSavedReports, check onboarding status, and load last analysis on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      await Promise.all([
+        fetchSavedReports(),
+        checkOnboardingStatus(),
+        loadLastAnalysis()
+      ]);
+      setIsLoading(false);
+    };
+    fetchData();
+    // eslint-disable-next-line
   }, []);
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
@@ -101,8 +249,14 @@ const AgenticManagerDashboard = () => {
 
       console.log('Sending onboarding data:', dataToSend);
 
-      const response = await fetch("http://localhost:8000/api/agent/onboarding", {
-        method: "POST",
+      // Use PUT for updates, POST for new submissions
+      const method = isEditingProfile ? "PUT" : "POST";
+      const url = isEditingProfile 
+        ? `http://localhost:8000/api/agent/profile/${ARTIST_ID}`
+        : "http://localhost:8000/api/agent/onboarding";
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -122,6 +276,10 @@ const AgenticManagerDashboard = () => {
 
       if (result.status === "success") {
         setHasCompletedOnboarding(true);
+        setIsEditingProfile(false);
+        // Show success message briefly
+        setError(""); // Clear any previous errors
+        // You could add a toast notification here if you have a toast system
       } else {
         setError(result.detail || "Failed to save onboarding data. Please try again.");
       }
@@ -138,8 +296,14 @@ const AgenticManagerDashboard = () => {
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!file.type.includes('audio/mpeg') && !file.type.includes('audio/mp3')) {
-      setAnalysisError("Please upload an MP3 file.");
+    // More flexible file type checking
+    const isAudioFile = file.type.includes('audio/') || 
+                       file.name.toLowerCase().endsWith('.mp3') || 
+                       file.name.toLowerCase().endsWith('.wav') || 
+                       file.name.toLowerCase().endsWith('.m4a');
+    
+    if (!isAudioFile) {
+      setAnalysisError("Please upload an audio file (MP3, WAV, or M4A).");
       return;
     }
 
@@ -169,7 +333,7 @@ const AgenticManagerDashboard = () => {
         });
       }, 200);
 
-      const response = await fetch('http://localhost:8000/api/agent/upload-track', {
+      const response = await fetch(`${BACKEND_URL}/api/agent/upload-track`, {
         method: 'POST',
         body: formData,
       });
@@ -178,9 +342,20 @@ const AgenticManagerDashboard = () => {
       setUploadProgress(100);
 
       const result = await response.json();
+      console.log('Backend response:', result);
 
       if (result.status === 'success') {
-        setAnalysisResults(result.metadata);
+        // Flatten the nested metadata structure for easier access
+        const flattenedResults = {
+          ...result.metadata.basic_info,
+          ...result.metadata.commercial_analysis,
+          ...result.metadata.similarity_analysis,
+          ...result.metadata.resonance_prediction,
+          ...result.metadata.enhanced_features,
+          gemini_insights: result.analysis?.ai_insights || {}
+        };
+        console.log('Flattened results:', flattenedResults);
+        setAnalysisResults(flattenedResults);
       } else {
         setAnalysisError('Failed to analyze the audio file.');
       }
@@ -207,18 +382,203 @@ const AgenticManagerDashboard = () => {
     }
   };
 
+  const handleSaveAnalysis = async () => {
+    if (!analysisResults) return;
+    setSaveLoading(true);
+    setSaveError(null);
+    try {
+      const artistId = getArtistId();
+      
+      // Use the new save analysis endpoint
+      const response = await fetch(`${BACKEND_URL}/api/agent/save-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `artist_id=${encodeURIComponent(artistId)}`,
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        // Update the local state to reflect that it's now saved
+        setAnalysisResults(prev => prev ? { ...prev, is_saved: true } : null);
+        // Refetch reports after save
+        fetchSavedReports();
+      } else {
+        throw new Error(result.message || 'Failed to save analysis');
+      }
+    } catch (err: any) {
+      setSaveError(err.message || 'Failed to save analysis.');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  // Function to switch to email assistant with venue data
+  const handleVenueEmailClick = (venue: any) => {
+    setEmailAssistantData({
+      template: 'venue-booking',
+      venueData: venue
+    });
+    setActiveTab('email');
+  };
+
+  // Venue management functions
+  const handleSearchParamsChange = (params: any) => {
+    setSearchParams(params);
+  };
+
+  const handleDiscoverVenues = async () => {
+    if (!searchParams.location.trim()) {
+      setVenuesError('Please enter a location to search for venues');
+      return;
+    }
+
+    setVenuesLoading(true);
+    setVenuesError(null);
+
+    try {
+      console.log('🔍 Discovering venues for:', searchParams.location);
+      
+      const formData = new FormData();
+      formData.append('location', searchParams.location);
+      formData.append('venue_types', searchParams.venueTypes === 'all' ? '' : searchParams.venueTypes);
+      formData.append('artist_genre', searchParams.artistGenre);
+      formData.append('capacity_range', searchParams.capacityRange === 'any' ? '' : searchParams.capacityRange);
+
+      const response = await fetch(`${BACKEND_URL}/api/agent/discover-venues`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error(`Failed to discover venues: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setVenues(data.venues || []);
+        if (data.venues?.length === 0) {
+          setVenuesError('No venues found for the specified location and criteria');
+        }
+      } else {
+        throw new Error(data.detail || 'Failed to discover venues');
+      }
+    } catch (err) {
+      console.error('❌ Error discovering venues:', err);
+      setVenuesError(err instanceof Error ? err.message : 'Failed to discover venues');
+    } finally {
+      setVenuesLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async (venue: any) => {
+    console.log('🎯 handleToggleFavorite called with venue:', venue.name);
+    console.log('👤 Current user:', user);
+    
+    if (!user?.id) {
+      console.log('❌ No user ID found, cannot favorite venue');
+      return;
+    }
+
+    try {
+      console.log('✅ User authenticated, proceeding with favorite toggle');
+      
+      const venueData = {
+        id: venue.id,
+        name: venue.name,
+        address: venue.address,
+        phone: venue.phone,
+        website: venue.website,
+        rating: venue.rating,
+        total_ratings: venue.total_ratings,
+        types: venue.types,
+        location: venue.location,
+        estimated_capacity: venue.estimated_capacity,
+        booking_difficulty: venue.booking_difficulty,
+        genre_suitability: venue.genre_suitability,
+        booking_approach: venue.booking_approach,
+        description: venue.description,
+        booking_requirements: venue.booking_requirements,
+        amenities: venue.amenities
+      };
+
+      console.log('📦 Venue data prepared:', venueData);
+      const isFavorited = await favoriteVenuesService.toggleFavoriteVenue(user.id, venueData);
+      console.log('🔄 Favorite toggle result:', isFavorited);
+      
+      if (isFavorited) {
+        // Add to favorites list
+        setFavoriteVenues(prev => [venue, ...prev]);
+        console.log('❤️ Added to favorites list');
+      } else {
+        // Remove from favorites list
+        setFavoriteVenues(prev => prev.filter(v => v.id !== venue.id));
+        console.log('🗑️ Removed from favorites list');
+      }
+    } catch (error) {
+      console.error('❌ Error toggling favorite:', error);
+    }
+  };
+
+  // Load favorite venues on component mount
+  React.useEffect(() => {
+    console.log('🔍 Checking user authentication for favorites...');
+    console.log('👤 User object:', user);
+    console.log('🆔 User ID:', user?.id);
+    
+    if (user?.id) {
+      console.log('✅ User authenticated, loading favorite venues...');
+      loadFavoriteVenues();
+    } else {
+      console.log('❌ No user ID found, cannot load favorites');
+    }
+  }, [user?.id]);
+
+  const loadFavoriteVenues = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const favorites = await favoriteVenuesService.getFavoriteVenues(user.id);
+      const favoriteVenuesList = favorites.map(fav => ({
+        id: fav.venue_id,
+        name: fav.venue_name,
+        address: fav.venue_address || '',
+        phone: fav.venue_phone || '',
+        website: fav.venue_website || '',
+        rating: fav.venue_rating || 0,
+        total_ratings: fav.venue_total_ratings || 0,
+        types: fav.venue_types || [],
+        location: fav.venue_location || '',
+        estimated_capacity: fav.venue_estimated_capacity || '',
+        booking_difficulty: fav.venue_booking_difficulty as 'easy' | 'medium' | 'hard' || 'medium',
+        genre_suitability: fav.venue_genre_suitability,
+        booking_approach: fav.venue_booking_approach,
+        description: fav.venue_description,
+        booking_requirements: fav.venue_booking_requirements || [],
+        amenities: fav.venue_amenities || []
+      }));
+      setFavoriteVenues(favoriteVenuesList);
+    } catch (error) {
+      console.error('Error loading favorite venues:', error);
+    }
+  };
+
   // Show loading screen while checking onboarding status
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0f1216]">
+      <div className="min-h-screen flex flex-col bg-[#0f1216] pt-16">
         <Navbar />
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg">Loading Agentic Manager...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-white text-lg">Loading your profile...</p>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -226,15 +586,18 @@ const AgenticManagerDashboard = () => {
   // Show onboarding screen if not completed
   if (!hasCompletedOnboarding) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0f1216]">
+      <div className="min-h-screen flex flex-col bg-[#0f1216] pt-16">
         <Navbar />
-        <main className="flex-grow max-w-2xl mx-auto w-full px-4 md:px-8 pt-20 pb-10">
+        <main className="flex-grow max-w-2xl mx-auto w-full px-4 md:px-8 pt-6 pb-10">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Welcome to Agentic Manager
+              {isEditingProfile ? "Edit Your Profile" : "Welcome to Agentic Manager"}
             </h1>
             <p className="text-xl text-gray-300">
-              Let's get your AI-powered artist management set up with some basic information.
+              {isEditingProfile 
+                ? "Update your artist management profile information."
+                : "Let's get your AI-powered artist management set up with some basic information."
+              }
             </p>
           </div>
 
@@ -340,13 +703,31 @@ const AgenticManagerDashboard = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white text-lg py-3 disabled:opacity-50"
-            >
-              {isSubmitting ? "Setting up..." : "Complete Setup & Enter Agentic Manager"}
-            </Button>
+            <div className="flex gap-4">
+              {isEditingProfile && (
+                <Button 
+                  type="button"
+                  onClick={() => {
+                    setIsEditingProfile(false);
+                    setHasCompletedOnboarding(true);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className={`${isEditingProfile ? 'flex-1' : 'w-full'} bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white text-lg py-3 disabled:opacity-50`}
+              >
+                {isSubmitting 
+                  ? (isEditingProfile ? "Updating..." : "Setting up...") 
+                  : (isEditingProfile ? "Update Profile" : "Complete Setup & Enter Agentic Manager")
+                }
+              </Button>
+            </div>
           </form>
         </main>
         <Footer />
@@ -354,228 +735,261 @@ const AgenticManagerDashboard = () => {
     );
   }
 
-  // Main dashboard with updated audio tab
+  // Main dashboard with improved styling and tabs
   return (
-    <div className="min-h-screen flex flex-col bg-[#0f1216]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0f1216] via-[#1a1d26] to-[#0f1216] pt-16">
       <Navbar />
-      <main className="flex-grow max-w-5xl mx-auto w-full px-2 md:px-8 pt-20 pb-10">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-10 text-center">
-          Agentic Manager
-        </h1>
-        {/* Improved Horizontal Tab Navigation */}
-        <div className="relative mb-10">
-          <div className="overflow-x-auto scrollbar-hide whitespace-nowrap border-b border-gray-800 shadow-sm rounded-t-xl bg-[#151823]">
-            <div className="flex flex-row items-center justify-start md:justify-center min-w-max">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  className={`mx-0.5 px-0.5 py-0.5 md:px-1 md:py-0.5 rounded-t-lg font-semibold text-[11px] md:text-xs transition-all duration-200 focus:outline-none whitespace-nowrap
-                    ${activeTab === tab.key
-                      ? "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white shadow-lg"
-                      : "bg-[#181c24] text-gray-300 hover:bg-gray-800 hover:text-white"}
-                  `}
-                  onClick={() => setActiveTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+      
+      {/* Header with Back Button */}
+      <div className="bg-[#181c24] border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => navigate('/dashboard')}
+                variant="ghost"
+                className="text-gray-400 hover:text-white hover:bg-gray-800"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div className="h-6 w-px bg-gray-700"></div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Agentic Manager</h1>
+                <p className="text-gray-400 text-sm">AI-Powered Artist Management</p>
+              </div>
             </div>
+            <Button
+              onClick={() => {
+                setIsEditingProfile(true);
+                setHasCompletedOnboarding(false);
+              }}
+              variant="outline"
+              className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+            >
+              Edit Profile
+            </Button>
           </div>
         </div>
-        {/* Tab Content */}
-        <div className="bg-[#181c24] rounded-xl shadow-xl p-6 md:p-10 min-h-[500px]">
-          {activeTab === "summary" && (
-            <div>
-              <h2 className="text-2xl font-semibold text-blue-400 mb-4">Weekly Strategy Summary</h2>
-              <p className="text-gray-300 mb-6">Fan growth, ROI estimate, and top fan city at a glance.</p>
-              <Button className="bg-blue-600 text-white">View Details</Button>
-            </div>
-          )}
-          {activeTab === "audio" && (
-            <div className="space-y-8">
-              <div className="text-center">
-                <h2 className="text-3xl font-bold text-purple-400 mb-2">MP3 Audio Analysis</h2>
-                <p className="text-gray-300">Upload your latest track and get instant AI-powered insights</p>
+      </div>
+
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 py-6">
+        {/* Enhanced Tabs */}
+        <div className="mb-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-[#0f1216] border border-gray-800">
+              <TabsTrigger 
+                value="audio" 
+                className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+              >
+                <Music className="w-4 h-4" />
+                MP3 Analysis
+              </TabsTrigger>
+              <TabsTrigger 
+                value="venues" 
+                className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+              >
+                <Target className="w-4 h-4" />
+                Target Venues
+              </TabsTrigger>
+              <TabsTrigger 
+                value="email" 
+                className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Email Assistant
+              </TabsTrigger>
+            </TabsList>
+
+            {/* MP3 Analysis Tab */}
+            <TabsContent value="audio" className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-2">MP3 Audio Analysis</h2>
+                <p className="text-lg text-gray-300">
+                  Upload your latest track and get instant AI-powered insights
+                </p>
               </div>
 
               {/* File Upload Area */}
-              <div 
-                className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center bg-[#0f1216] hover:border-purple-500 transition-colors cursor-pointer"
-                onDrop={handleFileDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => document.getElementById('file-input')?.click()}
-              >
-                <input
-                  id="file-input"
-                  type="file"
-                  accept=".mp3,audio/mpeg"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Upload className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  {uploadedFile ? uploadedFile.name : "Drop your MP3 file here"}
-                </h3>
-                <p className="text-gray-400">or click to browse (Max 20MB)</p>
-              </div>
+              <Card className="bg-[#0f1216] border-2 border-dashed border-gray-600 hover:border-purple-500 transition-colors">
+                <CardContent className="p-8">
+                  <div 
+                    className="text-center cursor-pointer"
+                    onDrop={handleFileDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => document.getElementById('file-input')?.click()}
+                  >
+                    <input
+                      id="file-input"
+                      type="file"
+                      accept=".mp3,audio/mpeg"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <Upload className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {uploadedFile ? uploadedFile.name : "Drop your MP3 file here"}
+                    </h3>
+                    <p className="text-gray-400">or click to browse (Max 20MB)</p>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Upload Progress */}
               {isAnalyzing && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white">Analyzing audio...</span>
-                    <span className="text-purple-400">{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="w-full" />
-                </div>
+                <Card className="bg-[#0f1216] border border-gray-700">
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-medium">Analyzing audio...</span>
+                        <span className="text-purple-400 font-semibold">{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Analysis Error */}
               {analysisError && (
-                <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
-                  {analysisError}
-                </div>
+                <Card className="bg-red-900/20 border border-red-500">
+                  <CardContent className="p-4">
+                    <div className="text-red-400">{analysisError}</div>
+                  </CardContent>
+                </Card>
               )}
 
-              {/* Analysis Results */}
+              {/* Complete Analysis Display */}
               {analysisResults && (
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* BPM */}
-                    <div className="bg-[#0f1216] rounded-lg p-4 border border-purple-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Music className="w-5 h-5 text-purple-400" />
-                        <span className="text-sm text-gray-400">BPM</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {Math.round(analysisResults.bpm)}
-                      </div>
+                <div className="space-y-6">
+                  <CompleteAnalysisDisplay 
+                    analysis={analysisResults} 
+                    isSaved={analysisResults.is_saved}
+                  />
+                  
+                  {/* Save Analysis Button - only show if not saved */}
+                  {!analysisResults.is_saved && (
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleSaveAnalysis}
+                        disabled={saveLoading}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                      >
+                        {saveLoading ? 'Saving...' : 'Save Analysis'}
+                      </Button>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {/* Key */}
-                    <div className="bg-[#0f1216] rounded-lg p-4 border border-blue-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-blue-400" />
-                        <span className="text-sm text-gray-400">Key</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {analysisResults.key} {analysisResults.mode}
-                      </div>
-                    </div>
-
-                    {/* Energy */}
-                    <div className="bg-[#0f1216] rounded-lg p-4 border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Zap className="w-5 h-5 text-green-400" />
-                        <span className="text-sm text-gray-400">Energy</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {Math.round(analysisResults.energy * 100)}%
-                      </div>
-                    </div>
-
-                    {/* Loudness */}
-                    <div className="bg-[#0f1216] rounded-lg p-4 border border-yellow-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Volume2 className="w-5 h-5 text-yellow-400" />
-                        <span className="text-sm text-gray-400">Loudness</span>
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {Math.round(analysisResults.loudness)} dB
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Duration and Additional Info */}
-                  <div className="bg-[#0f1216] rounded-lg p-6 border border-gray-700">
-                    <h3 className="text-xl font-semibold text-white mb-4">Track Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-400">Duration:</span>
-                        <span className="text-white ml-2">
-                          {Math.floor(analysisResults.duration / 60)}:{String(Math.floor(analysisResults.duration % 60)).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Mode:</span>
-                        <span className="text-white ml-2 capitalize">{analysisResults.mode}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">File:</span>
-                        <span className="text-white ml-2">{uploadedFile?.name}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Placeholder for Similar Artists */}
-                  <div className="bg-[#0f1216] rounded-lg p-6 border border-gray-700">
-                    <h3 className="text-xl font-semibold text-white mb-4">Similar Artists</h3>
-                    <p className="text-gray-400 mb-4">Analyzing sound similarity to find matches...</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-[#181c24] rounded-lg p-4 animate-pulse">
-                          <div className="w-full h-24 bg-gray-700 rounded mb-2"></div>
-                          <div className="h-4 bg-gray-700 rounded mb-1"></div>
-                          <div className="h-3 bg-gray-700 rounded w-2/3"></div>
-                        </div>
+              {/* Saved Reports Section */}
+              <Card className="bg-[#181c24] border border-purple-700">
+                <CardHeader>
+                  <CardTitle className="text-purple-300">Saved Reports</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {fetchReportsLoading ? (
+                    <div className="text-gray-400">Loading reports...</div>
+                  ) : fetchReportsError ? (
+                    <div className="text-red-500">{fetchReportsError}</div>
+                  ) : savedReports.length === 0 ? (
+                    <div className="text-gray-400">No saved reports yet.</div>
+                  ) : (
+                    <ul className="divide-y divide-purple-900/40">
+                      {savedReports.map((report, idx) => (
+                        <li key={report.id || idx} className="py-4">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+                            <div>
+                              <span className="font-semibold text-white">
+                                {report.complete_analysis_json?.basic_info?.filename || `Track Analysis #${report.id?.slice(-8)}`}
+                              </span>
+                              <span className="text-gray-400 ml-2">
+                                {report.updated_at ? new Date(report.updated_at).toLocaleString() : 
+                                 report.created_at ? new Date(report.created_at).toLocaleString() : 
+                                 'Recent'}
+                              </span>
+                            </div>
+                            <div className="flex gap-4 mt-2 md:mt-0">
+                              <Badge variant="outline" className="text-blue-400 border-blue-400">BPM: {report.pyaudio_bpm ?? report.bpm ?? 'N/A'}</Badge>
+                              <Badge variant="outline" className="text-green-400 border-green-400">Energy: {report.pyaudio_energy_mean ?? report.energy ?? 'N/A'}</Badge>
+                              <Badge variant="outline" className="text-yellow-400 border-yellow-400">Loudness: {report.pyaudio_loudness ?? report.loudness ?? 'N/A'}</Badge>
+                              <Badge variant="outline" className="text-purple-400 border-purple-400">Key: {report.pyaudio_key ?? report.key ?? 'N/A'}</Badge>
+                            </div>
+                          </div>
+                          
+                          {/* Show commercial potential if available */}
+                          {report.gemini_insights_json?.track_summary?.commercial_potential && (
+                            <div className="mt-2">
+                              <span className="text-gray-400">Commercial Potential: </span>
+                              <span className={`font-semibold ${
+                                report.gemini_insights_json.track_summary.commercial_potential.toLowerCase() === 'high' ? 'text-green-400' :
+                                report.gemini_insights_json.track_summary.commercial_potential.toLowerCase() === 'medium' ? 'text-yellow-400' :
+                                'text-red-400'
+                              }`}>
+                                {report.gemini_insights_json.track_summary.commercial_potential.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Show top strength if available */}
+                          {report.gemini_insights_json?.track_summary?.strengths?.[0] && (
+                            <div className="mt-1 text-sm text-gray-300">
+                              <span className="text-green-400">✓ </span>
+                              {report.gemini_insights_json.track_summary.strengths[0]}
+                            </div>
+                          )}
+                        </li>
                       ))}
-                    </div>
-                  </div>
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
 
-                  {/* Actions */}
-                  <div className="flex gap-4">
-                    <Button className="bg-purple-600 text-white flex-1">
-                      Generate Campaign Strategy
-                    </Button>
-                    <Button variant="outline" className="border-purple-500 text-purple-400 flex-1">
-                      Save Analysis
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Similar Artists Section */}
+              <SimilarArtistsDisplay 
+                geminiInsights={analysisResults?.gemini_insights}
+                isLoading={isAnalyzing}
+              />
+            </TabsContent>
 
-              {/* Empty State */}
-              {!uploadedFile && !isAnalyzing && !analysisResults && (
-                <div className="text-center py-12">
-                  <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-400 mb-2">No audio file uploaded</h3>
-                  <p className="text-gray-500">Upload an MP3 file to start the AI analysis</p>
-                </div>
-              )}
-            </div>
-          )}
-          {activeTab === "campaign" && (
-            <div>
-              <h2 className="text-2xl font-semibold text-green-400 mb-4">Funding & Campaign Recommendation</h2>
-              <p className="text-gray-300 mb-6">AI-powered suggestions for your next release campaign.</p>
-              {/* TODO: Integrate campaign recommendation API */}
-              <Button className="bg-green-600 text-white">Get Recommendation</Button>
-            </div>
-          )}
-          {activeTab === "fan" && (
-            <div>
-              <h2 className="text-2xl font-semibold text-pink-400 mb-4">Fan Analytics</h2>
-              <p className="text-gray-300 mb-6">Track your follower growth, top cities, and engagement.</p>
-              {/* TODO: Integrate fan analytics API */}
-              <Button className="bg-pink-600 text-white">View Analytics</Button>
-            </div>
-          )}
-          {activeTab === "venues" && (
-            <div>
-              <h2 className="text-2xl font-semibold text-yellow-400 mb-4">Target Venues</h2>
-              <p className="text-gray-300 mb-6">Get a curated list of venues to pitch in your top cities.</p>
-              {/* TODO: Integrate venue recommendations API */}
-              <Button className="bg-yellow-500 text-white">Find Venues</Button>
-            </div>
-          )}
-          {activeTab === "email" && (
-            <div>
-              <h2 className="text-2xl font-semibold text-cyan-400 mb-4">Email Pitch Assistant</h2>
-              <p className="text-gray-300 mb-6">AI-generated outreach drafts for venues, curators, and more.</p>
-              {/* TODO: Integrate email draft API */}
-              <Button className="bg-cyan-600 text-white">Generate Email Drafts</Button>
-            </div>
-          )}
+            {/* Target Venues Tab */}
+            <TabsContent value="venues" className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-2">Target Venues</h2>
+                <p className="text-lg text-gray-300">
+                  Discover the best venues for your music and get booking recommendations
+                </p>
+              </div>
+
+              <TargetVenuesDisplay 
+                artistProfile={artistProfile} 
+                onVenueEmailClick={handleVenueEmailClick}
+                venues={venues}
+                favoriteVenues={favoriteVenues}
+                loading={venuesLoading}
+                error={venuesError}
+                searchParams={searchParams}
+                onSearchParamsChange={handleSearchParamsChange}
+                onDiscoverVenues={handleDiscoverVenues}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            </TabsContent>
+
+            {/* Email Pitch Assistant Tab */}
+            <TabsContent value="email" className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-2">Email Pitch Assistant</h2>
+                <p className="text-lg text-gray-300">
+                  Generate professional email pitches for venues, promoters, and industry contacts
+                </p>
+              </div>
+
+              <EmailPitchAssistant 
+                artistProfile={artistProfile} 
+                initialData={emailAssistantData}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />

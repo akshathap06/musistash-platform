@@ -1,33 +1,45 @@
--- Fix Database Schema for MusiStash Platform
--- Run this in your Supabase SQL Editor to add missing fields
+-- Fix Database Schema Issues
+-- This migration fixes missing columns that are causing errors
 
--- Add missing fields to artist_profiles table
+-- Fix uploaded_tracks table - add missing columns
+ALTER TABLE uploaded_tracks 
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS filename VARCHAR(255),
+ADD COLUMN IF NOT EXISTS file_size_bytes BIGINT,
+ADD COLUMN IF NOT EXISTS analysis_quality VARCHAR(50) DEFAULT 'basic',
+ADD COLUMN IF NOT EXISTS libraries_used JSONB DEFAULT '[]',
+ADD COLUMN IF NOT EXISTS analysis_json JSONB;
+
+-- Fix artist_profiles table - add missing columns
 ALTER TABLE artist_profiles 
-ADD COLUMN IF NOT EXISTS career_highlights JSONB DEFAULT '[]'::jsonb;
+ADD COLUMN IF NOT EXISTS artist_id UUID,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
-ALTER TABLE artist_profiles 
-ADD COLUMN IF NOT EXISTS musical_style TEXT DEFAULT '';
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_uploaded_tracks_artist_id ON uploaded_tracks(artist_id);
+CREATE INDEX IF NOT EXISTS idx_uploaded_tracks_created_at ON uploaded_tracks(created_at);
+CREATE INDEX IF NOT EXISTS idx_artist_profiles_artist_id ON artist_profiles(artist_id);
 
-ALTER TABLE artist_profiles 
-ADD COLUMN IF NOT EXISTS influences TEXT DEFAULT '';
+-- Add comments for documentation
+COMMENT ON COLUMN uploaded_tracks.created_at IS 'Timestamp when the track was uploaded and analyzed';
+COMMENT ON COLUMN uploaded_tracks.updated_at IS 'Timestamp when the track analysis was last updated';
+COMMENT ON COLUMN uploaded_tracks.filename IS 'Original filename of the uploaded track';
+COMMENT ON COLUMN uploaded_tracks.file_size_bytes IS 'Size of the uploaded file in bytes';
+COMMENT ON COLUMN uploaded_tracks.analysis_quality IS 'Quality level of the analysis (basic, enhanced, ai_enhanced)';
+COMMENT ON COLUMN uploaded_tracks.libraries_used IS 'JSON array of libraries used for analysis';
+COMMENT ON COLUMN uploaded_tracks.analysis_json IS 'Complete analysis results as JSON';
 
--- Update existing profiles to have default values
+COMMENT ON COLUMN artist_profiles.artist_id IS 'Unique identifier for the artist';
+COMMENT ON COLUMN artist_profiles.created_at IS 'Timestamp when the profile was created';
+COMMENT ON COLUMN artist_profiles.updated_at IS 'Timestamp when the profile was last updated';
+
+-- Update existing records to have proper timestamps
+UPDATE uploaded_tracks 
+SET created_at = NOW(), updated_at = NOW() 
+WHERE created_at IS NULL;
+
 UPDATE artist_profiles 
-SET 
-  career_highlights = COALESCE(career_highlights, '[]'::jsonb),
-  musical_style = COALESCE(musical_style, ''),
-  influences = COALESCE(influences, '')
-WHERE career_highlights IS NULL 
-   OR musical_style IS NULL 
-   OR influences IS NULL;
-
--- Add comments to document the new fields
-COMMENT ON COLUMN artist_profiles.career_highlights IS 'Array of career highlights with year, title, and description';
-COMMENT ON COLUMN artist_profiles.musical_style IS 'Artist''s primary musical style/genre';
-COMMENT ON COLUMN artist_profiles.influences IS 'Musical influences and inspirations';
-
--- Verify the table structure
-SELECT column_name, data_type, is_nullable, column_default 
-FROM information_schema.columns 
-WHERE table_name = 'artist_profiles' 
-ORDER BY ordinal_position; 
+SET created_at = NOW(), updated_at = NOW() 
+WHERE created_at IS NULL; 

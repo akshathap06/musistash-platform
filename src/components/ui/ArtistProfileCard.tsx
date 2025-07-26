@@ -60,16 +60,39 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showFullBio, setShowFullBio] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [musistashFollowers, setMusistashFollowers] = useState(0);
   
   const bio = artist.bio || "No biography available for this artist.";
   const displayBio = showFullBio ? bio : bio.slice(0, 120) + (bio.length > 120 ? '...' : '');
   
-  // Load real data from profile
+  // Load real data from profile including follower count and follow state
   useEffect(() => {
     const loadArtistData = async () => {
       try {
         setIsLoadingData(true);
-        // Data is already available in the artist profile
+        
+        // Fetch real follower count from the database
+        try {
+          const followerCount = await followingService.getFollowerCount(artist.id);
+          setMusistashFollowers(followerCount);
+          console.log('ArtistProfileCard: Loaded follower count:', followerCount, 'for artist:', artist.id);
+        } catch (error) {
+          console.error('Error loading follower count:', error);
+          setMusistashFollowers(0);
+        }
+        
+        // Check if current user is following this artist
+        if (user && isAuthenticated) {
+          try {
+            const isUserFollowing = await followingService.isFollowing(user.id, artist.id);
+            setIsFollowing(isUserFollowing);
+            console.log('ArtistProfileCard: Loaded follow state:', isUserFollowing, 'for artist:', artist.id);
+          } catch (error) {
+            console.error('Error loading follow state:', error);
+            setIsFollowing(false);
+          }
+        }
+        
         setIsLoadingData(false);
       } catch (error) {
         console.error('Error loading artist data:', error);
@@ -78,7 +101,7 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
     };
 
     loadArtistData();
-  }, [artist.id]);
+  }, [artist.id, user, isAuthenticated]);
 
   // Get real stats from artist profile data
   const getRealStats = () => {
@@ -97,7 +120,8 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
       monthlyListeners,
       totalStreams,
       popularity,
-      followers: spotifyFollowers,
+      spotifyFollowers,
+      musistashFollowers, // Use the real follower count from state
     };
   };
 
@@ -140,6 +164,15 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
           title: "Unfollowed",
           description: `You've unfollowed ${artist.artist_name}`,
         });
+      }
+      
+      // Refresh the follower count after follow/unfollow
+      try {
+        const newFollowerCount = await followingService.getFollowerCount(artist.id);
+        setMusistashFollowers(newFollowerCount);
+        console.log('ArtistProfileCard: Updated follower count to:', newFollowerCount);
+      } catch (error) {
+        console.error('Error updating follower count:', error);
       }
       
       if (onFollowChange) {
@@ -227,20 +260,20 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
 
         {/* Stats Row - Compact */}
         <div className="grid grid-cols-2 gap-2 mb-3">
-          {/* Monthly Listeners */}
+          {/* Spotify Followers */}
           <div className="bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg p-2 text-white">
             <div className="flex items-center gap-1 mb-1">
               <Users className="w-3 h-3" />
-              <span className="text-xs font-medium">Monthly</span>
+              <span className="text-xs font-medium">Spotify</span>
             </div>
             <div className="text-sm font-bold">
               {isLoadingData ? (
                 <div className="animate-pulse bg-white/20 rounded h-4 w-12"></div>
               ) : (
-                formatLargeNumber(stats.monthlyListeners)
+                formatLargeNumber(stats.spotifyFollowers)
               )}
             </div>
-            <div className="text-xs opacity-90">Listeners</div>
+            <div className="text-xs opacity-90">Followers</div>
           </div>
 
           {/* Total Streams */}
@@ -275,17 +308,17 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({
             <div className="text-xs opacity-90">Score</div>
           </div>
 
-          {/* Spotify Followers */}
+          {/* MusiStash Followers */}
           <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg p-2 text-white">
             <div className="flex items-center gap-1 mb-1">
               <Heart className="w-3 h-3" />
-              <span className="text-xs font-medium">Spotify</span>
+              <span className="text-xs font-medium">MusiStash</span>
             </div>
             <div className="text-sm font-bold">
               {isLoadingData ? (
                 <div className="animate-pulse bg-white/20 rounded h-4 w-12"></div>
               ) : (
-                formatLargeNumber(stats.followers)
+                formatLargeNumber(stats.musistashFollowers)
               )}
             </div>
             <div className="text-xs opacity-90">Followers</div>

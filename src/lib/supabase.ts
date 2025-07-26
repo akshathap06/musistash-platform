@@ -302,6 +302,74 @@ export interface Database {
           updated_at?: string
         }
       }
+      favorite_venues: {
+        Row: {
+          id: string
+          user_id: string
+          venue_id: string
+          venue_name: string
+          venue_address?: string
+          venue_phone?: string
+          venue_website?: string
+          venue_rating?: number
+          venue_total_ratings?: number
+          venue_types?: string[]
+          venue_location?: string
+          venue_estimated_capacity?: string
+          venue_booking_difficulty?: string
+          venue_genre_suitability?: number
+          venue_booking_approach?: string
+          venue_description?: string
+          venue_booking_requirements?: string[]
+          venue_amenities?: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          venue_id: string
+          venue_name: string
+          venue_address?: string
+          venue_phone?: string
+          venue_website?: string
+          venue_rating?: number
+          venue_total_ratings?: number
+          venue_types?: string[]
+          venue_location?: string
+          venue_estimated_capacity?: string
+          venue_booking_difficulty?: string
+          venue_genre_suitability?: number
+          venue_booking_approach?: string
+          venue_description?: string
+          venue_booking_requirements?: string[]
+          venue_amenities?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          venue_id?: string
+          venue_name?: string
+          venue_address?: string
+          venue_phone?: string
+          venue_website?: string
+          venue_rating?: number
+          venue_total_ratings?: number
+          venue_types?: string[]
+          venue_location?: string
+          venue_estimated_capacity?: string
+          venue_booking_difficulty?: string
+          venue_genre_suitability?: number
+          venue_booking_approach?: string
+          venue_description?: string
+          venue_booking_requirements?: string[]
+          venue_amenities?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

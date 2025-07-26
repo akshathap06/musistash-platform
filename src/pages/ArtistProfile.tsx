@@ -16,6 +16,7 @@ import { followingService } from '@/services/followingService';
 import { supabaseService } from '@/services/supabaseService';
 import { useAuth } from '@/hooks/useAuth';
 import { Music, Users, Sparkles, BarChart, ArrowRight } from 'lucide-react';
+import { formatLargeNumber } from '@/lib/utils';
 import spotifyService from '@/services/spotify';
 import { SpotifyArtist } from '@/services/spotify/spotifyTypes';
 
@@ -100,6 +101,16 @@ interface ArtistData {
   twitter_handle?: string;
   website_url?: string;
   verified_status?: boolean;
+  spotify_data?: {
+    followers?: number;
+    popularity?: number;
+    genres?: string[];
+    topTracks?: Array<{
+      id: string;
+      name: string;
+      url: string;
+    }>;
+  };
 }
 
 const ArtistProfile = () => {
@@ -172,7 +183,8 @@ const ArtistProfile = () => {
             instagram_handle: foundProfile.instagram_handle || '',
             twitter_handle: foundProfile.twitter_handle || '',
             website_url: foundProfile.website_url || '',
-            verified_status: foundProfile.is_verified || false
+            verified_status: foundProfile.is_verified || false,
+            spotify_data: foundProfile.spotify_data || {}
           };
           console.log('ArtistProfile: Created artist object from profile:', foundArtist);
           setArtist(foundArtist);
@@ -284,14 +296,43 @@ const ArtistProfile = () => {
         }
         
         // Then fetch real Spotify data for the artist
-        if (foundArtist && foundArtist.name) {
+        if (foundArtist) {
           try {
-          const spotifyData = await spotifyService.searchArtist(foundArtist.name);
-          if (spotifyData) {
-            setSpotifyArtist(spotifyData);
-            if (spotifyData.images && spotifyData.images.length > 0) {
-              setSpotifyImage(spotifyData.images[0].url);
+            let spotifyData = null;
+            
+            // First try to get by Spotify artist ID if available
+            if (foundArtist.spotify_artist_id) {
+              console.log('ArtistProfile: Fetching Spotify data by ID:', foundArtist.spotify_artist_id);
+              spotifyData = await spotifyService.getArtist(foundArtist.spotify_artist_id);
             }
+            
+            // If no data found by ID, try searching by name
+            if (!spotifyData && foundArtist.name) {
+              console.log('ArtistProfile: Fetching Spotify data by name:', foundArtist.name);
+              spotifyData = await spotifyService.searchArtist(foundArtist.name);
+            }
+            
+            if (spotifyData) {
+              console.log('ArtistProfile: Spotify data found:', spotifyData);
+              setSpotifyArtist(spotifyData);
+              if (spotifyData.images && spotifyData.images.length > 0) {
+                setSpotifyImage(spotifyData.images[0].url);
+              }
+            } else {
+              console.log('ArtistProfile: No Spotify data found for artist:', foundArtist.name);
+              // Try to use stored Spotify data from the profile if available
+              if (foundArtist.spotify_data && typeof foundArtist.spotify_data === 'object') {
+                console.log('ArtistProfile: Using stored Spotify data from profile');
+                const storedSpotifyData = {
+                  id: foundArtist.spotify_artist_id || 'unknown',
+                  name: foundArtist.name,
+                  followers: { total: foundArtist.spotify_data.followers || 0 },
+                  popularity: foundArtist.spotify_data.popularity || 0,
+                  genres: foundArtist.spotify_data.genres || [],
+                  images: []
+                };
+                setSpotifyArtist(storedSpotifyData);
+              }
             }
           } catch (error) {
             console.error('ArtistProfile: Error fetching Spotify data:', error);
@@ -511,11 +552,9 @@ const ArtistProfile = () => {
                   <div className="flex items-center bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-700/30">
                     <Users className="h-4 w-4 mr-2 text-blue-300" />
                     <span className="font-semibold text-blue-200">
-                      {spotifyArtist && spotifyArtist.followers ? 
-                        `${spotifyArtist.followers.total.toLocaleString()}` : 
-                        `${followersCount.toLocaleString()}`}
+                      {formatLargeNumber(followersCount)}
                     </span>
-                    <span className="text-blue-100 ml-1 text-sm">Followers</span>
+                    <span className="text-blue-100 ml-1 text-sm">MusiStash Followers</span>
                   </div>
                   
                   <div className="flex items-center bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-700/30">
@@ -537,13 +576,13 @@ const ArtistProfile = () => {
                   </div>
                   
                   {/* New Stats */}
-                  {artist.monthly_listeners && (
+                  {spotifyArtist?.followers?.total && (
                     <div className="flex items-center bg-emerald-900/20 px-3 py-2 rounded-lg border border-emerald-700/30">
                       <BarChart className="h-4 w-4 mr-2 text-emerald-300" />
                       <span className="font-semibold text-emerald-200">
-                        {artist.monthly_listeners.toLocaleString()}
+                        {formatLargeNumber(spotifyArtist.followers.total)}
                       </span>
-                      <span className="text-emerald-100 ml-1 text-sm">Monthly Listeners</span>
+                      <span className="text-emerald-100 ml-1 text-sm">Spotify Followers</span>
                     </div>
                   )}
                   
@@ -551,7 +590,7 @@ const ArtistProfile = () => {
                     <div className="flex items-center bg-cyan-900/20 px-3 py-2 rounded-lg border border-cyan-700/30">
                       <Music className="h-4 w-4 mr-2 text-cyan-300" />
                       <span className="font-semibold text-cyan-200">
-                        {artist.total_streams.toLocaleString()}
+                        {formatLargeNumber(artist.total_streams)}
                       </span>
                       <span className="text-cyan-100 ml-1 text-sm">Total Streams</span>
                     </div>
@@ -745,14 +784,19 @@ const ArtistProfile = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-gray-800 rounded-lg p-4 border border-blue-600/30 text-center hover:border-blue-500/50 transition-colors">
                           <div className="text-2xl font-bold text-blue-400 mb-1">
-                            {artist.monthly_listeners?.toLocaleString() || '0'}
+                            {spotifyArtist?.followers?.total ? 
+                              formatLargeNumber(spotifyArtist.followers.total) : 
+                              artist.spotify_data?.followers ? 
+                                formatLargeNumber(artist.spotify_data.followers) : 
+                                '0'
+                            }
                           </div>
-                          <div className="text-xs text-blue-300">Monthly Listeners</div>
+                          <div className="text-xs text-blue-300">Spotify Followers</div>
                         </div>
                         
                         <div className="bg-gray-800 rounded-lg p-4 border border-green-600/30 text-center hover:border-green-500/50 transition-colors">
                           <div className="text-2xl font-bold text-green-400 mb-1">
-                            {artist.total_streams?.toLocaleString() || '0'}
+                            {artist.total_streams ? formatLargeNumber(artist.total_streams) : '0'}
                           </div>
                           <div className="text-xs text-green-300">Total Streams</div>
                         </div>
@@ -766,9 +810,9 @@ const ArtistProfile = () => {
                         
                         <div className="bg-gray-800 rounded-lg p-4 border border-pink-600/30 text-center hover:border-pink-500/50 transition-colors">
                           <div className="text-2xl font-bold text-pink-400 mb-1">
-                            {followersCount.toLocaleString()}
+                            {formatLargeNumber(followersCount)}
                           </div>
-                          <div className="text-xs text-pink-300">Followers</div>
+                          <div className="text-xs text-pink-300">MusiStash Followers</div>
                         </div>
                       </div>
                     </CardContent>
@@ -822,10 +866,10 @@ const ArtistProfile = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
-                      <div className="space-y-4">
+                      <div className="space-y-12">
                         {artist.social_links?.youtube && (
                           <a href={artist.social_links.youtube} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-red-600/20 hover:bg-red-600/30 border-red-600/50 text-red-300 hover:text-red-200 shadow-lg h-12">
+                            <Button variant="outline" className="w-full justify-start bg-red-600/20 hover:bg-red-600/30 border-red-600/50 text-red-300 hover:text-red-200 shadow-lg h-16 py-6 mb-4">
                               <svg className="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                               </svg>
@@ -836,7 +880,7 @@ const ArtistProfile = () => {
                         
                         {artist.social_links?.spotify && (
                           <a href={artist.social_links.spotify} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-600/50 text-emerald-300 hover:text-emerald-200 shadow-lg h-12">
+                            <Button variant="outline" className="w-full justify-start bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-600/50 text-emerald-300 hover:text-emerald-200 shadow-lg h-16 py-6 mb-4">
                               <svg className="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
                               </svg>
@@ -847,7 +891,7 @@ const ArtistProfile = () => {
                         
                         {artist.social_links?.instagram && (
                           <a href={artist.social_links.instagram} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-gradient-to-r from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 border-pink-600/50 text-pink-300 hover:text-pink-200 shadow-lg h-12">
+                            <Button variant="outline" className="w-full justify-start bg-gradient-to-r from-pink-600/20 to-purple-600/20 hover:from-pink-600/30 hover:to-purple-600/30 border-pink-600/50 text-pink-300 hover:text-pink-200 shadow-lg h-16 py-6 mb-4">
                               <svg className="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                               </svg>
@@ -858,7 +902,7 @@ const ArtistProfile = () => {
                         
                         {artist.website_url && (
                           <a href={artist.website_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full justify-start bg-gray-600/20 hover:bg-gray-600/30 border-gray-600/50 text-gray-300 hover:text-gray-200 shadow-lg h-12">
+                            <Button variant="outline" className="w-full justify-start bg-gray-600/20 hover:bg-gray-600/30 border-gray-600/50 text-gray-300 hover:text-gray-200 shadow-lg h-16 py-6 mb-4">
                               <svg className="h-5 w-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2v3.057c1.836-.211 3.5-1.172 4.5-2.648 1.5-2.172 1.5-5.172 0-7.172-1.5-2.172-4.5-2.172-6 0-1.5 2.172-1.5 5.172 0 7.172 1 1.476 2.664 2.437 4.5 2.648zm-1-5.057c0-.552.448-1 1-1s1 .448 1 1-.448 1-1 1-1-.448-1-1z"/>
                               </svg>

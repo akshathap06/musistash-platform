@@ -232,72 +232,6 @@ const CircularProgress = ({ value, label, color, size = "lg" }: {
   );
 };
 
-const CompactArtistCard = ({ artist, label, isTarget = false }: { 
-  artist: any; 
-  label: string; 
-  isTarget?: boolean;
-}) => (
-  <div className={`p-4 rounded-lg border ${isTarget ? 'border-blue-500/30 bg-blue-500/5' : 'border-gray-700 bg-gray-800/50'}`}>
-    <div className="space-y-3">
-      {/* Header with label and tier */}
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-gray-400">{label}</div>
-        {artist?.tier?.tier && (
-          <div className="bg-purple-500 text-xs px-2 py-1 rounded-full font-medium text-white">
-            {artist.tier.tier}
-          </div>
-        )}
-      </div>
-      
-      {/* Artist info row */}
-      <div className="flex items-center gap-3">
-        <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-          {artist?.avatar ? (
-            <img 
-              src={artist.avatar} 
-              alt={artist.name}
-              className="w-full h-full rounded-lg object-cover"
-            />
-          ) : (
-            <div className="w-full h-full rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-              <Music className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-            </div>
-          )}
-        </div>
-        
-        <div className="min-w-0 flex-1">
-          <div className="text-base sm:text-lg font-semibold text-white truncate mb-1">
-            {artist?.name}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-400 mb-2">
-            {artist?.followers 
-              ? `${formatLargeNumber(artist.followers)} followers`
-              : 'Emerging Artist'
-            }
-          </div>
-        </div>
-      </div>
-      
-      {/* Genre Tags */}
-      <div className="flex flex-wrap gap-1.5">
-        {artist?.genres?.slice(0, 4).map((genre: string, index: number) => (
-          <span 
-            key={index}
-            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20"
-          >
-            {genre}
-          </span>
-        ))}
-        {artist?.genres?.length > 4 && (
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-500/10 text-gray-400 border border-gray-500/20">
-            +{artist.genres.length - 4} more
-          </span>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
 const MetricBar = ({ label, value, color = "blue", description }: { 
   label: string; 
   value: number; 
@@ -324,6 +258,8 @@ const MetricBar = ({ label, value, color = "blue", description }: {
     </div>
   </div>
 );
+
+export { CircularProgress, MetricBar };
 
 const ResultsDisplay = ({ data }: { data: ArtistAnalysis }) => {
   if (!data?.musistash_resonance_score) return null;

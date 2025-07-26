@@ -1,4 +1,4 @@
-#!/Users/akshatthapliyal/ms-july/musistash-platform/backend/venv/bin/python
+#!/Users/akshatthapliyal/Musistash_Jul_24th/musistash-platform/backend/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys

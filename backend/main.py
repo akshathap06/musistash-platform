@@ -18,7 +18,7 @@ import random
 import asyncio
 import math
 from datetime import datetime, timedelta
-import soundcharts
+# import soundcharts
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from google.oauth2 import id_token
@@ -54,6 +54,21 @@ import tempfile
 import shutil
 from fastapi import Request
 
+def convert_numpy_types(obj):
+    """Convert numpy types to JSON-serializable Python types"""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    else:
+        return obj
+
 # Import ML service
 try:
     from ml_service import get_ml_enhanced_analysis
@@ -62,6 +77,15 @@ try:
 except ImportError:
     ML_AVAILABLE = False
     print("❌ ML service not available - using fallback analysis")
+
+# Import Enhanced Audio Analysis
+try:
+    from enhanced_audio_analysis import enhanced_analyzer
+    ENHANCED_AUDIO_AVAILABLE = True
+    print("✅ Enhanced audio analysis imported successfully")
+except ImportError:
+    ENHANCED_AUDIO_AVAILABLE = False
+    print("❌ Enhanced audio analysis not available - using basic analysis")
 
 # Import Supabase service separately from Billboard service
 try:
@@ -74,6 +98,15 @@ try:
 except ImportError as e:
     SUPABASE_AVAILABLE = False
     print(f"❌ Supabase service not available: {e}")
+
+# Import Gemini analysis service
+try:
+    from gemini_analysis_service import call_gemini_api
+    GEMINI_AVAILABLE = True
+    print("✅ Gemini analysis service imported successfully")
+except ImportError as e:
+    GEMINI_AVAILABLE = False
+    print(f"❌ Gemini analysis service not available: {e}")
 
 # Billboard service disabled - not essential for core functionality
 BILLBOARD_AVAILABLE = False
@@ -781,6 +814,396 @@ async def get_soundcharts_artist_data(artist_name: str, allow_fallback: bool = T
         print(f"Error fetching SoundCharts data for {artist_name}: {e}")
         return None
 
+# === ENHANCED MP3 AUDIO ANALYSIS ===
+
+async def extract_comprehensive_audio_features(file_path: str, filename: str) -> Dict[str, Any]:
+    """Extract comprehensive audio features for similarity and resonance analysis"""
+    try:
+        print(f"🔍 Loading audio file: {file_path}")
+        
+        # Check if file exists and has content
+        if not os.path.exists(file_path):
+            raise Exception(f"Audio file not found: {file_path}")
+        
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            raise Exception("Audio file is empty")
+        
+        print(f"📁 File size: {file_size} bytes")
+        
+        # Load audio file with librosa (with better error handling)
+        try:
+            print(f"🎵 Attempting to load audio with librosa...")
+            y, sr = librosa.load(file_path, duration=30, sr=None)  # Analyze first 30 seconds for efficiency
+            print(f"✅ Audio loaded successfully: {len(y)} samples, {sr} Hz")
+        except Exception as load_error:
+            print(f"❌ Librosa load failed: {load_error}")
+            
+            # Try alternative loading methods
+            try:
+                print(f"🔄 Trying alternative audio loading method...")
+                import soundfile as sf
+                y, sr = sf.read(file_path)
+                if len(y.shape) > 1:  # Convert stereo to mono
+                    y = np.mean(y, axis=1)
+                print(f"✅ Audio loaded with soundfile: {len(y)} samples, {sr} Hz")
+            except Exception as sf_error:
+                print(f"❌ Soundfile load failed: {sf_error}")
+                
+                try:
+                    print(f"🔄 Trying with audioread...")
+                    import audioread
+                    with audioread.audio_open(file_path) as audio_file:
+                        sr = audio_file.samplerate
+                        duration = audio_file.duration
+                        y = np.zeros(int(sr * min(duration, 30)))  # 30 seconds max
+                        # This is a simplified approach - in production you'd want proper audio reading
+                        print(f"✅ Audio info extracted: {sr} Hz, {duration}s")
+                        # For now, return basic features without full analysis
+                        return {
+                            "filename": filename,
+                            "duration": float(duration),
+                            "sample_rate": int(sr),
+                            "bpm": 120.0,  # Default
+                            "key": "C",
+                            "mode": "major",
+                            "energy": 0.5,
+                            "loudness": -20.0,
+                            "valence": 0.5,
+                            "arousal": 0.5,
+                            "emotional_category": "neutral",
+                            "commercial_score": 0.5,
+                            "error": "Limited analysis due to audio format compatibility"
+                        }
+                except Exception as ar_error:
+                    print(f"❌ All audio loading methods failed: {ar_error}")
+                    raise Exception(f"Audio file format not supported. Tried librosa, soundfile, and audioread. Error: {ar_error}")
+        
+        if len(y) == 0:
+            print(f"⚠️  No audio data extracted, using fallback analysis")
+            # Return basic analysis with default values
+            return {
+                "filename": filename,
+                "duration": 30.0,
+                "sample_rate": 44100,
+                "bpm": 120.0,
+                "key": "C",
+                "mode": "major",
+                "energy": 0.5,
+                "loudness": -20.0,
+                "valence": 0.5,
+                "arousal": 0.5,
+                "emotional_category": "neutral",
+                "commercial_score": 0.5,
+                "error": "Basic analysis - audio data extraction limited"
+            }
+        
+        # Basic audio properties
+        duration = len(y) / sr
+        
+        # Tempo and rhythm features
+        tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+        
+        # Harmonic and percussive components
+        y_harmonic, y_percussive = librosa.effects.hpss(y)
+        
+        # Chroma features (key detection)
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        key = np.argmax(np.sum(chroma, axis=1))
+        key_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+        detected_key = key_names[key]
+        
+        # Mode detection (major/minor)
+        major_profile = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
+        minor_profile = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
+        avg_chroma = np.mean(chroma, axis=1)
+        major_score = np.dot(avg_chroma, major_profile)
+        minor_score = np.dot(avg_chroma, minor_profile)
+        mode = "major" if major_score > minor_score else "minor"
+        
+        # Energy and dynamics
+        rms = librosa.feature.rms(y=y)
+        energy = np.mean(rms)
+        loudness = librosa.amplitude_to_db(rms)
+        avg_loudness = np.mean(loudness)
+        dynamic_range = np.max(loudness) - np.min(loudness)
+        
+        # Spectral features
+        spectral_centroids = librosa.feature.spectral_centroid(y=y, sr=sr)
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+        zero_crossing_rate = librosa.feature.zero_crossing_rate(y)
+        
+        # MFCC features (timbral characteristics)
+        mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        
+        # Advanced features
+        tonnetz = librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr)
+        
+        # Calculate resonance indicators
+        harmonic_strength = np.mean(librosa.amplitude_to_db(np.abs(librosa.stft(y_harmonic))))
+        percussive_strength = np.mean(librosa.amplitude_to_db(np.abs(librosa.stft(y_percussive))))
+        
+        # Emotional indicators
+        valence_estimate = (major_score - minor_score + 1) / 2  # 0-1 scale
+        arousal_estimate = min(energy * 10, 1.0)  # 0-1 scale
+        
+        # Commercial appeal indicators
+        commercial_features = {
+            "tempo_commercial": 1.0 if 100 <= tempo <= 140 else 0.7,  # Commercial tempo range
+            "key_commercial": 1.0 if detected_key in ['C', 'G', 'D', 'A', 'E'] else 0.8,  # Popular keys
+            "mode_commercial": 1.0 if mode == "major" else 0.7,  # Major keys more commercial
+            "dynamic_range_score": min(dynamic_range / 30, 1.0),  # Good dynamic range
+            "energy_commercial": 1.0 if 0.3 <= energy <= 0.8 else 0.6
+        }
+        
+        commercial_score = np.mean(list(commercial_features.values()))
+        
+        result = {
+            # Basic properties
+            "filename": filename,
+            "duration": float(duration),
+            "sample_rate": int(sr),
+            
+            # Rhythm and tempo
+            "bpm": float(tempo),
+            "beats_count": len(beats),
+            "rhythm_stability": float(np.std(np.diff(beats))),
+            
+            # Harmonic content
+            "key": detected_key,
+            "mode": mode,
+            "key_confidence": float(max(major_score, minor_score)),
+            "harmonic_strength": float(harmonic_strength),
+            "percussive_strength": float(percussive_strength),
+            
+            # Energy and dynamics
+            "energy": float(energy),
+            "loudness": float(avg_loudness),
+            "dynamic_range": float(dynamic_range),
+            
+            # Spectral characteristics
+            "spectral_centroid": float(np.mean(spectral_centroids)),
+            "spectral_rolloff": float(np.mean(spectral_rolloff)),
+            "spectral_bandwidth": float(np.mean(spectral_bandwidth)),
+            "zero_crossing_rate": float(np.mean(zero_crossing_rate)),
+            
+            # Timbral features (averaged MFCC)
+            "mfcc_features": [float(np.mean(mfcc)) for mfcc in mfccs],
+            
+            # Tonal features
+            "tonnetz_features": [float(np.mean(ton)) for ton in tonnetz],
+            
+            # Emotional characteristics
+            "valence": float(valence_estimate),
+            "arousal": float(arousal_estimate),
+            "emotional_category": get_emotional_category(valence_estimate, arousal_estimate),
+            
+            # Commercial appeal
+            "commercial_score": float(commercial_score),
+            "commercial_features": commercial_features,
+            
+            # Similarity vectors for matching
+            "chroma_vector": [float(np.mean(chroma[i])) for i in range(12)],
+            "mfcc_vector": [float(np.mean(mfccs[i])) for i in range(13)],
+            "feature_vector": [
+                float(tempo), float(energy), float(valence_estimate), 
+                float(arousal_estimate), float(np.mean(spectral_centroids))
+            ]
+        }
+        
+        # Convert any remaining numpy types to JSON-serializable types
+        return convert_numpy_types(result)
+        
+    except Exception as e:
+        error_msg = str(e) if str(e) else "Unknown error occurred during audio analysis"
+        print(f"❌ Error in audio analysis: {error_msg}")
+        return {"error": error_msg}
+
+def get_emotional_category(valence: float, arousal: float) -> str:
+    """Categorize emotion based on valence and arousal"""
+    if valence > 0.6 and arousal > 0.6:
+        return "energetic_positive"
+    elif valence > 0.6 and arousal <= 0.6:
+        return "calm_positive"
+    elif valence <= 0.4 and arousal > 0.6:
+        return "energetic_negative"
+    elif valence <= 0.4 and arousal <= 0.6:
+        return "calm_negative"
+    else:
+        return "neutral"
+
+async def calculate_track_similarity(new_features: Dict[str, Any], artist_id: str) -> Dict[str, Any]:
+    """Calculate similarity with existing tracks from the same artist"""
+    try:
+        # Get existing tracks for this artist
+        existing_tracks = supabase_manager.client.table("uploaded_tracks").select("*").eq("artist_id", artist_id).execute()
+        
+        if not existing_tracks.data or len(existing_tracks.data) == 0:
+            return {
+                "similarity_scores": [],
+                "avg_similarity": 0.0,
+                "most_similar_track": None,
+                "style_consistency": 1.0  # First track is always consistent
+            }
+        
+        similarities = []
+        
+        for track in existing_tracks.data:
+            if track.get("analysis_json"):
+                existing_features = track["analysis_json"]
+                
+                # Calculate multiple similarity metrics
+                tempo_sim = 1 - abs(new_features["bpm"] - existing_features.get("tempo", 0)) / 200
+                energy_sim = 1 - abs(new_features["energy"] - existing_features.get("energy", 0))
+                key_sim = 1.0 if new_features["key"] == existing_features.get("key", "") else 0.3
+                
+                # MFCC similarity (timbral)
+                if "mfcc_vector" in new_features and "mfcc_features" in existing_features:
+                    new_mfcc = np.array(new_features["mfcc_vector"])
+                    old_mfcc = np.array(existing_features.get("mfcc_features", [0]*13))
+                    mfcc_sim = max(0, cosine_similarity([new_mfcc], [old_mfcc])[0][0])
+                else:
+                    mfcc_sim = 0.5
+                
+                # Overall similarity
+                overall_sim = np.mean([tempo_sim, energy_sim, key_sim, mfcc_sim])
+                
+                similarities.append({
+                    "track_id": track["id"],
+                    "filename": track.get("file_url", "unknown"),
+                    "similarity": float(max(0, min(1, overall_sim))),
+                    "tempo_similarity": float(max(0, min(1, tempo_sim))),
+                    "energy_similarity": float(max(0, min(1, energy_sim))),
+                    "key_similarity": float(key_sim),
+                    "timbral_similarity": float(mfcc_sim)
+                })
+        
+        avg_similarity = np.mean([s["similarity"] for s in similarities]) if similarities else 0
+        most_similar = max(similarities, key=lambda x: x["similarity"]) if similarities else None
+        
+        # Style consistency (how well this track fits the artist's existing style)
+        style_consistency = avg_similarity if similarities else 1.0
+        
+        return {
+            "similarity_scores": similarities,
+            "avg_similarity": float(avg_similarity),
+            "most_similar_track": most_similar,
+            "style_consistency": float(style_consistency),
+            "total_tracks_compared": len(similarities)
+        }
+        
+    except Exception as e:
+        print(f"Error calculating similarity: {e}")
+        return {
+            "similarity_scores": [],
+            "avg_similarity": 0.0,
+            "most_similar_track": None,
+            "style_consistency": 0.5,
+            "error": str(e)
+        }
+
+async def calculate_resonance_score(features: Dict[str, Any], similarity_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Calculate predicted audience resonance score"""
+    try:
+        # Base score from audio features
+        feature_score = (
+            features.get("commercial_score", 0.5) * 0.3 +
+            features.get("energy", 0.5) * 0.2 +
+            features.get("valence", 0.5) * 0.2 +
+            min(features.get("dynamic_range", 0) / 30, 1.0) * 0.1 +
+            (1.0 if 100 <= features.get("bpm", 120) <= 140 else 0.7) * 0.2
+        )
+        
+        # Style consistency bonus/penalty
+        consistency_score = similarity_data.get("style_consistency", 0.5)
+        consistency_modifier = 0.1 if consistency_score > 0.7 else -0.1 if consistency_score < 0.3 else 0
+        
+        # Emotional appeal
+        emotional_appeal = get_emotional_appeal_score(features.get("emotional_category", "neutral"))
+        
+        # Final resonance score (0-100)
+        resonance_score = min(100, max(0, (
+            feature_score * 60 +
+            emotional_appeal * 25 +
+            consistency_score * 15 +
+            consistency_modifier * 10
+        )))
+        
+        # Confidence level
+        confidence = min(1.0, (
+            len(similarity_data.get("similarity_scores", [])) * 0.1 +
+            features.get("key_confidence", 0.5) * 0.3 +
+            0.6  # Base confidence
+        ))
+        
+        # Success factors
+        success_factors = []
+        if features.get("commercial_score", 0) > 0.7:
+            success_factors.append("High commercial appeal")
+        if features.get("energy", 0) > 0.6:
+            success_factors.append("High energy level")
+        if features.get("valence", 0) > 0.6:
+            success_factors.append("Positive emotional tone")
+        if 110 <= features.get("bpm", 0) <= 130:
+            success_factors.append("Optimal tempo for engagement")
+        if consistency_score > 0.7:
+            success_factors.append("Consistent with artist style")
+        
+        # Risk factors
+        risk_factors = []
+        if features.get("commercial_score", 1) < 0.4:
+            risk_factors.append("Low commercial appeal")
+        if features.get("energy", 1) < 0.3:
+            risk_factors.append("Low energy may limit engagement")
+        if features.get("dynamic_range", 30) < 10:
+            risk_factors.append("Limited dynamic range")
+        if consistency_score < 0.3:
+            risk_factors.append("Departure from established style")
+        
+        return {
+            "resonance_score": float(resonance_score),
+            "confidence": float(confidence),
+            "feature_score": float(feature_score * 100),
+            "emotional_appeal": float(emotional_appeal * 100),
+            "style_consistency": float(consistency_score * 100),
+            "success_factors": success_factors,
+            "risk_factors": risk_factors,
+            "recommendation": get_resonance_recommendation(resonance_score, success_factors, risk_factors)
+        }
+        
+    except Exception as e:
+        print(f"Error calculating resonance score: {e}")
+        return {
+            "resonance_score": 50.0,
+            "confidence": 0.5,
+            "error": str(e)
+        }
+
+def get_emotional_appeal_score(emotional_category: str) -> float:
+    """Get emotional appeal score based on category"""
+    appeal_scores = {
+        "energetic_positive": 0.9,
+        "calm_positive": 0.8,
+        "neutral": 0.6,
+        "energetic_negative": 0.5,
+        "calm_negative": 0.4
+    }
+    return appeal_scores.get(emotional_category, 0.6)
+
+def get_resonance_recommendation(score: float, success_factors: list, risk_factors: list) -> str:
+    """Generate recommendation based on resonance analysis"""
+    if score >= 80:
+        return "Excellent resonance potential! This track has strong commercial appeal and should perform well with audiences."
+    elif score >= 65:
+        return "Good resonance potential. Consider minor adjustments to maximize appeal."
+    elif score >= 50:
+        return "Moderate resonance potential. Review risk factors and consider targeted improvements."
+    elif score >= 35:
+        return "Below average resonance potential. Significant improvements recommended before release."
+    else:
+        return "Low resonance potential. Consider major revisions or exploring different musical directions."
+
 # === AGENTIC MANAGER ENDPOINTS ===
 
 @app.post("/api/agent/upload-track")
@@ -792,8 +1215,8 @@ async def upload_track(
     if not SUPABASE_AVAILABLE:
         raise HTTPException(status_code=500, detail="Supabase not available.")
     
-    # Validate file type
-    if not file.filename.endswith(('.mp3', '.wav', '.m4a')):
+    # Validate file type (more flexible check)
+    if not file.filename or not any(file.filename.lower().endswith(ext) for ext in ['.mp3', '.wav', '.m4a', '.mpeg', '.mp4']):
         raise HTTPException(status_code=400, detail="Invalid file type. Only MP3, WAV, and M4A files are supported.")
     
     # Validate file size (max 20MB)
@@ -802,77 +1225,427 @@ async def upload_track(
         raise HTTPException(status_code=400, detail="File too large. Maximum size is 20MB.")
     
     try:
-        # Save file temporarily for analysis
+        # Save uploaded file to a temp location (using the already read content)
+        try:
+            temp_file_path = f"/tmp/{file.filename}"
+            with open(temp_file_path, "wb") as f:
+                f.write(file_content)
+            print(f"📁 Uploaded file saved to: {temp_file_path}")
+            print(f"📏 File size: {len(file_content)} bytes")
+            print(f"🔎 First 16 bytes: {file_content[:16].hex()}")
+        except Exception as save_error:
+            print(f"❌ Failed to save uploaded file: {save_error}")
+            raise HTTPException(status_code=500, detail=f"Failed to save uploaded file: {save_error}")
+
+        try:
+            # Extract comprehensive audio features
+            print(f"🎵 Starting analysis for: {file.filename}, size: {len(file_content)} bytes")
+            
+            try:
+                if ENHANCED_AUDIO_AVAILABLE:
+                    print("🚀 Using enhanced audio analysis with multiple libraries...")
+                    features = await enhanced_analyzer.analyze_audio_comprehensive(temp_file_path, file.filename, artist_id)
+                else:
+                    print("📊 Using basic audio analysis...")
+                    features = await extract_comprehensive_audio_features(temp_file_path, file.filename)
+                print(f"✅ Audio features extracted successfully")
+            except Exception as e:
+                print(f"❌ Audio feature extraction failed: {str(e)}")
+                raise Exception(f"Audio feature extraction failed: {str(e)}")
+            
+            if "error" in features:
+                raise Exception(f"Audio analysis failed: {features['error']}")
+            
+            # Calculate similarity with existing tracks
+            print(f"🔍 Calculating similarity with existing tracks...")
+            try:
+                similarity_data = await calculate_track_similarity(features, artist_id)
+                print(f"✅ Similarity calculation completed")
+            except Exception as e:
+                print(f"❌ Similarity calculation failed: {str(e)}")
+                # Continue with default similarity data
+                similarity_data = {
+                    "similarity_scores": [],
+                    "avg_similarity": 0.0,
+                    "most_similar_track": None,
+                    "style_consistency": 1.0,
+                    "total_tracks_compared": 0
+                }
+            
+            # Calculate resonance score
+            print(f"🎯 Calculating audience resonance score...")
+            try:
+                resonance_data = await calculate_resonance_score(features, similarity_data)
+                print(f"✅ Resonance calculation completed")
+            except Exception as e:
+                print(f"❌ Resonance calculation failed: {str(e)}")
+                # Continue with default resonance data
+                resonance_data = {
+                    "resonance_score": 50.0,
+                    "confidence": 0.5,
+                    "recommendation": "Analysis completed with limited data",
+                    "success_factors": [],
+                    "risk_factors": []
+                }
+            
+            # Store enhanced track data in database (not saved yet - user must click "Save Analysis")
+            track_data = {
+                "artist_id": artist_id,
+                "file_url": f"uploads/{file.filename}",
+                "onset_count": features.get("onset_count"),
+                "spectral_contrast": features.get("spectral_contrast"),
+                "pyaudio_energy_mean": features.get("pyaudio_energy_mean"),
+                "pyaudio_energy_std": features.get("pyaudio_energy_std"),
+                "music21_analysis": features.get("music21_analysis"),
+                "analysis_quality": features.get("analysis_quality"),
+                "libraries_used": features.get("libraries_used"),
+                # PyAudioAnalysis fields (replacing Essentia)
+                "pyaudio_rhythm_clarity": features.get("pyaudio_rhythm_clarity"),
+                "pyaudio_bpm": features.get("pyaudio_bpm"),
+                "pyaudio_beats_confidence": features.get("pyaudio_beats_confidence"),
+                "pyaudio_dissonance": features.get("pyaudio_dissonance"),
+                "pyaudio_key": features.get("pyaudio_key"),
+                "pyaudio_scale": features.get("pyaudio_scale"),
+                "pyaudio_spectral_centroid": features.get("pyaudio_spectral_centroid"),
+                "pyaudio_spectral_rolloff": features.get("pyaudio_spectral_rolloff"),
+                "pyaudio_spectral_flux": features.get("pyaudio_spectral_flux"),
+                "pyaudio_spectral_contrast": features.get("pyaudio_spectral_contrast"),
+                "pyaudio_key_confidence": features.get("pyaudio_key_confidence"),
+                # Complete analysis data
+                "complete_analysis_json": {
+                    "basic_info": {
+                        "filename": file.filename,
+                        "duration": features.get("duration", 0),
+                        "bpm": features.get("bpm", 0),
+                        "key": features.get("key", "Unknown"),
+                        "mode": features.get("mode", "major"),
+                        "energy": features.get("energy", 0),
+                        "loudness": features.get("loudness", 0)
+                    },
+                    "commercial_analysis": {
+                        "commercial_score": features.get("commercial_score", 0),
+                        "emotional_category": features.get("emotional_category", "neutral"),
+                        "valence": features.get("valence", 0),
+                        "arousal": features.get("arousal", 0)
+                    },
+                    "similarity_analysis": {
+                        "style_consistency": similarity_data.get("style_consistency", 0.5),
+                        "tracks_compared": similarity_data.get("total_tracks_compared", 0),
+                        "most_similar": similarity_data.get("most_similar_track", None)
+                    },
+                    "resonance_prediction": {
+                        "score": resonance_data.get("resonance_score", 50),
+                        "confidence": resonance_data.get("confidence", 0.5),
+                        "recommendation": resonance_data.get("recommendation", ""),
+                        "success_factors": resonance_data.get("success_factors", []),
+                        "risk_factors": resonance_data.get("risk_factors", [])
+                    },
+                    "enhanced_features": {
+                        "onset_count": features.get("onset_count"),
+                        "spectral_contrast": features.get("spectral_contrast"),
+                        "pyaudio_energy_mean": features.get("pyaudio_energy_mean"),
+                        "pyaudio_energy_std": features.get("pyaudio_energy_std"),
+                        "music21_analysis": features.get("music21_analysis"),
+                        "analysis_quality": features.get("analysis_quality"),
+                        "libraries_used": features.get("libraries_used"),
+                        "pyaudio_rhythm_clarity": features.get("pyaudio_rhythm_clarity"),
+                        "pyaudio_bpm": features.get("pyaudio_bpm"),
+                        "pyaudio_beats_confidence": features.get("pyaudio_beats_confidence"),
+                        "pyaudio_dissonance": features.get("pyaudio_dissonance"),
+                        "pyaudio_key": features.get("pyaudio_key"),
+                        "pyaudio_scale": features.get("pyaudio_scale"),
+                        "pyaudio_spectral_centroid": features.get("pyaudio_spectral_centroid"),
+                        "pyaudio_spectral_rolloff": features.get("pyaudio_spectral_rolloff"),
+                        "pyaudio_spectral_flux": features.get("pyaudio_spectral_flux"),
+                        "pyaudio_spectral_contrast": features.get("pyaudio_spectral_contrast"),
+                        "pyaudio_key_confidence": features.get("pyaudio_key_confidence"),
+                    }
+                },
+                "is_saved": False,  # Not saved until user clicks "Save Analysis"
+                "last_analysis_date": datetime.now().isoformat(),
+                # Store Gemini insights separately for easy access
+                "gemini_insights_json": features.get("gemini_insights", {}),
+                "track_summary": features.get("gemini_insights", {}).get("track_summary", {}),
+                "technical_analysis": features.get("gemini_insights", {}).get("technical_analysis", {}),
+                "artistic_insights": features.get("gemini_insights", {}).get("artistic_insights", {}),
+                "actionable_recommendations": features.get("gemini_insights", {}).get("actionable_recommendations", {}),
+                "similar_artists": features.get("gemini_insights", {}).get("similar_artists", {}),
+                "market_positioning": features.get("gemini_insights", {}).get("market_positioning", {})
+            }
+            
+            result = supabase_manager.client.table("uploaded_tracks").insert(track_data).execute()
+            
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Failed to save track analysis.")
+            
+            print(f"✅ Track analysis completed successfully!")
+            
+            return {
+                "status": "success",
+                "metadata": {
+                    "basic_info": {
+                        "filename": file.filename,
+                        "duration": features.get("duration", 0),
+                        "bpm": features.get("bpm", 0),
+                        "key": features.get("key", "Unknown"),
+                        "mode": features.get("mode", "major"),
+                        "energy": features.get("energy", 0),
+                        "loudness": features.get("loudness", 0)
+                    },
+                    "commercial_analysis": {
+                        "commercial_score": features.get("commercial_score", 0),
+                        "emotional_category": features.get("emotional_category", "neutral"),
+                        "valence": features.get("valence", 0),
+                        "arousal": features.get("arousal", 0)
+                    },
+                    "similarity_analysis": {
+                        "style_consistency": similarity_data.get("style_consistency", 0.5),
+                        "tracks_compared": similarity_data.get("total_tracks_compared", 0),
+                        "most_similar": similarity_data.get("most_similar_track", None)
+                    },
+                    "resonance_prediction": {
+                        "score": resonance_data.get("resonance_score", 50),
+                        "confidence": resonance_data.get("confidence", 0.5),
+                        "recommendation": resonance_data.get("recommendation", ""),
+                        "success_factors": resonance_data.get("success_factors", []),
+                        "risk_factors": resonance_data.get("risk_factors", [])
+                    },
+                    "enhanced_features": {
+                        "onset_count": features.get("onset_count"),
+                        "spectral_contrast": features.get("spectral_contrast"),
+                        "pyaudio_energy_mean": features.get("pyaudio_energy_mean"),
+                        "pyaudio_energy_std": features.get("pyaudio_energy_std"),
+                        "music21_analysis": features.get("music21_analysis"),
+                        "analysis_quality": features.get("analysis_quality"),
+                        "libraries_used": features.get("libraries_used"),
+                        # PyAudioAnalysis fields (replacing Essentia)
+                        "pyaudio_rhythm_clarity": features.get("pyaudio_rhythm_clarity"),
+                        "pyaudio_bpm": features.get("pyaudio_bpm"),
+                        "pyaudio_beats_confidence": features.get("pyaudio_beats_confidence"),
+                        "pyaudio_dissonance": features.get("pyaudio_dissonance"),
+                        "pyaudio_key": features.get("pyaudio_key"),
+                        "pyaudio_scale": features.get("pyaudio_scale"),
+                        "pyaudio_spectral_centroid": features.get("pyaudio_spectral_centroid"),
+                        "pyaudio_spectral_rolloff": features.get("pyaudio_spectral_rolloff"),
+                        "pyaudio_spectral_flux": features.get("pyaudio_spectral_flux"),
+                        "pyaudio_spectral_contrast": features.get("pyaudio_spectral_contrast"),
+                        "pyaudio_key_confidence": features.get("pyaudio_key_confidence"),
+                    }
+                },
+                "analysis": {
+                    "basic_info": {
+                        "filename": file.filename,
+                        "duration": features.get("duration", 0),
+                        "bpm": features.get("bpm", 0),
+                        "key": features.get("key", "Unknown"),
+                        "mode": features.get("mode", "major"),
+                        "energy": features.get("energy", 0)
+                    },
+                    "commercial_analysis": {
+                        "commercial_score": features.get("commercial_score", 0),
+                        "emotional_category": features.get("emotional_category", "neutral"),
+                        "valence": features.get("valence", 0),
+                        "arousal": features.get("arousal", 0)
+                    },
+                    "similarity_analysis": {
+                        "style_consistency": similarity_data.get("style_consistency", 0.5),
+                        "tracks_compared": similarity_data.get("total_tracks_compared", 0),
+                        "most_similar": similarity_data.get("most_similar_track", None)
+                    },
+                    "resonance_prediction": {
+                        "score": resonance_data.get("resonance_score", 50),
+                        "confidence": resonance_data.get("confidence", 0.5),
+                        "recommendation": resonance_data.get("recommendation", ""),
+                        "success_factors": resonance_data.get("success_factors", []),
+                        "risk_factors": resonance_data.get("risk_factors", [])
+                    },
+                    "ai_insights": features.get("gemini_insights", {})
+                },
+                "message": "Track uploaded and comprehensively analyzed!"
+            }
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing track: {str(e)}")
+
+# Alternative endpoint with cleaner REST naming
+@app.post("/api/upload-track")
+async def upload_track_analysis(
+    file: UploadFile = File(...), 
+    artist_id: str = Form(...)
+):
+    """Enhanced MP3 upload with comprehensive audio analysis, similarity comparison, and resonance scoring"""
+    if not SUPABASE_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Supabase not available.")
+    
+    # Validate file type
+    allowed_extensions = ('.mp3', '.wav', '.m4a', '.flac', '.ogg')
+    if not file.filename.lower().endswith(allowed_extensions):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Supported formats: {', '.join(allowed_extensions)}"
+        )
+    
+    # Validate file size (max 25MB)
+    file_content = await file.read()
+    max_size = 25 * 1024 * 1024  # 25MB
+    if len(file_content) > max_size:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"File too large. Maximum size is {max_size // (1024*1024)}MB."
+        )
+    
+    try:
+        # Create temporary file for analysis
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
             temp_file.write(file_content)
             temp_file_path = temp_file.name
         
         try:
-            # Load audio file with librosa
-            y, sr = librosa.load(temp_file_path)
+            print(f"🎵 Starting comprehensive analysis for: {file.filename}")
             
-            # Extract audio features
-            tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-            chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-            key = np.argmax(np.sum(chroma, axis=1))
-            key_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-            detected_key = key_names[key]
+            # Step 1: Extract comprehensive audio features
+            features = await extract_comprehensive_audio_features(temp_file_path, file.filename)
             
-            # Calculate other features
-            rms = librosa.feature.rms(y=y)
-            energy = np.mean(rms)
-            loudness = librosa.amplitude_to_db(rms)
-            avg_loudness = np.mean(loudness)
+            if "error" in features:
+                raise Exception(f"Audio feature extraction failed: {features['error']}")
             
-            # Determine mode (major/minor) based on chroma
-            major_profile = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
-            minor_profile = [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0]
+            # Step 2: Calculate similarity with existing tracks
+            similarity_data = await calculate_track_similarity(features, artist_id)
             
-            avg_chroma = np.mean(chroma, axis=1)
-            major_score = np.dot(avg_chroma, major_profile)
-            minor_score = np.dot(avg_chroma, minor_profile)
-            mode = "major" if major_score > minor_score else "minor"
+            # Step 3: Calculate audience resonance score
+            resonance_data = await calculate_resonance_score(features, similarity_data)
             
-            # Duration in seconds
-            duration = len(y) / sr
-            
-            # Store track data in database
-            track_data = {
+            # Step 4: Store comprehensive results in database
+            track_record = {
                 "artist_id": artist_id,
-                "file_url": f"temp/{file.filename}",  # In production, store in cloud storage
-                "bpm": float(tempo),
-                "key": f"{detected_key} {mode}",
-                "energy": float(energy),
-                "loudness": float(avg_loudness),
-                "mode": mode,
-                "duration": float(duration),
-                "analysis_json": {
-                    "tempo": float(tempo),
-                    "key": detected_key,
-                    "mode": mode,
-                    "energy": float(energy),
-                    "loudness": float(avg_loudness),
-                    "duration": float(duration)
-                }
+                "filename": file.filename,
+                "file_url": f"uploads/{file.filename}",
+                # "file_size": len(file_content),  # Temporarily commented out
+                
+                # Basic audio properties
+                "duration": features.get("duration", 0),
+                "bpm": features.get("bpm", 0),
+                "key": features.get("key", "Unknown"),
+                "mode": features.get("mode", "major"),
+                "energy": features.get("energy", 0),
+                "loudness": features.get("loudness", 0),
+                # "dynamic_range": features.get("dynamic_range", 0),  # Temporarily commented out
+                
+                # Advanced analysis (temporarily commented out for database compatibility)
+                # "commercial_score": features.get("commercial_score", 0),
+                # "valence": features.get("valence", 0),
+                # "arousal": features.get("arousal", 0),
+                # "emotional_category": features.get("emotional_category", "neutral"),
+                
+                # Similarity and consistency (temporarily commented out for database compatibility)
+                # "style_consistency": similarity_data.get("style_consistency", 0.5),
+                # "avg_similarity": similarity_data.get("avg_similarity", 0),
+                
+                # Resonance prediction (temporarily commented out for database compatibility)
+                # "resonance_score": resonance_data.get("resonance_score", 50),
+                # "resonance_confidence": resonance_data.get("confidence", 0.5),
+                
+                # Full analysis data
+                "analysis_json": features,
+                "similarity_json": similarity_data,
+                "resonance_json": resonance_data,
+                
+                # "created_at": datetime.utcnow().isoformat(),  # Temporarily commented out
+                "analysis_version": "2.0"
             }
             
-            result = supabase_manager.client.table("uploaded_tracks").insert(track_data).execute()
+            # Save to database
+            result = supabase_manager.client.table("uploaded_tracks").insert(track_record).execute()
             
-            if result.get("status_code") not in [200, 201]:
-                raise HTTPException(status_code=500, detail="Failed to save track analysis.")
+            if not result.data:
+                raise HTTPException(status_code=500, detail="Failed to save analysis results.")
             
+            print(f"✅ Analysis completed successfully for {file.filename}")
+            
+            # Return comprehensive analysis results
             return {
                 "status": "success",
-                "analysis": track_data,
-                "message": "Track uploaded and analyzed successfully"
+                "track_id": result.data[0]["id"] if result.data else None,
+                "analysis": {
+                    "file_info": {
+                        "filename": file.filename,
+                        "size_mb": round(len(file_content) / (1024*1024), 2),
+                        "duration_seconds": round(features.get("duration", 0), 2)
+                    },
+                    "audio_features": {
+                        "bpm": round(features.get("bpm", 0), 1),
+                        "key": f"{features.get('key', 'Unknown')} {features.get('mode', 'major')}",
+                        "energy": round(features.get("energy", 0), 3),
+                        "loudness": round(features.get("loudness", 0), 1),
+                        "dynamic_range": round(features.get("dynamic_range", 0), 1),
+                        "spectral_centroid": round(features.get("spectral_centroid", 0), 0),
+                        "emotional_category": features.get("emotional_category", "neutral")
+                    },
+                    "commercial_analysis": {
+                        "commercial_score": round(features.get("commercial_score", 0) * 100, 1),
+                        "valence": round(features.get("valence", 0) * 100, 1),
+                        "arousal": round(features.get("arousal", 0) * 100, 1),
+                        "tempo_appeal": "High" if 100 <= features.get("bpm", 0) <= 140 else "Moderate",
+                        "key_appeal": "High" if features.get("key", "") in ['C', 'G', 'D', 'A', 'E'] else "Moderate"
+                    },
+                    "similarity_analysis": {
+                        "style_consistency": round(similarity_data.get("style_consistency", 0.5) * 100, 1),
+                        "avg_similarity": round(similarity_data.get("avg_similarity", 0) * 100, 1),
+                        "tracks_compared": similarity_data.get("total_tracks_compared", 0),
+                        "most_similar_track": similarity_data.get("most_similar_track", {}).get("filename", "None") if similarity_data.get("most_similar_track") else "None"
+                    },
+                    "resonance_prediction": {
+                        "score": round(resonance_data.get("resonance_score", 50), 1),
+                        "confidence": round(resonance_data.get("confidence", 0.5) * 100, 1),
+                        "grade": get_resonance_grade(resonance_data.get("resonance_score", 50)),
+                        "recommendation": resonance_data.get("recommendation", ""),
+                        "success_factors": resonance_data.get("success_factors", []),
+                        "risk_factors": resonance_data.get("risk_factors", [])
+                    }
+                },
+                "message": f"🎵 {file.filename} analyzed successfully! Resonance score: {round(resonance_data.get('resonance_score', 50), 1)}/100"
             }
             
         finally:
             # Clean up temporary file
-            os.unlink(temp_file_path)
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
             
     except Exception as e:
+        print(f"❌ Error in track analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error analyzing track: {str(e)}")
+
+def get_resonance_grade(score: float) -> str:
+    """Convert numerical score to letter grade"""
+    if score >= 90:
+        return "A+"
+    elif score >= 85:
+        return "A"
+    elif score >= 80:
+        return "A-"
+    elif score >= 75:
+        return "B+"
+    elif score >= 70:
+        return "B"
+    elif score >= 65:
+        return "B-"
+    elif score >= 60:
+        return "C+"
+    elif score >= 55:
+        return "C"
+    elif score >= 50:
+        return "C-"
+    elif score >= 45:
+        return "D+"
+    elif score >= 40:
+        return "D"
+    else:
+        return "F"
 
 @app.get("/api/agent/venue-recommendations")
 async def get_venue_recommendations(artist_id: str = Query(...), city: str = Query(None)):
@@ -884,8 +1657,8 @@ async def get_venue_recommendations(artist_id: str = Query(...), city: str = Que
     search_city = city
     if not search_city:
         snapshots = supabase_manager.client.table("artist_snapshots").select("*").eq("artist_id", artist_id).order("snapshot_date", desc=True).limit(1).execute()
-        if snapshots and snapshots.get("data") and len(snapshots["data"]) > 0:
-            snapshot = snapshots["data"][0]
+        if snapshots and snapshots.data and len(snapshots.data) > 0:
+            snapshot = snapshots.data[0]
             search_city = snapshot.get("city")
     
     if not search_city:
@@ -917,7 +1690,7 @@ async def get_venue_recommendations(artist_id: str = Query(...), city: str = Que
         
         # Check if already exists
         exists = supabase_manager.client.table("venue_recommendations").select("id").eq("artist_id", artist_id).eq("city", search_city).eq("venue_name", venue_name).execute()
-        if exists and exists.get("data"):
+        if exists and exists.data:
             continue
         
         data = {
@@ -1012,14 +1785,14 @@ async def get_campaign_recommendations(artist_id: str = Query(...)):
     
     # Fetch artist profile
     artist_profile = supabase_manager.client.table("artist_profiles").select("*").eq("id", artist_id).single().execute()
-    if not artist_profile or not artist_profile.get("data"):
+    if not artist_profile or not artist_profile.data:
         raise HTTPException(status_code=404, detail="Artist profile not found.")
     
-    artist = artist_profile["data"]
+    artist = artist_profile.data
     
     # Fetch recent projects
     projects = supabase_manager.client.table("projects").select("*").eq("artist_id", artist_id).order("created_at", desc=True).limit(3).execute()
-    project_list = projects.get("data", []) if projects else []
+    project_list = projects.data if projects and projects.data else []
     
     # AI/ML logic for recommendations
     funding_goal = 25000 if not project_list else int(sum([p.get("funding_goal", 0) for p in project_list]) / len(project_list) * 1.1)
@@ -1044,13 +1817,40 @@ async def save_onboarding_data(data: dict):
         raise HTTPException(status_code=500, detail="Supabase not available.")
     
     try:
-        # Save to agentic_manager_profiles
+        artist_id = data.get("artist_id")
+        if not artist_id:
+            raise HTTPException(status_code=400, detail="artist_id is required")
+        
+        # Step 1: Create or get artist profile first
+        try:
+            # Check if artist profile already exists
+            existing_profile = supabase_manager.client.table("artist_profiles").select("*").eq("id", artist_id).execute()
+            
+            if not existing_profile.data:
+                # Create minimal artist profile
+                artist_profile_data = {
+                    "id": artist_id,
+                    "artist_name": f"Artist {artist_id[:8]}",  # Basic name
+                    "location": data.get("location", ""),
+                    "genre": [data.get("genre", "Unknown")] if data.get("genre") else ["Unknown"],
+                    "created_at": datetime.utcnow().isoformat()
+                }
+                
+                artist_result = supabase_manager.client.table("artist_profiles").insert(artist_profile_data).execute()
+                if not artist_result.data:
+                    raise Exception("Failed to create artist profile")
+        
+        except Exception as artist_error:
+            print(f"Artist profile creation/check error: {artist_error}")
+            # Continue anyway - the manager profile might work without strict foreign key
+        
+        # Step 2: Save to agentic_manager_profiles 
         result = supabase_manager.client.table("agentic_manager_profiles").insert(data).execute()
         
-        if result.get("status_code") not in [200, 201]:
+        if not result.data:
             raise HTTPException(status_code=500, detail="Failed to save onboarding data.")
         
-        return {"status": "success", "data": result.get("data")}
+        return {"status": "success", "data": result.data}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving onboarding data: {str(e)}")
@@ -1064,7 +1864,7 @@ async def get_agentic_profile(artist_id: str):
     try:
         # Get existing profile
         result = supabase_manager.client.table("agentic_manager_profiles").select("*").eq("artist_id", artist_id).single().execute()
-        profile_data = result.get("data")
+        profile_data = result.data
         
         if not profile_data:
             return {"status": "success", "data": None, "has_profile": False}
@@ -1085,13 +1885,411 @@ async def update_agentic_profile(artist_id: str, data: dict):
         data["updated_at"] = "now()"
         result = supabase_manager.client.table("agentic_manager_profiles").update(data).eq("artist_id", artist_id).execute()
         
-        if result.get("status_code") not in [200, 201]:
+        if not result.data:
             raise HTTPException(status_code=500, detail="Failed to update profile.")
         
-        return {"status": "success", "data": result.get("data")}
+        return {"status": "success", "data": result.data}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
+@app.post("/api/agent/save-analysis")
+async def save_analysis(artist_id: str = Form(...)):
+    """Save the latest analysis for an artist"""
+    if not SUPABASE_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Supabase not available.")
+    
+    try:
+        # Get the latest analysis for this artist (not saved yet)
+        result = supabase_manager.client.table("uploaded_tracks").select("*").eq("artist_id", artist_id).eq("is_saved", False).order("last_analysis_date", desc=True).limit(1).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="No unsaved analysis found for this artist.")
+        
+        track_record = result.data[0]
+        
+        # Mark the analysis as saved
+        update_result = supabase_manager.client.table("uploaded_tracks").update({
+            "is_saved": True,
+            "updated_at": datetime.now().isoformat()
+        }).eq("id", track_record["id"]).execute()
+        
+        if not update_result.data:
+            raise HTTPException(status_code=500, detail="Failed to save analysis.")
+        
+        return {
+            "status": "success",
+            "message": "Analysis saved successfully!",
+            "track_id": track_record["id"]
+        }
+        
+    except Exception as e:
+        print(f"Error saving analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save analysis: {str(e)}")
+
+@app.get("/api/agent/last-analysis/{artist_id}")
+async def get_last_analysis(artist_id: str):
+    """Get the last analysis for an artist (saved or unsaved)"""
+    if not SUPABASE_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Supabase not available.")
+    
+    try:
+        # Get the most recent analysis for this artist
+        result = supabase_manager.client.table("uploaded_tracks").select("*").eq("artist_id", artist_id).order("last_analysis_date", desc=True).limit(1).execute()
+        
+        if not result.data:
+            return {
+                "status": "success",
+                "has_analysis": False,
+                "message": "No analysis found for this artist."
+            }
+        
+        track_record = result.data[0]
+        
+        return {
+            "status": "success",
+            "has_analysis": True,
+            "analysis": {
+                "id": track_record["id"],
+                "filename": track_record.get("file_url", "").split("/")[-1] if track_record.get("file_url") else "Unknown",
+                "is_saved": track_record.get("is_saved", False),
+                "last_analysis_date": track_record.get("last_analysis_date"),
+                "complete_analysis": track_record.get("complete_analysis_json", {}),
+                "gemini_insights": track_record.get("gemini_insights_json", {}),
+                "basic_info": {
+                    "bpm": track_record.get("pyaudio_bpm") or track_record.get("bpm"),
+                    "key": track_record.get("pyaudio_key") or track_record.get("key"),
+                    "energy": track_record.get("pyaudio_energy_mean") or track_record.get("energy"),
+                    "loudness": track_record.get("loudness"),
+                    "duration": track_record.get("duration")
+                }
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error getting last analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get last analysis: {str(e)}")
+
+@app.get("/api/agent/similar-artists-samples")
+async def get_similar_artists_samples(artist_names: str = Query(...)):
+    """Get Spotify samples for similar artists recommended by Gemini"""
+    try:
+        # Parse the artist names from the query parameter
+        artist_list = [name.strip() for name in artist_names.split(',') if name.strip()]
+        
+        if not artist_list:
+            raise HTTPException(status_code=400, detail="No artist names provided")
+        
+        print(f"🎵 Fetching Spotify samples for artists: {artist_list}")
+        
+        similar_artists_data = []
+        
+        for artist_name in artist_list[:6]:  # Limit to 6 artists to avoid rate limits
+            try:
+                # Search for the artist on Spotify
+                search_results = sp.search(q=artist_name, type='artist', limit=1)
+                
+                if not search_results['artists']['items']:
+                    print(f"⚠️  No Spotify artist found for: {artist_name}")
+                    continue
+                
+                artist = search_results['artists']['items'][0]
+                artist_id = artist['id']
+                
+                print(f"✅ Found Spotify artist: {artist['name']} (ID: {artist_id})")
+                
+                # Get top tracks for this artist
+                try:
+                    top_tracks = sp.artist_top_tracks(artist_id, country='US')
+                    
+                    # Get up to 3 top tracks
+                    tracks_data = []
+                    for track in top_tracks['tracks'][:3]:
+                        track_info = {
+                            "id": track['id'],
+                            "name": track['name'],
+                            "album": track['album']['name'],
+                            "album_art": track['album']['images'][0]['url'] if track['album']['images'] else None,
+                            "preview_url": track.get('preview_url'),
+                            "external_url": track['external_urls']['spotify'],
+                            "duration_ms": track['duration_ms'],
+                            "popularity": track['popularity'],
+                            "explicit": track['explicit']
+                        }
+                        tracks_data.append(track_info)
+                    
+                    # Get artist image
+                    artist_image = artist['images'][0]['url'] if artist['images'] else None
+                    
+                    similar_artists_data.append({
+                        "name": artist['name'],
+                        "spotify_id": artist_id,
+                        "image": artist_image,
+                        "popularity": artist['popularity'],
+                        "genres": artist['genres'],
+                        "tracks": tracks_data
+                    })
+                    
+                    print(f"✅ Added {len(tracks_data)} tracks for {artist['name']}")
+                    
+                except Exception as track_error:
+                    print(f"❌ Error getting tracks for {artist_name}: {track_error}")
+                    # Still add the artist even if we can't get tracks
+                    similar_artists_data.append({
+                        "name": artist['name'],
+                        "spotify_id": artist_id,
+                        "image": artist['images'][0]['url'] if artist['images'] else None,
+                        "popularity": artist['popularity'],
+                        "genres": artist['genres'],
+                        "tracks": []
+                    })
+                
+            except Exception as artist_error:
+                print(f"❌ Error processing artist {artist_name}: {artist_error}")
+                continue
+        
+        print(f"🎯 Successfully fetched data for {len(similar_artists_data)} artists")
+        
+        return {
+            "status": "success",
+            "similar_artists": similar_artists_data,
+            "total_artists": len(similar_artists_data)
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching similar artists samples: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch similar artists samples: {str(e)}")
+
+@app.post("/api/agent/discover-venues")
+async def discover_venues(
+    location: str = Form(...),
+    venue_types: str = Form(""),
+    artist_genre: str = Form(""),
+    capacity_range: str = Form("")
+):
+    """Discover venues using Google Maps API and Gemini AI analysis"""
+    try:
+        print(f"🎯 Discovering venues for location: {location}")
+        
+        # Get Google Maps API key from environment
+        google_maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+        if not google_maps_api_key:
+            raise HTTPException(status_code=500, detail="Google Maps API key not configured")
+        
+        # Build search query for Google Places API
+        search_query = f"music venues, concert halls, clubs in {location}"
+        if venue_types:
+            search_query += f" {venue_types}"
+        
+        print(f"🔍 Searching for: {search_query}")
+        
+        # Search for venues using Google Places API
+        venues_data = []
+        
+        # First, get places from Google Places API
+        places_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+        places_params = {
+            "query": search_query,
+            "key": google_maps_api_key,
+            "type": "establishment"
+        }
+        
+        async with httpx.AsyncClient() as client:
+            places_response = await client.get(places_url, params=places_params)
+            places_data = places_response.json()
+            
+            if places_data.get("status") != "OK":
+                print(f"❌ Google Places API error: {places_data.get('status')}")
+                raise HTTPException(status_code=500, detail=f"Google Places API error: {places_data.get('status')}")
+            
+            print(f"✅ Found {len(places_data.get('results', []))} venues from Google Places")
+            
+            # Process each venue
+            for place in places_data.get('results', [])[:10]:  # Limit to 10 venues
+                try:
+                    place_id = place.get('place_id')
+                    
+                    # Get detailed information for each place
+                    details_url = "https://maps.googleapis.com/maps/api/place/details/json"
+                    details_params = {
+                        "place_id": place_id,
+                        "key": google_maps_api_key,
+                        "fields": "name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,types,opening_hours,photos"
+                    }
+                    
+                    details_response = await client.get(details_url, params=details_params)
+                    details_data = details_response.json()
+                    
+                    if details_data.get("status") == "OK":
+                        venue_details = details_data.get('result', {})
+                        
+                        # Extract venue information
+                        venue_info = {
+                            "id": place_id,
+                            "name": venue_details.get('name', place.get('name', 'Unknown Venue')),
+                            "address": venue_details.get('formatted_address', place.get('formatted_address', '')),
+                            "phone": venue_details.get('formatted_phone_number', ''),
+                            "website": venue_details.get('website', ''),
+                            "rating": venue_details.get('rating', 0),
+                            "total_ratings": venue_details.get('user_ratings_total', 0),
+                            "types": venue_details.get('types', []),
+                            "opening_hours": venue_details.get('opening_hours', {}),
+                            "photos": venue_details.get('photos', []),
+                            "location": location,
+                            "estimated_capacity": estimate_capacity_from_types(venue_details.get('types', [])),
+                            "booking_difficulty": estimate_booking_difficulty(venue_details.get('rating', 0), venue_details.get('user_ratings_total', 0))
+                        }
+                        
+                        venues_data.append(venue_info)
+                        print(f"✅ Processed venue: {venue_info['name']}")
+                    
+                except Exception as venue_error:
+                    print(f"❌ Error processing venue {place.get('name', 'Unknown')}: {venue_error}")
+                    continue
+        
+        # Use Gemini AI to analyze and enhance venue data
+        if venues_data:
+            try:
+                enhanced_venues = await enhance_venues_with_gemini(venues_data, artist_genre, capacity_range)
+                venues_data = enhanced_venues
+                print(f"🤖 Enhanced {len(venues_data)} venues with Gemini AI")
+            except Exception as gemini_error:
+                print(f"⚠️  Gemini enhancement failed, using basic venue data: {gemini_error}")
+        
+        return {
+            "status": "success",
+            "venues": venues_data,
+            "total_venues": len(venues_data),
+            "search_location": location
+        }
+        
+    except Exception as e:
+        print(f"❌ Error discovering venues: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to discover venues: {str(e)}")
+
+def estimate_capacity_from_types(types):
+    """Estimate venue capacity based on Google Places types"""
+    capacity_ranges = {
+        "bar": (50, 200),
+        "night_club": (100, 500),
+        "restaurant": (50, 150),
+        "establishment": (100, 300),
+        "point_of_interest": (100, 300)
+    }
+    
+    for venue_type in types:
+        if venue_type in capacity_ranges:
+            min_cap, max_cap = capacity_ranges[venue_type]
+            return f"{min_cap}-{max_cap}"
+    
+    return "100-300"  # Default range
+
+def estimate_booking_difficulty(rating, total_ratings):
+    """Estimate booking difficulty based on rating and popularity"""
+    if rating >= 4.5 and total_ratings > 100:
+        return "hard"
+    elif rating >= 4.0 and total_ratings > 50:
+        return "medium"
+    else:
+        return "easy"
+
+async def enhance_venues_with_gemini(venues_data, artist_genre, capacity_range):
+    """Use Gemini AI to enhance venue data with genre analysis and recommendations"""
+    try:
+        # Prepare venue data for Gemini
+        venues_summary = []
+        for venue in venues_data:
+            venues_summary.append({
+                "name": venue["name"],
+                "types": venue["types"],
+                "rating": venue["rating"],
+                "capacity": venue["estimated_capacity"]
+            })
+        
+        prompt = f"""
+        Analyze these music venues and provide enhanced information for an artist in the {artist_genre} genre:
+        
+        Venues: {venues_summary}
+        
+        For each venue, provide:
+        1. Genre suitability (1-10 scale)
+        2. Recommended approach for booking
+        3. Estimated contact email format
+        4. Venue description
+        5. Booking requirements
+        6. Amenities likely available
+        
+        Return the analysis as a JSON array with enhanced venue data.
+        """
+        
+        # Call Gemini API
+        gemini_response = await call_gemini_api(prompt)
+        
+        # Parse and merge Gemini insights with venue data
+        try:
+            gemini_analysis = json.loads(gemini_response)
+            for i, venue in enumerate(venues_data):
+                if i < len(gemini_analysis):
+                    venue.update(gemini_analysis[i])
+        except:
+            # If Gemini parsing fails, add basic enhancements
+            for venue in venues_data:
+                venue["genre_suitability"] = 7
+                venue["booking_approach"] = "Contact via phone or website"
+                venue["description"] = f"Music venue in {venue['location']}"
+                venue["booking_requirements"] = ["Demo", "Social media presence"]
+                venue["amenities"] = ["Sound system", "Lighting"]
+        
+        return venues_data
+        
+    except Exception as e:
+        print(f"❌ Error enhancing venues with Gemini: {e}")
+        return venues_data
+
+@app.get("/spotify-artist/{artist_id}")
+async def get_spotify_artist(artist_id: str):
+    """Get Spotify artist data by artist ID"""
+    try:
+        if sp is None:
+            # Return mock data if Spotify is not available
+            return {
+                "id": artist_id,
+                "name": "Mock Artist",
+                "followers": {"total": 1000000},
+                "popularity": 75,
+                "genres": ["pop", "r&b"],
+                "topTracks": [
+                    {
+                        "id": "mock_track_1",
+                        "name": "Top Hit",
+                        "external_urls": {"spotify": "https://open.spotify.com/track/mock1"}
+                    }
+                ]
+            }
+        
+        # Get artist data from Spotify
+        artist = sp.artist(artist_id)
+        if not artist:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        
+        # Get top tracks
+        top_tracks = sp.artist_top_tracks(artist_id, country='US')
+        tracks = []
+        if top_tracks and top_tracks['tracks']:
+            tracks = top_tracks['tracks'][:5]  # Get top 5 tracks
+        
+        return {
+            "id": artist['id'],
+            "name": artist['name'],
+            "followers": artist['followers'],
+            "popularity": artist['popularity'],
+            "genres": artist['genres'],
+            "topTracks": tracks
+        }
+        
+    except Exception as e:
+        print(f"Error fetching Spotify artist data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Spotify data: {str(e)}")
 
 @app.get("/health")
 async def health_check():
@@ -1102,7 +2300,7 @@ async def health_check():
         "services": {
             "supabase": SUPABASE_AVAILABLE,
             "ml_service": ML_AVAILABLE,
-            "billboard": BILLBOARD_AVAILABLE
+            "billboard": False  # Billboard service disabled
         },
         "timestamp": datetime.utcnow().isoformat()
     }

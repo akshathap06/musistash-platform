@@ -24,4 +24,14 @@ textblob
 nltk
 pandas
 matplotlib
-seaborn 
+seaborn
+librosa
+audioread
+soundfile
+mutagen
+aubio
+pyAudioAnalysis
+eyed3
+pydub
+hmmlearn
+music21 

@@ -77,14 +77,14 @@ except ImportError:
     ML_AVAILABLE = False
     print("❌ ML service not available - using fallback analysis")
 
-# Import Enhanced Audio Analysis
+# Import Audio Analysis Factory
 try:
-    from enhanced_audio_analysis import enhanced_analyzer
-    ENHANCED_AUDIO_AVAILABLE = True
-    print("✅ Enhanced audio analysis imported successfully")
+    from audio_analysis_factory import AudioAnalysisFactory
+    AUDIO_FACTORY_AVAILABLE = True
+    print("✅ Audio analysis factory imported successfully")
 except ImportError:
-    ENHANCED_AUDIO_AVAILABLE = False
-    print("❌ Enhanced audio analysis not available - using basic analysis")
+    AUDIO_FACTORY_AVAILABLE = False
+    print("❌ Audio analysis factory not available - using basic analysis")
 
 # Import Supabase service separately from Billboard service
 try:
@@ -1170,9 +1170,10 @@ async def upload_track(
             print(f"🎵 Starting analysis for: {file.filename}, size: {len(file_content)} bytes")
             
             try:
-                if ENHANCED_AUDIO_AVAILABLE:
-                    print("🚀 Using enhanced audio analysis with multiple libraries...")
-                    features = await enhanced_analyzer.analyze_audio_comprehensive(temp_file_path, file.filename, artist_id)
+                if AUDIO_FACTORY_AVAILABLE:
+                    print("🚀 Using audio analysis factory...")
+                    analyzer = AudioAnalysisFactory.get_analyzer()
+                    features = await analyzer.analyze_audio_comprehensive(temp_file_path, file.filename, artist_id)
                 else:
                     print("📊 Using basic audio analysis...")
                     features = await extract_comprehensive_audio_features(temp_file_path, file.filename)
@@ -2228,10 +2229,26 @@ async def health_check():
         "services": {
             "supabase": SUPABASE_AVAILABLE,
             "ml_service": ML_AVAILABLE,
+            "audio_factory": AUDIO_FACTORY_AVAILABLE,
             "billboard": False  # Billboard service disabled
         },
         "timestamp": datetime.utcnow().isoformat()
     }
+
+@app.get("/api/audio-analysis-capabilities")
+async def get_audio_analysis_capabilities():
+    """Get information about available audio analysis capabilities"""
+    if AUDIO_FACTORY_AVAILABLE:
+        return AudioAnalysisFactory.get_analysis_capabilities()
+    else:
+        return {
+            "mode": "error",
+            "enable_full": False,
+            "analyzer_type": "error",
+            "available_libraries": {},
+            "analysis_quality": "error",
+            "error": "Audio analysis factory not available"
+        }
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,0 +1,35 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="musistash-platform",
+    version="1.0.0",
+    description="MusiStash Platform - Music Industry Investment Platform",
+    packages=find_packages(),
+    python_requires=">=3.11",
+    install_requires=[
+        "fastapi",
+        "uvicorn[standard]",
+        "python-dotenv",
+        "openai",
+        "requests",
+        "httpx",
+        "spotipy",
+        "numpy",
+        "scikit-learn",
+        "google-generativeai>=0.8.0",
+        "google-auth",
+        "google-auth-oauthlib",
+        "google-auth-httplib2",
+        "pyjwt",
+        "python-jose[cryptography]",
+        "pytrends",
+        "yfinance",
+        "lyricsgenius",
+        "google-api-python-client",
+        "scipy",
+        "textblob",
+        "nltk",
+        "pandas",
+        "xgboost"
+    ],
+) 

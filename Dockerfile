@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     pkg-config \
-    libaubio-dev \
     libavcodec-dev \
     libavformat-dev \
     libavutil-dev \

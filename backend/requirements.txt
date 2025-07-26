@@ -13,7 +13,6 @@ librosa
 audioread
 soundfile
 mutagen
-aubio
 pyAudioAnalysis
 eyed3
 pydub

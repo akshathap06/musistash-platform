@@ -20,8 +20,33 @@ from fastapi import Request
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
+# Supabase Configuration
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+    print("✅ Supabase imported successfully")
+except ImportError:
+    SUPABASE_AVAILABLE = False
+    print("❌ Supabase not available")
+
 # Load environment variables
 load_dotenv()
+
+# Supabase Configuration
+supabase_url = os.getenv("SUPABASE_URL", "dummy_url")
+supabase_key = os.getenv("SUPABASE_ANON_KEY", "dummy_key")
+
+# Initialize Supabase client
+if SUPABASE_AVAILABLE and supabase_url != "dummy_url" and supabase_key != "dummy_key":
+    try:
+        supabase: Client = create_client(supabase_url, supabase_key)
+        print("✅ Supabase client initialized successfully!")
+    except Exception as e:
+        print(f"❌ Error initializing Supabase client: {e}")
+        supabase = None
+else:
+    print("⚠️ Supabase not configured - using fallback mode")
+    supabase = None
 
 # Spotify Configuration
 spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID", "dummy_key")
@@ -247,6 +272,37 @@ async def get_artist_details(artist_id: str):
     except Exception as e:
         print(f"Error fetching artist details: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch artist details: {str(e)}")
+
+@app.get("/api/artists")
+async def get_artists():
+    """Get all artists from database"""
+    try:
+        if supabase is None:
+            return {"artists": []}
+        
+        response = supabase.table('artist_profiles').select('*').execute()
+        return {"artists": response.data}
+        
+    except Exception as e:
+        print(f"Error fetching artists: {e}")
+        return {"artists": []}
+
+@app.get("/api/artist-profile/{artist_id}")
+async def get_artist_profile(artist_id: str):
+    """Get artist profile from database"""
+    try:
+        if supabase is None:
+            return {"error": "Database not available"}
+        
+        response = supabase.table('artist_profiles').select('*').eq('id', artist_id).execute()
+        if response.data:
+            return response.data[0]
+        else:
+            raise HTTPException(status_code=404, detail="Artist profile not found")
+        
+    except Exception as e:
+        print(f"Error fetching artist profile: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch artist profile: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

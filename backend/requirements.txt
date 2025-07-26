@@ -4,7 +4,6 @@ uvicorn[standard]
 python-dotenv
 
 # Core scientific computing (install first for audio processing)
-numpy>=1.21.0
 scipy
 scikit-learn
 pandas

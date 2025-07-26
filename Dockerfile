@@ -21,6 +21,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt /app/backend/
+
+# Install numpy first to ensure it's available for aubio compilation
+RUN pip install --no-cache-dir numpy>=1.21.0
+
+# Then install the rest of the requirements
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
 COPY backend/ /app/backend/

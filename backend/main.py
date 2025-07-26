@@ -17,9 +17,31 @@ from fastapi import UploadFile, File, Form
 import tempfile
 import shutil
 from fastapi import Request
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 
 # Load environment variables
 load_dotenv()
+
+# Spotify Configuration
+spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID", "dummy_key")
+spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET", "dummy_key")
+
+# Initialize Spotify client
+if not spotify_client_id or spotify_client_id == "dummy_key":
+    print("❌ Warning: Spotify credentials not found. Using mock data.")
+    sp = None
+else:
+    try:
+        print("✅ Initializing Spotify client with credentials...")
+        sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+            client_id=spotify_client_id,
+            client_secret=spotify_client_secret
+        ))
+        print("✅ Spotify client initialized successfully!")
+    except Exception as e:
+        print(f"❌ Error initializing Spotify client: {e}")
+        sp = None
 
 # JWT Configuration
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-this-in-production")
@@ -127,25 +149,104 @@ async def root():
 async def get_spotify_artist(artist_id: str):
     """Get Spotify artist data by artist ID"""
     try:
-        # Return mock data for now
+        if sp is None:
+            # Return mock data if Spotify is not available
+            return {
+                "id": artist_id,
+                "name": "Mock Artist",
+                "followers": {"total": 1000000},
+                "popularity": 75,
+                "genres": ["pop", "r&b"],
+                "topTracks": [
+                    {
+                        "id": "mock_track_1",
+                        "name": "Top Hit",
+                        "external_urls": {"spotify": "https://open.spotify.com/track/mock1"}
+                    }
+                ]
+            }
+        
+        # Get artist data from Spotify
+        artist = sp.artist(artist_id)
+        if not artist:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        
+        # Get top tracks
+        top_tracks = sp.artist_top_tracks(artist_id, country='US')
+        tracks = []
+        if top_tracks and top_tracks['tracks']:
+            tracks = top_tracks['tracks'][:5]  # Get top 5 tracks
+        
         return {
-            "id": artist_id,
-            "name": "Mock Artist",
-            "followers": {"total": 1000000},
-            "popularity": 75,
-            "genres": ["pop", "r&b"],
-            "topTracks": [
-                {
-                    "id": "mock_track_1",
-                    "name": "Top Hit",
-                    "external_urls": {"spotify": "https://open.spotify.com/track/mock1"}
-                }
-            ]
+            "id": artist['id'],
+            "name": artist['name'],
+            "followers": artist['followers'],
+            "popularity": artist['popularity'],
+            "genres": artist['genres'],
+            "topTracks": tracks
         }
         
     except Exception as e:
         print(f"Error fetching Spotify artist data: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch Spotify data: {str(e)}")
+
+@app.get("/api/artist/search")
+async def search_artists(query: str = Query(...)):
+    """Search for artists on Spotify"""
+    try:
+        if sp is None:
+            # Return mock data if Spotify is not available
+            return {
+                "artists": [
+                    {
+                        "id": "mock_artist_1",
+                        "name": "Mock Artist",
+                        "followers": {"total": 1000000},
+                        "popularity": 75,
+                        "genres": ["pop", "r&b"],
+                        "images": [{"url": "https://via.placeholder.com/300"}]
+                    }
+                ]
+            }
+        
+        # Search for artists on Spotify
+        results = sp.search(q=query, type='artist', limit=10)
+        artists = results['artists']['items']
+        
+        return {
+            "artists": artists
+        }
+        
+    except Exception as e:
+        print(f"Error searching artists: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to search artists: {str(e)}")
+
+@app.get("/api/artist/{artist_id}")
+async def get_artist_details(artist_id: str):
+    """Get detailed artist information"""
+    try:
+        if sp is None:
+            # Return mock data if Spotify is not available
+            return {
+                "id": artist_id,
+                "name": "Mock Artist",
+                "followers": {"total": 1000000},
+                "popularity": 75,
+                "genres": ["pop", "r&b"],
+                "images": [{"url": "https://via.placeholder.com/300"}],
+                "external_urls": {"spotify": "https://open.spotify.com/artist/mock"}
+            }
+        
+        # Get artist details from Spotify
+        artist = sp.artist(artist_id)
+        if not artist:
+            raise HTTPException(status_code=404, detail="Artist not found")
+        
+        return artist
+        
+    except Exception as e:
+        print(f"Error fetching artist details: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch artist details: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

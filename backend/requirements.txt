@@ -5,4 +5,10 @@ python-dotenv
 
 # Basic utilities
 requests
-httpx 
+httpx
+
+# Spotify integration
+spotipy
+google-auth
+google-auth-oauthlib
+google-auth-httplib2 

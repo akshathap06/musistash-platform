@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BACKEND_URL } from '@/config/api';
 
 interface MLModelMetrics {
   model_version: string;
@@ -77,7 +78,7 @@ const MLModelDashboard = () => {
     const fetchRealMetrics = async () => {
       try {
         // Fetch from your backend API
-        const response = await fetch('http://localhost:8000/api/ml-metrics');
+        const response = await fetch(`${BACKEND_URL}/api/ml-metrics`);
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Fetched real ML metrics:', data);
@@ -156,7 +157,7 @@ const MLModelDashboard = () => {
   useEffect(() => {
     const updateArtistInsights = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/ml-metrics');
+        const response = await fetch(`${BACKEND_URL}/api/ml-metrics`);
         if (response.ok) {
           const data = await response.json();
           
@@ -313,7 +314,7 @@ const MLModelDashboard = () => {
     setIsSearching(true);
     try {
       // Search for artists in Supabase via backend
-      const response = await fetch(`http://localhost:8000/search-artists?q=${encodeURIComponent(searchQuery)}`);
+              const response = await fetch(`${BACKEND_URL}/search-artists?q=${encodeURIComponent(searchQuery)}`);
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data.artists || []);

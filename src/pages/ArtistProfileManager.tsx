@@ -15,6 +15,7 @@ import { artistProfileService } from '@/services/artistProfileService';
 import { EfficientArtistProfileService } from '@/services/efficientArtistProfileService';
 import { CareerHighlightsService } from '@/services/careerHighlightsService';
 import { useToast } from '@/hooks/use-toast';
+import { BACKEND_URL } from '@/config/api';
 
 interface ArtistProfile {
   name: string;
@@ -499,7 +500,7 @@ const ArtistProfileManager = () => {
       const artistId = urlMatch[1];
       
       // Call backend to fetch Spotify data
-      const response = await fetch(`http://localhost:8000/spotify-artist/${artistId}`);
+      const response = await fetch(`${BACKEND_URL}/spotify-artist/${artistId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch Spotify data');
       }

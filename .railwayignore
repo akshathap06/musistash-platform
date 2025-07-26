@@ -1,0 +1,34 @@
+# Ignore Node.js/Frontend files that confuse Railway's language detection
+package.json
+package-lock.json
+node_modules/
+bun.lockb
+tsconfig*.json
+vite.config.ts
+tailwind.config.ts
+eslint.config.js
+postcss.config.js
+components.json
+vercel.json
+
+# Ignore frontend source code
+src/
+public/
+index.html
+
+# Ignore documentation and scripts
+*.md
+*.sh
+deploy-*.sh
+
+# Ignore SQL files
+*.sql
+
+# Ignore test files
+test_*.py
+test-*.js
+test*.html
+
+# Ignore other project directories
+ms_final_draft_edit/
+musistash-production.zip 

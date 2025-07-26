@@ -14,4 +14,39 @@ google-auth-oauthlib
 google-auth-httplib2
 
 # Database
-supabase 
+supabase
+
+# Core scientific computing
+numpy>=1.21.0
+scipy
+scikit-learn
+pandas
+
+# Audio processing libraries
+librosa
+audioread
+soundfile
+mutagen
+pyAudioAnalysis
+eyed3
+pydub
+
+# Machine learning
+hmmlearn
+music21
+
+# AI and analysis
+openai
+google-generativeai>=0.8.0
+pyjwt
+python-jose[cryptography]
+
+# Data analysis
+pytrends
+yfinance
+lyricsgenius
+google-api-python-client
+textblob
+nltk
+matplotlib
+seaborn 

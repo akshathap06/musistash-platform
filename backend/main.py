@@ -5,20 +5,82 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Tuple
 import os
 from dotenv import load_dotenv
+import openai
+import requests
+import httpx
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 import json
 from pathlib import Path
 import random
 import asyncio
 import math
 from datetime import datetime, timedelta
+import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import jwt
+from jose import JWTError, jwt as jose_jwt
+import yfinance as yf
+import statistics
+import lyricsgenius
+import googleapiclient.discovery
+import googleapiclient.errors
+from scipy import stats
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from textblob import TextBlob
+import re
+from collections import Counter
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import ssl
+from urllib.parse import quote
 import time
 from functools import lru_cache
 from fastapi import UploadFile, File, Form
+import librosa
 import tempfile
 import shutil
 from fastapi import Request
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+
+def convert_numpy_types(obj):
+    """Convert numpy types to JSON-serializable Python types"""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    else:
+        return obj
+
+# Import ML service
+try:
+    from ml_service import get_ml_enhanced_analysis
+    ML_AVAILABLE = True
+    print("✅ ML service imported successfully")
+except ImportError:
+    ML_AVAILABLE = False
+    print("❌ ML service not available - using fallback analysis")
+
+# Import Enhanced Audio Analysis
+try:
+    from enhanced_audio_analysis import enhanced_analyzer
+    ENHANCED_AUDIO_AVAILABLE = True
+    print("✅ Enhanced audio analysis imported successfully")
+except ImportError:
+    ENHANCED_AUDIO_AVAILABLE = False
+    print("❌ Enhanced audio analysis not available - using basic analysis")
 
 # Supabase Configuration
 try:
@@ -48,6 +110,14 @@ else:
     print("⚠️ Supabase not configured - using fallback mode")
     supabase = None
 
+# API Keys Configuration
+openai_api_key = os.getenv("OPENAI_API_KEY", "dummy_key")
+gemini_api_key = os.getenv("GEMINI_API_KEY", "dummy_key")
+gemini_base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+# News API
+news_api_key = os.getenv("NEWS_API_KEY", "dummy_key")
+
 # Spotify Configuration
 spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID", "dummy_key")
 spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET", "dummy_key")
@@ -72,6 +142,19 @@ else:
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-this-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_TIME = timedelta(days=7)
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID = "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com"
+
+# Initialize Gemini
+if gemini_api_key and gemini_api_key != "dummy_key":
+    try:
+        genai.configure(api_key=gemini_api_key)
+        print("✅ Gemini configured successfully")
+    except Exception as e:
+        print(f"❌ Error configuring Gemini: {e}")
+else:
+    print("⚠️ Gemini API key not found")
 
 # Security
 security = HTTPBearer(auto_error=False)
@@ -145,6 +228,47 @@ class AuthResponse(BaseModel):
     user: User
     access_token: str
     token_type: str = "bearer"
+
+# --- Authentication Helper Functions ---
+def create_access_token(data: dict):
+    """Create a JWT access token"""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + JWT_EXPIRATION_TIME
+    to_encode.update({"exp": expire})
+    encoded_jwt = jose_jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+
+def verify_token(token: str):
+    """Verify JWT token"""
+    try:
+        payload = jose_jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+async def verify_google_token(token: str) -> Optional[Dict]:
+    """Verify Google OAuth token"""
+    try:
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+        
+        return idinfo
+    except Exception as e:
+        print(f"Error verifying Google token: {e}")
+        return None
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    payload = verify_token(credentials.credentials)
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    return payload
 
 # --- Basic Health Check Endpoint ---
 @app.get("/health")
@@ -303,6 +427,115 @@ async def get_artist_profile(artist_id: str):
     except Exception as e:
         print(f"Error fetching artist profile: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch artist profile: {str(e)}")
+
+@app.post("/api/upload-track")
+async def upload_track_analysis(
+    file: UploadFile = File(...), 
+    artist_id: str = Form(...)
+):
+    """Upload and analyze a track"""
+    try:
+        if not ENHANCED_AUDIO_AVAILABLE:
+            raise HTTPException(status_code=503, detail="Audio analysis not available")
+        
+        # Save uploaded file temporarily
+        temp_file_path = f"/tmp/{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Analyze the audio
+        features = await enhanced_analyzer.analyze_audio_comprehensive(temp_file_path, file.filename, artist_id)
+        
+        # Clean up temp file
+        os.remove(temp_file_path)
+        
+        return convert_numpy_types(features)
+        
+    except Exception as e:
+        print(f"Error in track analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Track analysis failed: {str(e)}")
+
+@app.post("/api/agent/upload-track")
+async def upload_track(
+    file: UploadFile = File(...), 
+    artist_id: str = Form(...)
+):
+    """Upload track for agentic analysis"""
+    try:
+        if not ENHANCED_AUDIO_AVAILABLE:
+            raise HTTPException(status_code=503, detail="Audio analysis not available")
+        
+        # Save uploaded file temporarily
+        temp_file_path = f"/tmp/{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Analyze the audio
+        features = await enhanced_analyzer.analyze_audio_comprehensive(temp_file_path, file.filename, artist_id)
+        
+        # Clean up temp file
+        os.remove(temp_file_path)
+        
+        return convert_numpy_types(features)
+        
+    except Exception as e:
+        print(f"Error in agentic track analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Agentic track analysis failed: {str(e)}")
+
+@app.get("/api/agent/venue-recommendations")
+async def get_venue_recommendations(artist_id: str = Query(...), city: str = Query(None)):
+    """Get venue recommendations for an artist"""
+    try:
+        # Mock venue recommendations for now
+        venues = [
+            {
+                "name": "The Grand Hall",
+                "location": city or "New York",
+                "capacity": 500,
+                "genre_suitability": 8,
+                "booking_approach": "Contact via email",
+                "description": "Popular music venue"
+            }
+        ]
+        return {"venues": venues}
+    except Exception as e:
+        print(f"Error getting venue recommendations: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get venue recommendations: {str(e)}")
+
+@app.post("/api/agent/email-drafts")
+async def generate_email_drafts(request: dict):
+    """Generate email drafts for venues"""
+    try:
+        # Mock email drafts for now
+        drafts = [
+            {
+                "subject": "Booking Inquiry - [Artist Name]",
+                "body": "Hi [Venue Name],\n\nI'm reaching out about booking opportunities for [Artist Name]...",
+                "type": "booking"
+            }
+        ]
+        return {"drafts": drafts}
+    except Exception as e:
+        print(f"Error generating email drafts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate email drafts: {str(e)}")
+
+@app.get("/api/agent/campaign-recommendations")
+async def get_campaign_recommendations(artist_id: str = Query(...)):
+    """Get marketing campaign recommendations"""
+    try:
+        # Mock campaign recommendations
+        campaigns = [
+            {
+                "type": "Social Media",
+                "description": "Focus on Instagram and TikTok",
+                "budget": "$500-1000",
+                "timeline": "3 months"
+            }
+        ]
+        return {"campaigns": campaigns}
+    except Exception as e:
+        print(f"Error getting campaign recommendations: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get campaign recommendations: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -2,16 +2,29 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install basic system dependencies
+# Install system dependencies required for audio processing libraries
 RUN apt-get update && apt-get install -y \
     build-essential \
     gcc \
     g++ \
+    pkg-config \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswresample-dev \
+    libsndfile1-dev \
+    libsamplerate0-dev \
+    libfftw3-dev \
+    libasound2-dev \
+    portaudio19-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt /app/backend/
 
-# Install requirements
+# Install numpy first to ensure it's available for other packages
+RUN pip install --no-cache-dir numpy>=1.21.0
+
+# Then install the rest of the requirements
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
 COPY backend/ /app/backend/

@@ -1,38 +1,23 @@
-node_modules
-npm-debug.log
-.git
-.gitignore
-README.md
-.env
-.nyc_output
-coverage
-.nyc_output
-.coverage
-.pytest_cache
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
-dist
-build
-*.egg-info
-.DS_Store
-*.swp
-*.swo
-*~ 
+# Ignore Dockerfiles to force Railway to use buildpack
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Ignore deployment scripts
+deploy-*.sh
+
+# Ignore full requirements
+requirements_full.txt
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore test files
+test_*.py
+*_test.py
+
+# Ignore development files
+.env.local
+.env.development
+*.log 

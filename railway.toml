@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+
+[env]
+AUDIO_ANALYSIS_MODE = "simplified"
+ENABLE_FULL_AUDIO_ANALYSIS = "false"
+PYTHONPATH = "/app" 

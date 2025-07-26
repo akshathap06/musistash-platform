@@ -3,42 +3,6 @@ fastapi
 uvicorn[standard]
 python-dotenv
 
-# Core scientific computing (install first for audio processing)
-scipy
-scikit-learn
-pandas
-
-# Audio processing libraries (depend on numpy)
-librosa
-audioread
-soundfile
-mutagen
-pyAudioAnalysis
-eyed3
-pydub
-
-# Machine learning
-hmmlearn
-music21
-
-# API and authentication
-openai
+# Basic utilities
 requests
-httpx
-spotipy
-google-generativeai>=0.8.0
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-pyjwt
-python-jose[cryptography]
-
-# Data and analysis
-pytrends
-yfinance
-lyricsgenius
-google-api-python-client
-textblob
-nltk
-matplotlib
-seaborn 
+httpx 

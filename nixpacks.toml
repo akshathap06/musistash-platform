@@ -1,1 +1,19 @@
- 
+[providers]
+python = true
+nodejs = false
+
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = [
+    "python -m pip install --upgrade pip",
+    "python -m pip install --no-cache-dir -r requirements.txt"
+]
+
+[start]
+cmd = "python start.py"
+
+[variables]
+AUDIO_ANALYSIS_MODE = "simplified"
+ENABLE_FULL_AUDIO_ANALYSIS = "false" 

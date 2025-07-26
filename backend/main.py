@@ -18,7 +18,7 @@ import random
 import asyncio
 import math
 from datetime import datetime, timedelta
-# import soundcharts
+# import soundcharts  # Commented out - not available
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from google.oauth2 import id_token
@@ -190,15 +190,9 @@ except Exception as e:
     print(f"❌ Error initializing Genius client: {e}")
     genius = None
 
-# SoundCharts - Using sandbox credentials
-try:
-    soundcharts_client = soundcharts.SoundchartsClient(
-        app_id="soundcharts",
-        api_key="soundcharts"
-    )
-except Exception as e:
-    print(f"Failed to initialize SoundCharts client: {e}")
-    soundcharts_client = None
+# SoundCharts - Disabled due to import issues
+soundcharts_client = None
+print("⚠️ SoundCharts client disabled - import not available")
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = "767080964358-cknd1jasah1f30ahivbm43mc7ch1pu5c.apps.googleusercontent.com"

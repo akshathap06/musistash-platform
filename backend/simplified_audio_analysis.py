@@ -211,4 +211,6 @@ class EnhancedAudioAnalyzer:
             return None
 
 # Create global instance
-enhanced_analyzer = EnhancedAudioAnalyzer() 
+simplified_analyzer = EnhancedAudioAnalyzer()
+
+__all__ = ["simplified_analyzer"] 

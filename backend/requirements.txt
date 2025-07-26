@@ -22,7 +22,7 @@ scipy
 scikit-learn
 pandas
 
-# Audio processing libraries
+# Audio processing libraries (aubio removed - will be optional)
 librosa
 audioread
 soundfile
